@@ -34,8 +34,8 @@ torch.set_default_dtype(DTYPE_TORCH)
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 0
-IS_CONSTRAINT = True
+SAMPLING_MODE = 1
+IS_CONSTRAINT = False
 
 random.seed(42)
 np.random.seed(42)
@@ -64,7 +64,7 @@ dir_path_id_img_train = pathlib.Path(dir_path_id, "img_train")
 dir_path_id_img_test = pathlib.Path(dir_path_id, "img_test")
 dir_path_id_img_samples = pathlib.Path(dir_path_id, "img_samples")
 
-N_SAMPLES_TRAIN = 1000
+N_SAMPLES_TRAIN = 10
 N_SAMPLES_VAL = 1000
 N_SAMPLES_TEST = 25000
 
@@ -80,8 +80,8 @@ NN_DIM_IN_TO_OUT = 256
 
 FK_ORIGIN = [0.0, 0.0]
 
-RADIUS_INNER = 0.0
-RADIUS_OUTER = 1.0
+RADIUS_INNER = 0.25
+RADIUS_OUTER = 0.9
 
 SAMPLE_CIRCLE = True
 
@@ -100,7 +100,7 @@ LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99985 # for 50k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
 
 TIME_MEASURE_UPDATE = 100
-TENSORBOARD_UPDATE = 1000
+TENSORBOARD_UPDATE = 5000
 FK_VISUALIZATION_UPDATE = 10000
 
 
@@ -910,7 +910,7 @@ for j in range(N_ITERATIONS) :
 
         else :
 
-            if distance_index < N_SAMPLES_TRAIN and j % 3 == 0:
+            if distance_index < N_SAMPLES_TRAIN and j % 2 == 0:
 
                 rel_index = distances_indices_sorted[distance_index]
                 
