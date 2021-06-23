@@ -21,8 +21,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 print(f"PyTorch Version: {torch.__version__}")
 
-SAVEFIG_DPI = 100
-SAVEFIG_DPI_FINAL = 300
+SAVEFIG_DPI = 300
+SAVEFIG_DPI_FINAL = 600
 
 # is needed to torch.set_deterministic(True) below
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
@@ -33,9 +33,16 @@ torch.set_default_dtype(DTYPE_TORCH)
 
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
-# 2 is sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 1
+# 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
+SAMPLING_MODE = 0
 IS_CONSTRAINT = False
+
+SAMPLING_STRING = "Sampling Once"
+if SAMPLING_MODE == 1 : SAMPLING_STRING = "Resampling"
+if SAMPLING_MODE == 2 : SAMPLING_STRING = "Expansion Sampling"
+
+CONSTRAINED_STRING = "Not Constrained"
+if IS_CONSTRAINT: CONSTRAINED_STRING = "Constrained"
 
 random.seed(42)
 np.random.seed(42)
@@ -45,7 +52,7 @@ torch.set_deterministic(True)
 torch.backends.cudnn.benchmark = False
 #torch.autograd.set_detect_anomaly(True)
 
-identifier_string = "Benchmark_2d_IK_heatmap"
+identifier_string = "Benchmark_2d_IK"
 log_file_str = "train_eval_log_file.txt"
 nn_model_full_str = "nn_model_full"
 nn_model_state_dict_only_str = "nn_model_state_dict_only"
@@ -56,16 +63,12 @@ for c in char_replace :
     dtstring = dtstring.replace(c, '_')
 dir_path_id = pathlib.Path(dir_path_id_partial, identifier_string + "_" + dtstring)
 dir_path_id_model = pathlib.Path(dir_path_id, "model")
-dir_path_id_joint_plot = pathlib.Path(dir_path_id, "joint_plot")
-dir_path_id_jacobian_visualization = pathlib.Path(dir_path_id, "jacobian_visualization")
-dir_path_id_heatmap = pathlib.Path(dir_path_id, "heatmap")
 dir_path_id_plots = pathlib.Path(dir_path_id, "plots")
 dir_path_id_img_val = pathlib.Path(dir_path_id, "img_val")
 dir_path_id_img_train = pathlib.Path(dir_path_id, "img_train")
 dir_path_id_img_test = pathlib.Path(dir_path_id, "img_test")
-dir_path_id_img_samples = pathlib.Path(dir_path_id, "img_samples")
 
-N_SAMPLES_TRAIN = 10
+N_SAMPLES_TRAIN = 1000
 N_SAMPLES_VAL = 1000
 N_SAMPLES_TEST = 25000
 
@@ -280,20 +283,8 @@ def initialize_directories():
 
         dir_path_id.mkdir()
 
-    if not dir_path_id_joint_plot.exists() :
-
-        dir_path_id_joint_plot.mkdir()
-
-    if not dir_path_id_jacobian_visualization.exists() :
-
-        dir_path_id_jacobian_visualization.mkdir()
-
-    if not dir_path_id_heatmap.exists() :
-
-        dir_path_id_heatmap.mkdir()
-
     if not dir_path_id_plots.exists() :
-        
+
         dir_path_id_plots.mkdir()
 
     if not dir_path_id_model.exists() :
@@ -311,10 +302,6 @@ def initialize_directories():
     if not dir_path_id_img_test.exists() :
         
         dir_path_id_img_test.mkdir()
-
-    if not dir_path_id_img_samples.exists() :
-        
-        dir_path_id_img_samples.mkdir()
 
 
 def compute_dloss_dW(model):
@@ -495,14 +482,14 @@ def compute_energy(model, x_state):
 
     energy += constraint_bound
 
-    return theta_hat, energy, constraint_bound, terminal_position_distance, x_hat_fk_chain
+    return energy, constraint_bound, terminal_position_distance, x_hat_fk_chain
 
 
 def compute_loss(model, x_state, iteration_index, is_visualize, fname, dir_path):
 
     n_batch = x_state.shape[0]
 
-    theta_hat, energy, constraint, terminal_position_distance, x_hat_fk_chain = compute_energy(model, x_state)
+    energy, constraint, terminal_position_distance, x_hat_fk_chain = compute_energy(model, x_state)
 
     loss = torch.mean(energy)
 
@@ -539,162 +526,26 @@ def save_model(model, iterations, string_path, string_dict_only, string_full):
     print("{} Saved Current State for Evaluation.\n".format(iterations))
 
 
-def compute_and_save_plots(model, device, X_state_train, metrics_test, dpi, n_one_direction, dir_path_img, fname_img):
-
-    X_state_train = X_state_train.detach().cpu()
-
-    test_terminal_energy_mean = metrics_test[0].detach().cpu()
-    test_terminal_energy_std = metrics_test[1].detach().cpu()
+def compute_and_save_joint_plot(model, device, dpi, n_one_dim, dir_path_img, fname_img):
 
     alpha = 0.5
-    alpha_train_samples = 0.25
 
-    dimX = np.linspace(LIMITS_HEATMAP[0][0], LIMITS_HEATMAP[0][1], n_one_direction)
-    dimY = np.linspace(LIMITS_HEATMAP[1][0], LIMITS_HEATMAP[1][1], n_one_direction)
+    dimX = np.linspace(LIMITS_HEATMAP[0][0], LIMITS_HEATMAP[0][1], n_one_dim)
+    dimY = np.linspace(LIMITS_HEATMAP[1][0], LIMITS_HEATMAP[1][1], n_one_dim)
 
     dimX, dimY = np.meshgrid(dimX, dimY)
 
     x_state = torch.tensor(np.stack((dimX.flatten(), dimY.flatten()), axis = -1)).to(device)
 
-    terminal_energy = torch.zeros((x_state.shape[0])).to(device)
-    theta_hat = torch.zeros((n_one_direction*n_one_direction, N_TRAJOPT, N_DIM_THETA))
+    theta_hat = torch.zeros((n_one_dim*n_one_dim, N_TRAJOPT, N_DIM_THETA))
 
     with torch.no_grad() :
 
-        if n_one_direction > 100 :
+        if n_one_dim > 100 :
 
             n_splits = 100
 
-            delta = n_one_direction*n_one_direction // n_splits
-
-            for split in range(n_splits):
-                theta_hat_tmp, energy_tmp, constraint_tmp, terminal_position_distance_tmp, _ = compute_energy(model, x_state[split*delta:(split+1)*delta])
-                terminal_energy[split*delta:(split+1)*delta] = terminal_position_distance_tmp
-                theta_hat[split*delta:(split+1)*delta] = torch.reshape(theta_hat_tmp, (delta, N_TRAJOPT, N_DIM_THETA))
-
-        else :
-
-            theta_hat, energy, constraint, terminal_position_distance, _ = compute_energy(model, x_state)
-            terminal_energy = terminal_position_distance
-
-    terminal_energy = np.array(terminal_energy.detach().cpu().reshape((n_one_direction, n_one_direction)).tolist())
-
-    terminal_energy_min = terminal_energy.min()
-    terminal_energy_max = terminal_energy.max()
-
-    theta_hat = ( theta_hat % ( 2.0 * math.pi ) ) * 180.0 / math.pi
-
-    theta_hat = torch.reshape(input = theta_hat, shape = (n_one_direction, n_one_direction, N_TRAJOPT, N_DIM_THETA)).detach().cpu()
-
-    rad_min = 0.0
-    rad_max = 360.0
-
-    theta_hat_1 = theta_hat[:, :,  -1, 0]
-    theta_hat_2 = theta_hat[:, :, -1, 1]
-
-    jac = torch.zeros(size = (n_one_direction*n_one_direction, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
-
-    for i in range(n_one_direction*n_one_direction) :
-        jac[i] = torch.reshape(torch.autograd.functional.jacobian(model, x_state[i:i+1], create_graph=False, strict=False), shape = (N_TRAJOPT*N_DIM_THETA, N_DIM_X))
-
-    jac_norm = torch.reshape(jac, shape = (n_one_direction, n_one_direction, N_TRAJOPT*N_DIM_THETA*N_DIM_X))
-    jac_norm = torch.norm(jac_norm, p = "fro", dim = -1)
-    jac_norm = jac_norm.detach().cpu()
-    jac_norm_min = torch.min(jac_norm) 
-    jac_norm_max = torch.max(jac_norm)
-
-    # plot
-
-    fig, axes = plt.subplots(nrows = 3, ncols = 2)
-
-    plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
-
-    for ax0 in axes:
-        for ax1 in ax0:
-            ax1.set_aspect(aspect = 'equal', adjustable = 'box')
-            ax1.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
-
-    axes[1][0].set_title(
-        '\nTerminal Energy Landscape in Meters\n2D Two-Linkage Robot Inverse Kinematics\n',
-        fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
-        pad = 5
-    )
-    c = axes[1][0].pcolormesh(dimX, dimY, terminal_energy, cmap = 'RdBu', shading = 'gouraud', norm = matplotlib.colors.LogNorm(vmin = terminal_energy_min, vmax = terminal_energy_max))
-
-    axes[1][0].plot(X_state_train[:, 0], X_state_train[:, 1], ms = 2.0, marker = 'o', color = 'k', ls = '', alpha = alpha_train_samples)
-
-    cb = fig.colorbar(c, ax = axes[1][0], extend = 'max')
-    cb.ax.plot([0, 1], [test_terminal_energy_mean]*2, 'k', alpha = alpha, lw = 8.0)
-    cb.ax.plot([0, 1], [test_terminal_energy_mean + test_terminal_energy_std]*2, 'k', alpha = alpha, lw = 3.0)
-    cb.ax.plot([0, 1], [test_terminal_energy_mean - test_terminal_energy_std]*2, 'k', alpha = alpha, lw = 3.0)
-
-    if SAMPLE_CIRCLE :
-        circleInner = plt.Circle((0.0, 0.0), radius = RADIUS_INNER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
-        circleOuter = plt.Circle((0.0, 0.0), radius = RADIUS_OUTER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
-
-    if LIMITS_HEATMAP != LIMITS :
-        rectangle = plt.Rectangle(xy = (LIMITS[0][0], LIMITS[1][0]), width = LIMITS[0][1]-LIMITS[0][0], height = LIMITS[1][1]-LIMITS[1][0], color = 'orange', fill = False, lw = 4.0, alpha = alpha)
-
-    save_figure(fig, dpi, dir_path_img, "no_train_region_" + fname_img)
-
-    legend_entries = [
-            matplotlib.lines.Line2D([0], [0], lw = 0.0, marker = 'o', color = 'k', alpha = alpha_train_samples, markersize = 10.0, label = 'Train Samples'),
-            matplotlib.patches.Patch(color = 'k', alpha = alpha, label = 'Test Mean ± Std')
-        ]
-
-    if LIMITS_HEATMAP != LIMITS or SAMPLE_CIRCLE:
-
-        legend_entries = legend_entries + [matplotlib.patches.Patch(color = 'orange', alpha = alpha, label = 'Sampling Area')]
-
-        if SAMPLE_CIRCLE :
-            axes[1][0].add_patch(circleInner)
-            axes[1][0].add_patch(circleOuter)
-
-        if LIMITS_HEATMAP != LIMITS:
-            axes[1][0].add_patch(rectangle)
-
-    plt.legend(loc = 'upper right', handles = legend_entries)
-
-    save_figure(fig, dpi, dir_path_img, fname_img)
-
-    save_figure(fig, dpi, "", "plots.png")
-
-    # transform the final plot into an array to save on tensorboard
-
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches = "tight", dpi=dpi)
-    buf.seek(0)
-    img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
-    buf.close()
-    img = cv2.imdecode(img_arr, 1)
-    img_arr = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
- 
-    # close the plot handle
-    plt.close()
-
-    return img_arr
-
-
-def compute_and_save_joint_plot(model, device, dpi, n_one_direction, dir_path_img, fname_img):
-
-    alpha = 0.5
-
-    dimX = np.linspace(LIMITS_HEATMAP[0][0], LIMITS_HEATMAP[0][1], n_one_direction)
-    dimY = np.linspace(LIMITS_HEATMAP[1][0], LIMITS_HEATMAP[1][1], n_one_direction)
-
-    dimX, dimY = np.meshgrid(dimX, dimY)
-
-    x_state = torch.tensor(np.stack((dimX.flatten(), dimY.flatten()), axis = -1)).to(device)
-
-    theta_hat = torch.zeros((n_one_direction*n_one_direction, N_TRAJOPT, N_DIM_THETA))
-
-    with torch.no_grad() :
-
-        if n_one_direction > 100 :
-
-            n_splits = 100
-
-            delta = n_one_direction*n_one_direction // n_splits
+            delta = n_one_dim*n_one_dim // n_splits
 
             for split in range(n_splits):
                 theta_hat_tmp = model(x_state[split*delta:(split+1)*delta])
@@ -709,7 +560,7 @@ def compute_and_save_joint_plot(model, device, dpi, n_one_direction, dir_path_im
 
     theta_hat = ( theta_hat % ( 2.0 * math.pi ) ) * 180.0 / math.pi
 
-    theta_hat = torch.reshape(input = theta_hat, shape = (n_one_direction, n_one_direction, N_TRAJOPT, N_DIM_THETA)).detach().cpu()
+    theta_hat = torch.reshape(input = theta_hat, shape = (n_one_dim, n_one_dim, N_TRAJOPT, N_DIM_THETA)).detach().cpu()
 
     rad_min = 0.0
     rad_max = 360.0
@@ -780,30 +631,31 @@ def compute_and_save_joint_plot(model, device, dpi, n_one_direction, dir_path_im
     plt.close()
 
 
-def compute_and_save_jacobian_visualization(model, device, X_state_train, dpi, n_one_direction, dir_path_img, fname_img):
+def compute_and_save_jacobian_visualization(index, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img):
 
     X_state_train = X_state_train.detach().cpu()
 
     alpha = 0.5
     alpha_train_samples = 0.25
 
-    dimX = np.linspace(LIMITS_HEATMAP[0][0], LIMITS_HEATMAP[0][1], n_one_direction)
-    dimY = np.linspace(LIMITS_HEATMAP[1][0], LIMITS_HEATMAP[1][1], n_one_direction)
+    dimX = np.linspace(LIMITS_HEATMAP[0][0], LIMITS_HEATMAP[0][1], n_one_dim)
+    dimY = np.linspace(LIMITS_HEATMAP[1][0], LIMITS_HEATMAP[1][1], n_one_dim)
 
     dimX, dimY = np.meshgrid(dimX, dimY)
 
     x_state = torch.tensor(np.stack((dimX.flatten(), dimY.flatten()), axis = -1), requires_grad = True).to(device)
 
-    jac = torch.zeros(size = (n_one_direction*n_one_direction, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+    jac = torch.zeros(size = (n_one_dim*n_one_dim, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
 
-    for i in range(n_one_direction*n_one_direction) :
+    for i in range(n_one_dim*n_one_dim) :
         jac[i] = torch.reshape(torch.autograd.functional.jacobian(model, x_state[i:i+1], create_graph=False, strict=False), shape = (N_TRAJOPT*N_DIM_THETA, N_DIM_X))
 
-    jac_norm = torch.reshape(jac, shape = (n_one_direction, n_one_direction, N_TRAJOPT*N_DIM_THETA*N_DIM_X))
+    jac_norm = torch.reshape(jac, shape = (n_one_dim, n_one_dim, N_TRAJOPT*N_DIM_THETA*N_DIM_X))
     jac_norm = torch.norm(jac_norm, p = "fro", dim = -1)
-    jac_norm = jac_norm.detach().cpu()
-    jac_norm_min = torch.min(jac_norm) 
-    jac_norm_max = torch.max(jac_norm)
+
+    jac_norm = np.array(jac_norm.detach().cpu().reshape((n_one_dim, n_one_dim)).tolist())
+    jac_norm_min = jac_norm.min()
+    jac_norm_max = jac_norm.max()
 
     # plot
 
@@ -814,7 +666,7 @@ def compute_and_save_jacobian_visualization(model, device, X_state_train, dpi, n
     ax.set_aspect(aspect = 'equal', adjustable = 'box')
 
     ax.set_title(
-        '\nJacobian Frobenius Norm Landscape\n2D Two-Linkage Robot Inverse Kinematics\n',
+        f'\nJacobian Frobenius Norm Landscape\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index+1}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
         fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
         pad = 5
     )
@@ -855,7 +707,162 @@ def compute_and_save_jacobian_visualization(model, device, X_state_train, dpi, n
     save_figure(fig, dpi, "", "jacobian_visualization.png")
  
     # close the plot handle
-    plt.close()
+    plt.close('all')
+
+    fig, ax = plt.subplots()
+
+    plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
+
+    ax.set_title(
+        f'\nJacobian Frobenius Norm Histogram\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index+1}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
+        pad = 5
+    )
+
+    hist, bins = np.histogram(jac_norm.flatten(), bins = int(max(10, (n_one_dim*n_one_dim)/25.0)))
+    logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
+    ax.hist(x = jac_norm.flatten(), bins = logbins, density = True, log = True)
+    plt.xscale('log')
+    plt.grid(True)
+
+    save_figure(fig, dpi, dir_path_img, "histogram_" + fname_img)
+    save_figure(fig, dpi, "", "histogram_jacobian_visualization.png")
+
+    # close the plot handle
+    plt.close('all')
+
+
+def compute_and_save_heatmap_plot(index, model, device, X_state_train, metrics_test, dpi, n_one_dim, dir_path_img, fname_img):
+
+    X_state_train = X_state_train.detach().cpu()
+
+    test_terminal_energy_mean = metrics_test[0].detach().cpu()
+    test_terminal_energy_std = metrics_test[1].detach().cpu()
+
+    alpha = 0.5
+    alpha_train_samples = 0.25
+
+    dimX = np.linspace(LIMITS_HEATMAP[0][0], LIMITS_HEATMAP[0][1], n_one_dim)
+    dimY = np.linspace(LIMITS_HEATMAP[1][0], LIMITS_HEATMAP[1][1], n_one_dim)
+
+    dimX, dimY = np.meshgrid(dimX, dimY)
+
+    x_state = torch.tensor(np.stack((dimX.flatten(), dimY.flatten()), axis = -1)).to(device)
+
+    terminal_energy = torch.zeros((x_state.shape[0])).to(device)
+
+    with torch.no_grad() :
+
+        if n_one_dim > 100 :
+
+            n_splits = 100
+
+            delta = n_one_dim*n_one_dim // n_splits
+
+            for split in range(n_splits):
+                energy_tmp, constraint_tmp, terminal_position_distance_tmp, _ = compute_energy(model, x_state[split*delta:(split+1)*delta])
+                terminal_energy[split*delta:(split+1)*delta] = terminal_position_distance_tmp #energy_tmp
+
+        else :
+
+            energy, constraint, terminal_position_distance, _ = compute_energy(model, x_state)
+            terminal_energy = terminal_position_distance
+
+    terminal_energy = np.array(terminal_energy.detach().cpu().reshape((n_one_dim, n_one_dim)).tolist())
+    terminal_energy_min = terminal_energy.min()
+    terminal_energy_max = terminal_energy.max()
+
+    # plot
+
+    fig, ax = plt.subplots()
+
+    plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
+
+    ax.set_aspect(aspect = 'equal', adjustable = 'box')
+
+    ax.set_title(
+        f'\nTerminal Energy Landscape in Meters\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index+1}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
+        pad = 5
+    )
+
+    ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
+    c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap = 'RdBu', shading = 'gouraud', norm = matplotlib.colors.LogNorm(vmin = terminal_energy_min, vmax = terminal_energy_max))
+
+    ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms = 2.0, marker = 'o', color = 'k', ls = '', alpha = alpha_train_samples)
+
+    cb = fig.colorbar(c, ax = ax, extend = 'max')
+    cb.ax.plot([0, 1], [test_terminal_energy_mean]*2, 'k', alpha = alpha, lw = 8.0)
+    cb.ax.plot([0, 1], [test_terminal_energy_mean + test_terminal_energy_std]*2, 'k', alpha = alpha, lw = 3.0)
+    cb.ax.plot([0, 1], [test_terminal_energy_mean - test_terminal_energy_std]*2, 'k', alpha = alpha, lw = 3.0)
+
+    if SAMPLE_CIRCLE :
+        circleInner = plt.Circle((0.0, 0.0), radius = RADIUS_INNER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
+        circleOuter = plt.Circle((0.0, 0.0), radius = RADIUS_OUTER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
+
+    if LIMITS_HEATMAP != LIMITS :
+        rectangle = plt.Rectangle(xy = (LIMITS[0][0], LIMITS[1][0]), width = LIMITS[0][1]-LIMITS[0][0], height = LIMITS[1][1]-LIMITS[1][0], color = 'orange', fill = False, lw = 4.0, alpha = alpha)
+
+    save_figure(fig, dpi, dir_path_img, "no_train_region_" + fname_img)
+
+    legend_entries = [
+            matplotlib.lines.Line2D([0], [0], lw = 0.0, marker = 'o', color = 'k', alpha = alpha_train_samples, markersize = 10.0, label = 'Train Samples'),
+            matplotlib.patches.Patch(color = 'k', alpha = alpha, label = 'Test Mean ± Std')
+        ]
+
+    if LIMITS_HEATMAP != LIMITS or SAMPLE_CIRCLE:
+
+        legend_entries = legend_entries + [matplotlib.patches.Patch(color = 'orange', alpha = alpha, label = 'Sampling Area')]
+
+        if SAMPLE_CIRCLE :
+            ax.add_patch(circleInner)
+            ax.add_patch(circleOuter)
+
+        if LIMITS_HEATMAP != LIMITS:
+            ax.add_patch(rectangle)
+
+    plt.legend(loc = 'upper right', handles = legend_entries)
+
+    save_figure(fig, dpi, dir_path_img, fname_img)
+
+    save_figure(fig, dpi, "", "heatmap.png")
+
+    # transform the final plot into an array to save on tensorboard
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches = "tight", dpi=dpi)
+    buf.seek(0)
+    img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
+    buf.close()
+    img = cv2.imdecode(img_arr, 1)
+    img_arr = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+ 
+    # close the plot handle
+    plt.close('all')
+
+    fig, ax = plt.subplots()
+
+    plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
+
+    ax.set_title(
+        f'\nTerminal Energy Histogram\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index+1}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
+        pad = 5
+    )
+
+    hist, bins = np.histogram(terminal_energy.flatten(), bins = int(max(10, (n_one_dim*n_one_dim)/25.0)))
+    logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
+    ax.hist(x = terminal_energy.flatten(), bins = logbins, density = True, log = True)
+    plt.xscale('log')
+    plt.grid(True)
+
+    save_figure(fig, dpi, dir_path_img, "histogram_" + fname_img)
+    save_figure(fig, dpi, "", "histogram_heatmap.png")
+
+    # close the plot handle
+    plt.close('all')
+
+    return img_arr
 
 
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
@@ -898,7 +905,7 @@ X_state_train_all = torch.tensor([compute_sample() for _ in range(N_SAMPLES_TRAI
 X_state_val = torch.tensor([compute_sample() for _ in range(N_SAMPLES_VAL)], dtype = DTYPE_TORCH).to(device)
 X_state_test = torch.tensor([compute_sample() for _ in range(N_SAMPLES_TEST)], dtype = DTYPE_TORCH).to(device)
 
-compute_and_save_samples_plot(X_state_train_all.detach().cpu(), X_state_val.detach().cpu(), X_state_test.detach().cpu(), dir_path_id_img_samples, "samples_plot.jpg")
+compute_and_save_samples_plot(X_state_train_all.detach().cpu(), X_state_val.detach().cpu(), X_state_test.detach().cpu(), dir_path_id_plots, "samples_plot.jpg")
 
 print("\nTraining Starts!\n")
 
@@ -997,27 +1004,25 @@ for j in range(N_ITERATIONS) :
                 tb_writer.add_scalar('Max Test Terminal Position Distance [m]', metrics_test[2].detach().cpu(), nb_actual_iterations)
 
         plot_dpi = SAVEFIG_DPI_FINAL if j == N_ITERATIONS - 1 else SAVEFIG_DPI
-        n_one_direction = 1000 if j == N_ITERATIONS - 1 else 50
+        n_one_dim = 1000 if j == N_ITERATIONS - 1 else 50
         jacobian_visualization_name = "jacobian_visualization_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "jacobian_visualization_{}.png".format(nb_actual_iterations)
         joint_plot_name = "joint_plot_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "joint_plot_{}.png".format(nb_actual_iterations)
         heatmap_name = "heatmap_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "heatmap_{}.png".format(nb_actual_iterations)
 
-        plot_metric = metrics_val
+        heatmap_metric = metrics_val
         if j == N_ITERATIONS - 1 :
-            plot_metric = metrics_test
-
+            heatmap_metric = metrics_test
+    
         tic = time.perf_counter()
 
-        #compute_and_save_jacobian_visualization(model, device, X_state_train, heatmap_dpi, min(200, n_one_direction), dir_path_id_jacobian_visualization, jacobian_visualization_name)
-        #compute_and_save_joint_plot(model, device, heatmap_dpi, n_one_direction, dir_path_id_joint_plot, joint_plot_name)
+        compute_and_save_joint_plot(model, device, plot_dpi, n_one_dim, dir_path_id_plots, joint_plot_name)
+        compute_and_save_jacobian_visualization(j, model, device, X_state_train, plot_dpi, n_one_dim, dir_path_id_plots, jacobian_visualization_name)
+        image_tensor = compute_and_save_heatmap_plot(j, model, device, X_state_train, heatmap_metric, plot_dpi, n_one_dim, dir_path_id_plots, heatmap_name)
+        tb_writer.add_image("heatmap", img_tensor = image_tensor, global_step = nb_actual_iterations, dataformats = 'HWC')
 
-        image_tensor = compute_and_save_plots(model, device, X_state_train, plot_metric, plot_dpi, n_one_direction, dir_path_id_plots, heatmap_name)
-        
         toc = time.perf_counter()
 
         print(f"{toc - tic:0.2f} [s] for image_tensor = compute_and_save_heatmap_plot(...)")
-
-        tb_writer.add_image("heatmap", img_tensor = image_tensor, global_step = nb_actual_iterations, dataformats = 'HWC')
 
     toc_loop = time.perf_counter()
     time_measure_tmp = (toc_loop - tic_loop)
