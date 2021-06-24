@@ -1,8 +1,6 @@
 #!/bin/python3
 
 import os
-import io
-import cv2
 import sys
 import math
 import time
@@ -64,9 +62,6 @@ for c in char_replace :
 dir_path_id = pathlib.Path(dir_path_id_partial, identifier_string + "_" + dtstring)
 dir_path_id_model = pathlib.Path(dir_path_id, "model")
 dir_path_id_plots = pathlib.Path(dir_path_id, "plots")
-dir_path_id_img_val = pathlib.Path(dir_path_id, "img_val")
-dir_path_id_img_train = pathlib.Path(dir_path_id, "img_train")
-dir_path_id_img_test = pathlib.Path(dir_path_id, "img_test")
 
 N_SAMPLES_TRAIN = 1000
 N_SAMPLES_VAL = 1000
@@ -76,7 +71,7 @@ N_DIM_THETA = 2
 N_DIM_X = 2
 N_DIM_X_STATE = 1*N_DIM_X
 N_TRAJOPT = 1
-N_ITERATIONS = 50000
+N_ITERATIONS = 500
 
 NN_DIM_IN = 1*N_DIM_X_STATE
 NN_DIM_OUT = 2*N_DIM_THETA*N_TRAJOPT
@@ -91,8 +86,8 @@ SAMPLE_CIRCLE = True
 
 LIMITS = [[-1.0, 1.0], [-1.0, 1.0]]
 
-LIMITS_HEATMAP = LIMITS
-LIMITS_HEATMAP = [[-1.0, 1.0], [-1.0, 1.0]]
+LIMITS_PLOTS = LIMITS
+LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0]]
 
 LENGTHS = N_DIM_THETA*[1.0/N_DIM_THETA]
 
@@ -104,8 +99,8 @@ LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99985 # for 50k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
 
 TIME_MEASURE_UPDATE = 100
-TENSORBOARD_UPDATE = 5000
-FK_VISUALIZATION_UPDATE = 10000
+TENSORBOARD_UPDATE = 500
+PLOT_UPATE = 10*TENSORBOARD_UPDATE
 
 
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
@@ -291,18 +286,6 @@ def initialize_directories():
 
         dir_path_id_model.mkdir()
 
-    if not dir_path_id_img_val.exists() :
-
-        dir_path_id_img_val.mkdir()
-
-    if not dir_path_id_img_train.exists() :
-
-        dir_path_id_img_train.mkdir()
-
-    if not dir_path_id_img_test.exists() :
-        
-        dir_path_id_img_test.mkdir()
-
 
 def compute_dloss_dW(model):
 
@@ -485,9 +468,7 @@ def compute_energy(model, x_state):
     return energy, constraint_bound, terminal_position_distance, x_hat_fk_chain
 
 
-def compute_loss(model, x_state, iteration_index, is_visualize, fname, dir_path):
-
-    n_batch = x_state.shape[0]
+def compute_loss(model, x_state):
 
     energy, constraint, terminal_position_distance, x_hat_fk_chain = compute_energy(model, x_state)
 
@@ -496,26 +477,6 @@ def compute_loss(model, x_state, iteration_index, is_visualize, fname, dir_path)
     metric0 = torch.mean(terminal_position_distance)
     metric1 = torch.std(terminal_position_distance)
     metric2 = torch.max(terminal_position_distance)
-
-    if is_visualize :
-
-        index_batch_worst = np.argmax(energy.detach().tolist())
-
-        visualize_trajectory_and_save_image(
-            x_state[index_batch_worst].detach().tolist(),
-            x_hat_fk_chain[index_batch_worst].detach().tolist(),
-            dir_path,
-            fname + "_worst_{:d}.jpg".format(iteration_index+1)
-        )
-
-        index_batch_random = random.randint(0, n_batch-1)
-
-        visualize_trajectory_and_save_image(
-            x_state[index_batch_random].detach().tolist(),
-            x_hat_fk_chain[index_batch_random].detach().tolist(),
-            dir_path,
-            fname + "_random_{:d}.jpg".format(iteration_index+1)
-        )
 
     return loss, [metric0, metric1, metric2]
 
@@ -526,12 +487,41 @@ def save_model(model, iterations, string_path, string_dict_only, string_full):
     print("{} Saved Current State for Evaluation.\n".format(iterations))
 
 
+def compute_and_save_robot_plot(model, x_state, index, fname, dir_path):
+
+    n_batch = x_state.shape[0]
+
+    energy, constraint, terminal_position_distance, x_hat_fk_chain = compute_energy(model, x_state)
+
+    index_batch_worst = np.argmax(energy.detach().tolist())
+
+    visualize_trajectory_and_save_image(
+        x_state[index_batch_worst].detach().tolist(),
+        x_hat_fk_chain[index_batch_worst].detach().tolist(),
+        dir_path,
+        fname + "_worst_iteration_{:d}.jpg".format(index+1)
+    )
+
+    nb = 10
+
+    for i in range(nb) :
+
+        index_batch_random = random.randrange(0, n_batch, 1)
+
+        visualize_trajectory_and_save_image(
+            x_state[index_batch_random].detach().tolist(),
+            x_hat_fk_chain[index_batch_random].detach().tolist(),
+            dir_path,
+            fname + "_random_{:d}_of_{:d}_iteration_{:d}.jpg".format(i+1, nb, index+1)
+        )
+
+
 def compute_and_save_joint_plot(model, device, dpi, n_one_dim, dir_path_img, fname_img):
 
     alpha = 0.5
 
-    dimX = np.linspace(LIMITS_HEATMAP[0][0], LIMITS_HEATMAP[0][1], n_one_dim)
-    dimY = np.linspace(LIMITS_HEATMAP[1][0], LIMITS_HEATMAP[1][1], n_one_dim)
+    dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
+    dimY = np.linspace(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1], n_one_dim)
 
     dimX, dimY = np.meshgrid(dimX, dimY)
 
@@ -583,7 +573,8 @@ def compute_and_save_joint_plot(model, device, dpi, n_one_dim, dir_path_img, fna
 
     axes[0].axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
 
-    c = axes[0].pcolormesh(dimX, dimY, theta_hat_1, cmap = 'twilight', shading = 'gouraud', vmin = rad_min, vmax = rad_max)
+    c = axes[0].pcolormesh(dimX, dimY, theta_hat_1, cmap = 'RdYlBu', shading = 'gouraud', vmin = rad_min, vmax = rad_max)
+    #c = axes[0].pcolormesh(dimX, dimY, theta_hat_1, cmap = 'twilight', shading = 'gouraud', vmin = rad_min, vmax = rad_max)
 
     axes[1].set_aspect(aspect = 'equal', adjustable = 'box')
 
@@ -605,13 +596,13 @@ def compute_and_save_joint_plot(model, device, dpi, n_one_dim, dir_path_img, fna
         circleInner2 = plt.Circle((0.0, 0.0), radius = RADIUS_INNER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
         circleOuter2 = plt.Circle((0.0, 0.0), radius = RADIUS_OUTER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
 
-    if LIMITS_HEATMAP != LIMITS :
+    if LIMITS_PLOTS != LIMITS :
         rectangle1 = plt.Rectangle(xy = (LIMITS[0][0], LIMITS[1][0]), width = LIMITS[0][1]-LIMITS[0][0], height = LIMITS[1][1]-LIMITS[1][0], color = 'orange', fill = False, lw = 4.0, alpha = alpha)
         rectangle2 = plt.Rectangle(xy = (LIMITS[0][0], LIMITS[1][0]), width = LIMITS[0][1]-LIMITS[0][0], height = LIMITS[1][1]-LIMITS[1][0], color = 'orange', fill = False, lw = 4.0, alpha = alpha)
     
     save_figure(fig, dpi, dir_path_img, "no_train_region_" + fname_img)
 
-    if LIMITS_HEATMAP != LIMITS or SAMPLE_CIRCLE:
+    if LIMITS_PLOTS != LIMITS or SAMPLE_CIRCLE:
 
         if SAMPLE_CIRCLE :
             axes[0].add_patch(circleInner1)
@@ -619,27 +610,27 @@ def compute_and_save_joint_plot(model, device, dpi, n_one_dim, dir_path_img, fna
             axes[1].add_patch(circleInner2)
             axes[1].add_patch(circleOuter2)
 
-        if LIMITS_HEATMAP != LIMITS:
+        if LIMITS_PLOTS != LIMITS:
             axes[0].add_patch(rectangle1)
             axes[1].add_patch(rectangle2)
 
     save_figure(fig, dpi, dir_path_img, fname_img)
 
-    save_figure(fig, dpi, "", "joint_plot.png")
+    save_figure(fig, dpi, "", "joint_plot_2d_ik.png")
 
     # close the plot handle
     plt.close()
 
 
-def compute_and_save_jacobian_visualization(index, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img):
+def compute_and_save_jacobian_plot(index, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img):
 
     X_state_train = X_state_train.detach().cpu()
 
     alpha = 0.5
     alpha_train_samples = 0.25
 
-    dimX = np.linspace(LIMITS_HEATMAP[0][0], LIMITS_HEATMAP[0][1], n_one_dim)
-    dimY = np.linspace(LIMITS_HEATMAP[1][0], LIMITS_HEATMAP[1][1], n_one_dim)
+    dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
+    dimY = np.linspace(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1], n_one_dim)
 
     dimX, dimY = np.meshgrid(dimX, dimY)
 
@@ -682,14 +673,14 @@ def compute_and_save_jacobian_visualization(index, model, device, X_state_train,
         circleInner = plt.Circle((0.0, 0.0), radius = RADIUS_INNER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
         circleOuter = plt.Circle((0.0, 0.0), radius = RADIUS_OUTER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
 
-    if LIMITS_HEATMAP != LIMITS :
+    if LIMITS_PLOTS != LIMITS :
         rectangle = plt.Rectangle(xy = (LIMITS[0][0], LIMITS[1][0]), width = LIMITS[0][1]-LIMITS[0][0], height = LIMITS[1][1]-LIMITS[1][0], color = 'orange', fill = False, lw = 4.0, alpha = alpha)
 
     save_figure(fig, dpi, dir_path_img, "no_train_region_" + fname_img)
 
     legend_entries = []
 
-    if LIMITS_HEATMAP != LIMITS or SAMPLE_CIRCLE:
+    if LIMITS_PLOTS != LIMITS or SAMPLE_CIRCLE:
 
         legend_entries = legend_entries + [matplotlib.patches.Patch(color = 'orange', alpha = alpha, label = 'Sampling Area')]
 
@@ -697,37 +688,15 @@ def compute_and_save_jacobian_visualization(index, model, device, X_state_train,
             ax.add_patch(circleInner)
             ax.add_patch(circleOuter)
 
-        if LIMITS_HEATMAP != LIMITS:
+        if LIMITS_PLOTS != LIMITS:
             ax.add_patch(rectangle)
 
     plt.legend(loc = 'upper right', handles = legend_entries)
 
     save_figure(fig, dpi, dir_path_img, fname_img)
 
-    save_figure(fig, dpi, "", "jacobian_visualization.png")
+    save_figure(fig, dpi, "", "jacobian_plot_2d_ik.png")
  
-    # close the plot handle
-    plt.close('all')
-
-    fig, ax = plt.subplots()
-
-    plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
-
-    ax.set_title(
-        f'\nJacobian Frobenius Norm Histogram\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index+1}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
-        fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
-        pad = 5
-    )
-
-    hist, bins = np.histogram(jac_norm.flatten(), bins = int(max(10, (n_one_dim*n_one_dim)/25.0)))
-    logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
-    ax.hist(x = jac_norm.flatten(), bins = logbins, density = True, log = True)
-    plt.xscale('log')
-    plt.grid(True)
-
-    save_figure(fig, dpi, dir_path_img, "histogram_" + fname_img)
-    save_figure(fig, dpi, "", "histogram_jacobian_visualization.png")
-
     # close the plot handle
     plt.close('all')
 
@@ -742,8 +711,8 @@ def compute_and_save_heatmap_plot(index, model, device, X_state_train, metrics_t
     alpha = 0.5
     alpha_train_samples = 0.25
 
-    dimX = np.linspace(LIMITS_HEATMAP[0][0], LIMITS_HEATMAP[0][1], n_one_dim)
-    dimY = np.linspace(LIMITS_HEATMAP[1][0], LIMITS_HEATMAP[1][1], n_one_dim)
+    dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
+    dimY = np.linspace(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1], n_one_dim)
 
     dimX, dimY = np.meshgrid(dimX, dimY)
 
@@ -800,17 +769,17 @@ def compute_and_save_heatmap_plot(index, model, device, X_state_train, metrics_t
         circleInner = plt.Circle((0.0, 0.0), radius = RADIUS_INNER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
         circleOuter = plt.Circle((0.0, 0.0), radius = RADIUS_OUTER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
 
-    if LIMITS_HEATMAP != LIMITS :
+    if LIMITS_PLOTS != LIMITS :
         rectangle = plt.Rectangle(xy = (LIMITS[0][0], LIMITS[1][0]), width = LIMITS[0][1]-LIMITS[0][0], height = LIMITS[1][1]-LIMITS[1][0], color = 'orange', fill = False, lw = 4.0, alpha = alpha)
 
-    save_figure(fig, dpi, dir_path_img, "no_train_region_" + fname_img)
+    #save_figure(fig, dpi, dir_path_img, "no_train_region_" + fname_img)
 
     legend_entries = [
             matplotlib.lines.Line2D([0], [0], lw = 0.0, marker = 'o', color = 'k', alpha = alpha_train_samples, markersize = 10.0, label = 'Train Samples'),
             matplotlib.patches.Patch(color = 'k', alpha = alpha, label = 'Test Mean ± Std')
         ]
 
-    if LIMITS_HEATMAP != LIMITS or SAMPLE_CIRCLE:
+    if LIMITS_PLOTS != LIMITS or SAMPLE_CIRCLE:
 
         legend_entries = legend_entries + [matplotlib.patches.Patch(color = 'orange', alpha = alpha, label = 'Sampling Area')]
 
@@ -818,27 +787,67 @@ def compute_and_save_heatmap_plot(index, model, device, X_state_train, metrics_t
             ax.add_patch(circleInner)
             ax.add_patch(circleOuter)
 
-        if LIMITS_HEATMAP != LIMITS:
+        if LIMITS_PLOTS != LIMITS:
             ax.add_patch(rectangle)
 
     plt.legend(loc = 'upper right', handles = legend_entries)
 
     save_figure(fig, dpi, dir_path_img, fname_img)
+    save_figure(fig, dpi, "", "heatmap_plot_2d_ik.png")
 
-    save_figure(fig, dpi, "", "heatmap.png")
-
-    # transform the final plot into an array to save on tensorboard
-
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches = "tight", dpi=dpi)
-    buf.seek(0)
-    img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
-    buf.close()
-    img = cv2.imdecode(img_arr, 1)
-    img_arr = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
- 
     # close the plot handle
     plt.close('all')
+
+
+def compute_and_save_jacobian_histogram(index, model, X_samples, dpi, dir_path_img, fname_img):
+
+    n_samples = X_samples.shape[0]
+
+    jac = torch.zeros(size = (n_samples, N_TRAJOPT*N_DIM_THETA, N_DIM_X)).to(X_samples.device)
+
+    for i in range(n_samples) :
+        jac[i] = torch.reshape(torch.autograd.functional.jacobian(model, X_samples[i:i+1], create_graph=False, strict=False), shape = (N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+
+    jac_norm = torch.norm(jac, p = "fro", dim = -1)
+    jac_norm = np.array(jac_norm.detach().cpu().tolist())
+
+    fig, ax = plt.subplots()
+
+    plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
+
+    ax.set_title(
+        f'\nJacobian Frobenius Norm Histogram\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index+1}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
+        pad = 5
+    )
+
+    arr = jac_norm.flatten() if len(jac_norm.flatten()) < 1000 else jac_norm.flatten()[:1000]
+
+    hist, bins = np.histogram(arr, bins = 25)
+    logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
+    ax.hist(x = arr, bins = logbins, density = True, log = True)
+    plt.xscale('log')
+    plt.grid(True)
+
+    save_figure(fig, dpi, dir_path_img, "histogram_" + fname_img)
+    save_figure(fig, dpi, "", "jacobian_histogram_2d_ik.png")
+
+    # close the plot handle
+    plt.close('all')
+
+
+def compute_and_save_heatmap_histogram(index, model, X_samples, metrics, dpi, dir_path_img, fname_img):
+
+    n_samples = X_samples.shape[0]
+
+    terminal_energy_mean = metrics[0].detach().cpu()
+    terminal_energy_std = metrics[1].detach().cpu()
+
+    terminal_energy = torch.zeros((n_samples)).to(X_samples.device)
+
+    energy, constraint, terminal_position_distance, _ = compute_energy(model, X_samples)
+
+    terminal_energy = np.array(terminal_position_distance.detach().cpu().tolist())
 
     fig, ax = plt.subplots()
 
@@ -850,19 +859,19 @@ def compute_and_save_heatmap_plot(index, model, device, X_state_train, metrics_t
         pad = 5
     )
 
-    hist, bins = np.histogram(terminal_energy.flatten(), bins = int(max(10, (n_one_dim*n_one_dim)/25.0)))
+    arr = terminal_energy.flatten()
+
+    hist, bins = np.histogram(arr, bins = 25)
     logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
-    ax.hist(x = terminal_energy.flatten(), bins = logbins, density = True, log = True)
+    ax.hist(x = arr, bins = logbins, density = True, log = True)
     plt.xscale('log')
     plt.grid(True)
 
     save_figure(fig, dpi, dir_path_img, "histogram_" + fname_img)
-    save_figure(fig, dpi, "", "histogram_heatmap.png")
+    save_figure(fig, dpi, "", "heatmap_histogram_2d_ik.png")
 
     # close the plot handle
     plt.close('all')
-
-    return img_arr
 
 
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
@@ -957,10 +966,7 @@ for j in range(N_ITERATIONS) :
 
                 distance_index += 1
 
-
-    is_visualize = True if nb_actual_iterations % FK_VISUALIZATION_UPDATE == 0 else False
-
-    [loss_train, metrics_train] = compute_loss(model, X_state_train, nb_actual_iterations, is_visualize, "train", dir_path_id_img_train)
+    [loss_train, metrics_train] = compute_loss(model, X_state_train)
 
     optimizer.zero_grad()
     loss_train.backward()
@@ -981,7 +987,7 @@ for j in range(N_ITERATIONS) :
 
             dloss_train_dW = compute_dloss_dW(model)
 
-            [loss_val, metrics_val] = compute_loss(model, X_state_val, nb_actual_iterations, is_visualize, "val", dir_path_id_img_val)
+            [loss_val, metrics_val] = compute_loss(model, X_state_val)
 
             tb_writer.add_scalar('Learning Rate', current_lr, nb_actual_iterations)
             tb_writer.add_scalar('Train Loss', loss_train.detach().cpu(), nb_actual_iterations)
@@ -996,33 +1002,62 @@ for j in range(N_ITERATIONS) :
 
             if j == N_ITERATIONS - 1 :
 
-                [loss_test, metrics_test] = compute_loss(model, X_state_test, nb_actual_iterations, is_visualize, "test", dir_path_id_img_test)
+                [loss_test, metrics_test] = compute_loss(model, X_state_test)
 
                 tb_writer.add_scalar('Test Loss', loss_test.detach().cpu(), nb_actual_iterations)
                 tb_writer.add_scalar('Mean Test Terminal Position Distance [m]', metrics_test[0].detach().cpu(), nb_actual_iterations)
                 tb_writer.add_scalar('Stddev Test Terminal Position Distance [m]', metrics_test[1].detach().cpu(), nb_actual_iterations)
                 tb_writer.add_scalar('Max Test Terminal Position Distance [m]', metrics_test[2].detach().cpu(), nb_actual_iterations)
 
-        plot_dpi = SAVEFIG_DPI_FINAL if j == N_ITERATIONS - 1 else SAVEFIG_DPI
-        n_one_dim = 1000 if j == N_ITERATIONS - 1 else 50
-        jacobian_visualization_name = "jacobian_visualization_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "jacobian_visualization_{}.png".format(nb_actual_iterations)
-        joint_plot_name = "joint_plot_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "joint_plot_{}.png".format(nb_actual_iterations)
-        heatmap_name = "heatmap_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "heatmap_{}.png".format(nb_actual_iterations)
+        if nb_actual_iterations % PLOT_UPATE == 0 or j == 0 or j == N_ITERATIONS - 1 :
 
-        heatmap_metric = metrics_val
-        if j == N_ITERATIONS - 1 :
-            heatmap_metric = metrics_test
-    
-        tic = time.perf_counter()
+            n_one_dim = 1000 if j == N_ITERATIONS - 1 else 50
+            plot_dpi = SAVEFIG_DPI_FINAL if j == N_ITERATIONS - 1 else SAVEFIG_DPI
+            heatmap_plot_name = "heatmap_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "heatmap_{}.png".format(nb_actual_iterations)
+            joint_plot_name = "joint_plot_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "joint_plot_{}.png".format(nb_actual_iterations)
+            jacobian_plot_name = "jacobian_visualization_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "jacobian_visualization_{}.png".format(nb_actual_iterations)
 
-        compute_and_save_joint_plot(model, device, plot_dpi, n_one_dim, dir_path_id_plots, joint_plot_name)
-        compute_and_save_jacobian_visualization(j, model, device, X_state_train, plot_dpi, n_one_dim, dir_path_id_plots, jacobian_visualization_name)
-        image_tensor = compute_and_save_heatmap_plot(j, model, device, X_state_train, heatmap_metric, plot_dpi, n_one_dim, dir_path_id_plots, heatmap_name)
-        tb_writer.add_image("heatmap", img_tensor = image_tensor, global_step = nb_actual_iterations, dataformats = 'HWC')
+            metrics = metrics_val
+            X_samples = X_state_val
+            if j == N_ITERATIONS - 1 :
+                metrics = metrics_test
+                X_samples = X_state_test
 
-        toc = time.perf_counter()
+            tic = time.perf_counter()
 
-        print(f"{toc - tic:0.2f} [s] for image_tensor = compute_and_save_heatmap_plot(...)")
+            compute_and_save_joint_plot(model, device, plot_dpi, n_one_dim, dir_path_id_plots, joint_plot_name)
+
+            toc = time.perf_counter()
+            print(f"{toc - tic:0.2f} [s] for compute_and_save_joint_plot(...)")
+
+            tic = time.perf_counter()
+
+            compute_and_save_heatmap_plot(j, model, device, X_state_train, metrics, plot_dpi, n_one_dim, dir_path_id_plots, heatmap_plot_name)
+
+            toc = time.perf_counter()
+            print(f"{toc - tic:0.2f} [s] for compute_and_save_heatmap_plot(...)")
+
+            tic = time.perf_counter()
+
+            compute_and_save_jacobian_plot(j, model, device, X_state_train, plot_dpi, min(200, n_one_dim), dir_path_id_plots, jacobian_plot_name)
+
+            toc = time.perf_counter()
+            print(f"{toc - tic:0.2f} [s] for compute_and_save_jacobian_plot(...)")
+        
+            tic = time.perf_counter()
+
+            compute_and_save_heatmap_histogram(j, model, X_samples, metrics, plot_dpi, dir_path_id_plots, heatmap_plot_name)
+
+            toc = time.perf_counter()
+            print(f"{toc - tic:0.2f} [s] for compute_and_save_heatmap_histogram(...)")
+
+            tic = time.perf_counter()
+
+            compute_and_save_jacobian_histogram(j, model, X_samples, plot_dpi, dir_path_id_plots, jacobian_plot_name)
+            
+            toc = time.perf_counter()
+
+            print(f"{toc - tic:0.2f} [s] for compute_and_save_jacobian_histogram(...)")
 
     toc_loop = time.perf_counter()
     time_measure_tmp = (toc_loop - tic_loop)
@@ -1030,6 +1065,8 @@ for j in range(N_ITERATIONS) :
 
     if nb_actual_iterations % TIME_MEASURE_UPDATE == 0 :
         print(f"{nb_actual_iterations} iterations {time_measure_tmp:0.2f} [s] (total {time_measure:0.2f} [s])")
+
+compute_and_save_robot_plot(model, X_state_test, j, "robot_plot", dir_path_id_plots)
 
 print("\nTraining Process Completed.\n")
 
