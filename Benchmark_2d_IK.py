@@ -42,6 +42,15 @@ if SAMPLING_MODE == 2 : SAMPLING_STRING = "Expansion Sampling"
 CONSTRAINED_STRING = "Not Constrained"
 if IS_CONSTRAINT: CONSTRAINED_STRING = "Constrained"
 
+NAME_HELPER = "2d_ik_"
+
+JOINT_PLOT_NAME = NAME_HELPER + "joint_plot.png"
+HEATMAP_PLOT_NAME = NAME_HELPER + "heatmap_plot.png"
+JACOBIAN_PLOT_NAME = NAME_HELPER + "jacobian_plot.png"
+
+HEATMAP_HISTOGRAM_NAME = NAME_HELPER + "heatmap_histogram.png"
+JACOBIAN_HISTOGRAM_NAME = NAME_HELPER + "jacobian_histogram.png"
+
 random.seed(42)
 np.random.seed(42)
 torch.manual_seed(42)
@@ -71,7 +80,7 @@ N_DIM_THETA = 2
 N_DIM_X = 2
 N_DIM_X_STATE = 1*N_DIM_X
 N_TRAJOPT = 1
-N_ITERATIONS = 500
+N_ITERATIONS = 50000
 
 NN_DIM_IN = 1*N_DIM_X_STATE
 NN_DIM_OUT = 2*N_DIM_THETA*N_TRAJOPT
@@ -79,8 +88,8 @@ NN_DIM_IN_TO_OUT = 256
 
 FK_ORIGIN = [0.0, 0.0]
 
-RADIUS_INNER = 0.25
-RADIUS_OUTER = 0.9
+RADIUS_INNER = 0.0
+RADIUS_OUTER = 1.0
 
 SAMPLE_CIRCLE = True
 
@@ -516,7 +525,7 @@ def compute_and_save_robot_plot(model, x_state, index, fname, dir_path):
         )
 
 
-def compute_and_save_joint_plot(model, device, dpi, n_one_dim, dir_path_img, fname_img):
+def compute_and_save_joint_angles_plot(model, device, dpi, n_one_dim, dir_path_img, index, fname_img):
 
     alpha = 0.5
 
@@ -555,40 +564,34 @@ def compute_and_save_joint_plot(model, device, dpi, n_one_dim, dir_path_img, fna
     rad_min = 0.0
     rad_max = 360.0
 
-    theta_hat_1 = theta_hat[:, :,  -1, 0]
-    theta_hat_2 = theta_hat[:, :, -1, 1]
-
     fig, axes = plt.subplots(nrows = 2, ncols = 1, sharex = True)
 
     plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=0.25)
 
-    axes[0].set_aspect(aspect = 'equal', adjustable = 'box')
-    axes[1].set_aspect(aspect = 'equal', adjustable = 'box')
+    c = 0
 
-    axes[0].set_title(
-        '\nJoint 1 Angles [deg]\n',
-        fontdict = {'fontsize': 10, 'fontweight': 'normal', 'horizontalalignment': 'center'},
-        pad = 5
-    )
-
-    axes[0].axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
-
-    c = axes[0].pcolormesh(dimX, dimY, theta_hat_1, cmap = 'RdYlBu', shading = 'gouraud', vmin = rad_min, vmax = rad_max)
-    #c = axes[0].pcolormesh(dimX, dimY, theta_hat_1, cmap = 'twilight', shading = 'gouraud', vmin = rad_min, vmax = rad_max)
-
-    axes[1].set_aspect(aspect = 'equal', adjustable = 'box')
-
-    axes[1].set_title(
-        '\nJoint 2 Angles [deg]\n',
-        fontdict = {'fontsize': 10, 'fontweight': 'normal', 'horizontalalignment': 'center'},
-        pad = 5
-    )
-
-    axes[1].axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
-
-    c = axes[1].pcolormesh(dimX, dimY, theta_hat_2, cmap = 'twilight', shading = 'gouraud', vmin = rad_min, vmax = rad_max)
+    for i in range(2) :
+        
+        axes[i].set_aspect(aspect = 'equal', adjustable = 'box')
+        axes[i].set_title(
+            f'\nJoint {i+1}\n',
+            fontdict = {'fontsize': 8, 'fontweight': 'normal', 'horizontalalignment': 'center'},
+            pad = 5
+        )
+        axes[i].axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
+        c = axes[i].pcolormesh(dimX, dimY, theta_hat[:, :,  -1, i], cmap = 'RdYlBu', shading = 'gouraud', vmin = rad_min, vmax = rad_max)
+        #c = axes[i].pcolormesh(dimX, dimY, theta_hat[:, :,  -1, i], cmap = 'twilight', shading = 'gouraud', vmin = rad_min, vmax = rad_max)
 
     cb = fig.colorbar(c, ax = axes.ravel().tolist(), extend = 'max')
+
+    plt.suptitle(
+        f'\nJoint Angles in Degrees\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        fontsize = 10,
+        fontweight = 'normal',
+        horizontalalignment = 'center',
+        x = 0.825,
+        y = 1.515
+    )
 
     if SAMPLE_CIRCLE :
         circleInner1 = plt.Circle((0.0, 0.0), radius = RADIUS_INNER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
@@ -599,8 +602,6 @@ def compute_and_save_joint_plot(model, device, dpi, n_one_dim, dir_path_img, fna
     if LIMITS_PLOTS != LIMITS :
         rectangle1 = plt.Rectangle(xy = (LIMITS[0][0], LIMITS[1][0]), width = LIMITS[0][1]-LIMITS[0][0], height = LIMITS[1][1]-LIMITS[1][0], color = 'orange', fill = False, lw = 4.0, alpha = alpha)
         rectangle2 = plt.Rectangle(xy = (LIMITS[0][0], LIMITS[1][0]), width = LIMITS[0][1]-LIMITS[0][0], height = LIMITS[1][1]-LIMITS[1][0], color = 'orange', fill = False, lw = 4.0, alpha = alpha)
-    
-    save_figure(fig, dpi, dir_path_img, "no_train_region_" + fname_img)
 
     if LIMITS_PLOTS != LIMITS or SAMPLE_CIRCLE:
 
@@ -614,15 +615,14 @@ def compute_and_save_joint_plot(model, device, dpi, n_one_dim, dir_path_img, fna
             axes[0].add_patch(rectangle1)
             axes[1].add_patch(rectangle2)
 
-    save_figure(fig, dpi, dir_path_img, fname_img)
-
-    save_figure(fig, dpi, "", "joint_plot_2d_ik.png")
+    save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
+    save_figure(fig, dpi, "", fname_img)
 
     # close the plot handle
     plt.close()
 
 
-def compute_and_save_jacobian_plot(index, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img):
+def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim, dir_path_img, index, fname_img):
 
     X_state_train = X_state_train.detach().cpu()
 
@@ -657,7 +657,7 @@ def compute_and_save_jacobian_plot(index, model, device, X_state_train, dpi, n_o
     ax.set_aspect(aspect = 'equal', adjustable = 'box')
 
     ax.set_title(
-        f'\nJacobian Frobenius Norm Landscape\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index+1}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        f'\nJacobian Frobenius Norm Landscape\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
         fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
         pad = 5
     )
@@ -676,7 +676,7 @@ def compute_and_save_jacobian_plot(index, model, device, X_state_train, dpi, n_o
     if LIMITS_PLOTS != LIMITS :
         rectangle = plt.Rectangle(xy = (LIMITS[0][0], LIMITS[1][0]), width = LIMITS[0][1]-LIMITS[0][0], height = LIMITS[1][1]-LIMITS[1][0], color = 'orange', fill = False, lw = 4.0, alpha = alpha)
 
-    save_figure(fig, dpi, dir_path_img, "no_train_region_" + fname_img)
+    #save_figure(fig, dpi, dir_path_img, "no_train_region_" + fname_img)
 
     legend_entries = []
 
@@ -693,20 +693,19 @@ def compute_and_save_jacobian_plot(index, model, device, X_state_train, dpi, n_o
 
     plt.legend(loc = 'upper right', handles = legend_entries)
 
-    save_figure(fig, dpi, dir_path_img, fname_img)
-
-    save_figure(fig, dpi, "", "jacobian_plot_2d_ik.png")
+    save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
+    save_figure(fig, dpi, "", fname_img)
  
     # close the plot handle
     plt.close('all')
 
 
-def compute_and_save_heatmap_plot(index, model, device, X_state_train, metrics_test, dpi, n_one_dim, dir_path_img, fname_img):
+def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, n_one_dim, dir_path_img, index, fname_img):
 
     X_state_train = X_state_train.detach().cpu()
 
-    test_terminal_energy_mean = metrics_test[0].detach().cpu()
-    test_terminal_energy_std = metrics_test[1].detach().cpu()
+    test_terminal_energy_mean = metrics[0].detach().cpu()
+    test_terminal_energy_std = metrics[1].detach().cpu()
 
     alpha = 0.5
     alpha_train_samples = 0.25
@@ -750,7 +749,7 @@ def compute_and_save_heatmap_plot(index, model, device, X_state_train, metrics_t
     ax.set_aspect(aspect = 'equal', adjustable = 'box')
 
     ax.set_title(
-        f'\nTerminal Energy Landscape in Meters\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index+1}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        f'\nTerminal Energy Landscape in Meters\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
         fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
         pad = 5
     )
@@ -792,14 +791,14 @@ def compute_and_save_heatmap_plot(index, model, device, X_state_train, metrics_t
 
     plt.legend(loc = 'upper right', handles = legend_entries)
 
-    save_figure(fig, dpi, dir_path_img, fname_img)
-    save_figure(fig, dpi, "", "heatmap_plot_2d_ik.png")
+    save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
+    save_figure(fig, dpi, "", fname_img)
 
     # close the plot handle
     plt.close('all')
 
 
-def compute_and_save_jacobian_histogram(index, model, X_samples, dpi, dir_path_img, fname_img):
+def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, index, fname_img):
 
     n_samples = X_samples.shape[0]
 
@@ -811,12 +810,15 @@ def compute_and_save_jacobian_histogram(index, model, X_samples, dpi, dir_path_i
     jac_norm = torch.norm(jac, p = "fro", dim = -1)
     jac_norm = np.array(jac_norm.detach().cpu().tolist())
 
+    jac_norm_mean = np.mean(jac_norm)
+    jac_norm_std = np.std(jac_norm)
+
     fig, ax = plt.subplots()
 
     plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
 
     ax.set_title(
-        f'\nJacobian Frobenius Norm Histogram\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index+1}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        f'\nJacobian Frobenius Norm Histogram\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
         fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
         pad = 5
     )
@@ -829,19 +831,21 @@ def compute_and_save_jacobian_histogram(index, model, X_samples, dpi, dir_path_i
     plt.xscale('log')
     plt.grid(True)
 
-    save_figure(fig, dpi, dir_path_img, "histogram_" + fname_img)
-    save_figure(fig, dpi, "", "jacobian_histogram_2d_ik.png")
+    plt.axvline(jac_norm_mean, color='k', linestyle='dashed', linewidth=4)
+    #plt.text(jac_norm_mean*1.1, max_ylim*0.75, 'Mean: {:.2f}'.format(jac_norm_mean))
+    plt.axvline((jac_norm_mean + jac_norm_std), color='k', linestyle='dashed', linewidth=2)
+    plt.axvline((jac_norm_mean - jac_norm_std), color='k', linestyle='dashed', linewidth=2)
+
+    save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
+    save_figure(fig, dpi, "", fname_img)
 
     # close the plot handle
     plt.close('all')
 
 
-def compute_and_save_heatmap_histogram(index, model, X_samples, metrics, dpi, dir_path_img, fname_img):
+def compute_and_save_heatmap_histogram(model, X_samples, dpi, dir_path_img, index, fname_img):
 
     n_samples = X_samples.shape[0]
-
-    terminal_energy_mean = metrics[0].detach().cpu()
-    terminal_energy_std = metrics[1].detach().cpu()
 
     terminal_energy = torch.zeros((n_samples)).to(X_samples.device)
 
@@ -849,12 +853,15 @@ def compute_and_save_heatmap_histogram(index, model, X_samples, metrics, dpi, di
 
     terminal_energy = np.array(terminal_position_distance.detach().cpu().tolist())
 
+    terminal_energy_mean = np.mean(terminal_energy)
+    terminal_energy_std = np.std(terminal_energy)
+
     fig, ax = plt.subplots()
 
     plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
 
     ax.set_title(
-        f'\nTerminal Energy Histogram\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index+1}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        f'\nTerminal Energy Histogram\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
         fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
         pad = 5
     )
@@ -867,8 +874,15 @@ def compute_and_save_heatmap_histogram(index, model, X_samples, metrics, dpi, di
     plt.xscale('log')
     plt.grid(True)
 
-    save_figure(fig, dpi, dir_path_img, "histogram_" + fname_img)
-    save_figure(fig, dpi, "", "heatmap_histogram_2d_ik.png")
+    min_ylim, max_ylim = plt.ylim()
+
+    plt.axvline(terminal_energy_mean, color='k', linestyle='dashed', linewidth=4)
+    #plt.text(terminal_energy_mean*1.1, max_ylim*0.75, 'Mean: {:.2f}'.format(terminal_energy_mean))
+    plt.axvline((terminal_energy_mean + terminal_energy_std), color='k', linestyle='dashed', linewidth=2)
+    plt.axvline((terminal_energy_mean - terminal_energy_std), color='k', linestyle='dashed', linewidth=2)
+
+    save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
+    save_figure(fig, dpi, "", fname_img)
 
     # close the plot handle
     plt.close('all')
@@ -919,19 +933,20 @@ compute_and_save_samples_plot(X_state_train_all.detach().cpu(), X_state_val.deta
 print("\nTraining Starts!\n")
 
 time_measure = 0
-nb_actual_iterations = 0
+cur_index = 0
 diffs = []
 
 X_state_train = 0
+
 distances = 0
-distances_indices_sorted = 0
 distance_index = 0
+distances_indices_sorted = 0
 
 for j in range(N_ITERATIONS) :
 
     tic_loop = time.perf_counter()
 
-    nb_actual_iterations += 1
+    cur_index += 1
     current_lr = optimizer.param_groups[0]['lr']
 
     if SAMPLING_MODE == 0 :
@@ -975,7 +990,7 @@ for j in range(N_ITERATIONS) :
     optimizer.step()
     scheduler.step()
 
-    if nb_actual_iterations % TENSORBOARD_UPDATE == 0 or j == 0 or j == N_ITERATIONS - 1 :
+    if cur_index % TENSORBOARD_UPDATE == 0 or j == 0 or j == N_ITERATIONS - 1 :
 
         loss_val = 0
         loss_test = 0
@@ -989,71 +1004,71 @@ for j in range(N_ITERATIONS) :
 
             [loss_val, metrics_val] = compute_loss(model, X_state_val)
 
-            tb_writer.add_scalar('Learning Rate', current_lr, nb_actual_iterations)
-            tb_writer.add_scalar('Train Loss', loss_train.detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Mean Train Terminal Position Distance [m]', metrics_train[0].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Stddev Train Terminal Position Distance [m]', metrics_train[1].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Max Train Terminal Position Distance [m]', metrics_train[2].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Val Loss', loss_val.detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Mean Val Terminal Position Distance [m]', metrics_val[0].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Stddev Val Terminal Position Distance [m]', metrics_val[1].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Max Val Terminal Position Distance [m]', metrics_val[2].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Loss Gradient Norm', dloss_train_dW, nb_actual_iterations)
+            tb_writer.add_scalar('Learning Rate', current_lr, cur_index)
+            tb_writer.add_scalar('Train Loss', loss_train.detach().cpu(), cur_index)
+            tb_writer.add_scalar('Mean Train Terminal Position Distance [m]', metrics_train[0].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Stddev Train Terminal Position Distance [m]', metrics_train[1].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Max Train Terminal Position Distance [m]', metrics_train[2].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Val Loss', loss_val.detach().cpu(), cur_index)
+            tb_writer.add_scalar('Mean Val Terminal Position Distance [m]', metrics_val[0].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Stddev Val Terminal Position Distance [m]', metrics_val[1].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Max Val Terminal Position Distance [m]', metrics_val[2].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Loss Gradient Norm', dloss_train_dW, cur_index)
 
             if j == N_ITERATIONS - 1 :
 
                 [loss_test, metrics_test] = compute_loss(model, X_state_test)
 
-                tb_writer.add_scalar('Test Loss', loss_test.detach().cpu(), nb_actual_iterations)
-                tb_writer.add_scalar('Mean Test Terminal Position Distance [m]', metrics_test[0].detach().cpu(), nb_actual_iterations)
-                tb_writer.add_scalar('Stddev Test Terminal Position Distance [m]', metrics_test[1].detach().cpu(), nb_actual_iterations)
-                tb_writer.add_scalar('Max Test Terminal Position Distance [m]', metrics_test[2].detach().cpu(), nb_actual_iterations)
+                tb_writer.add_scalar('Test Loss', loss_test.detach().cpu(), cur_index)
+                tb_writer.add_scalar('Mean Test Terminal Position Distance [m]', metrics_test[0].detach().cpu(), cur_index)
+                tb_writer.add_scalar('Stddev Test Terminal Position Distance [m]', metrics_test[1].detach().cpu(), cur_index)
+                tb_writer.add_scalar('Max Test Terminal Position Distance [m]', metrics_test[2].detach().cpu(), cur_index)
 
-        if nb_actual_iterations % PLOT_UPATE == 0 or j == 0 or j == N_ITERATIONS - 1 :
+        if cur_index % PLOT_UPATE == 0 or j == 0 or j == N_ITERATIONS - 1 :
 
             n_one_dim = 1000 if j == N_ITERATIONS - 1 else 50
             plot_dpi = SAVEFIG_DPI_FINAL if j == N_ITERATIONS - 1 else SAVEFIG_DPI
-            heatmap_plot_name = "heatmap_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "heatmap_{}.png".format(nb_actual_iterations)
-            joint_plot_name = "joint_plot_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "joint_plot_{}.png".format(nb_actual_iterations)
-            jacobian_plot_name = "jacobian_visualization_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "jacobian_visualization_{}.png".format(nb_actual_iterations)
 
             metrics = metrics_val
             X_samples = X_state_val
+
             if j == N_ITERATIONS - 1 :
+
                 metrics = metrics_test
                 X_samples = X_state_test
 
             tic = time.perf_counter()
 
-            compute_and_save_joint_plot(model, device, plot_dpi, n_one_dim, dir_path_id_plots, joint_plot_name)
+            compute_and_save_joint_angles_plot(model, device, plot_dpi, n_one_dim, dir_path_id_plots, cur_index, JOINT_PLOT_NAME)
 
             toc = time.perf_counter()
-            print(f"{toc - tic:0.2f} [s] for compute_and_save_joint_plot(...)")
+            print(f"{toc - tic:0.2f} [s] for compute_and_save_joint_angles_plot(...)")
 
             tic = time.perf_counter()
 
-            compute_and_save_heatmap_plot(j, model, device, X_state_train, metrics, plot_dpi, n_one_dim, dir_path_id_plots, heatmap_plot_name)
+            compute_and_save_heatmap_plot(model, device, X_state_train, metrics, plot_dpi, n_one_dim, dir_path_id_plots, cur_index, HEATMAP_PLOT_NAME)
 
             toc = time.perf_counter()
             print(f"{toc - tic:0.2f} [s] for compute_and_save_heatmap_plot(...)")
 
             tic = time.perf_counter()
 
-            compute_and_save_jacobian_plot(j, model, device, X_state_train, plot_dpi, min(200, n_one_dim), dir_path_id_plots, jacobian_plot_name)
+            n_one_dim_jac = 300 if j == N_ITERATIONS - 1 else 30
+            compute_and_save_jacobian_plot(model, device, X_state_train, plot_dpi, n_one_dim_jac, dir_path_id_plots, cur_index, JACOBIAN_PLOT_NAME)
 
             toc = time.perf_counter()
             print(f"{toc - tic:0.2f} [s] for compute_and_save_jacobian_plot(...)")
         
             tic = time.perf_counter()
 
-            compute_and_save_heatmap_histogram(j, model, X_samples, metrics, plot_dpi, dir_path_id_plots, heatmap_plot_name)
+            compute_and_save_heatmap_histogram(model, X_samples, plot_dpi, dir_path_id_plots, cur_index, HEATMAP_HISTOGRAM_NAME)
 
             toc = time.perf_counter()
             print(f"{toc - tic:0.2f} [s] for compute_and_save_heatmap_histogram(...)")
 
             tic = time.perf_counter()
 
-            compute_and_save_jacobian_histogram(j, model, X_samples, plot_dpi, dir_path_id_plots, jacobian_plot_name)
+            compute_and_save_jacobian_histogram(model, X_samples, plot_dpi, dir_path_id_plots, cur_index, JACOBIAN_HISTOGRAM_NAME)
             
             toc = time.perf_counter()
 
@@ -1063,14 +1078,14 @@ for j in range(N_ITERATIONS) :
     time_measure_tmp = (toc_loop - tic_loop)
     time_measure += time_measure_tmp
 
-    if nb_actual_iterations % TIME_MEASURE_UPDATE == 0 :
-        print(f"{nb_actual_iterations} iterations {time_measure_tmp:0.2f} [s] (total {time_measure:0.2f} [s])")
+    if cur_index % TIME_MEASURE_UPDATE == 0 :
+        print(f"{cur_index} iterations {time_measure_tmp:0.2f} [s] (total {time_measure:0.2f} [s])")
 
 compute_and_save_robot_plot(model, X_state_test, j, "robot_plot", dir_path_id_plots)
 
 print("\nTraining Process Completed.\n")
 
-save_model(model, nb_actual_iterations, dir_path_id_model, nn_model_state_dict_only_str, nn_model_full_str)
+save_model(model, cur_index, dir_path_id_model, nn_model_state_dict_only_str, nn_model_full_str)
 
 print("\nAll Done!\n")
 
