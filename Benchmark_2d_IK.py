@@ -877,7 +877,7 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, dir_path_img, inde
     min_ylim, max_ylim = plt.ylim()
 
     plt.axvline(terminal_energy_mean, color='k', linestyle='dashed', linewidth=4)
-    #plt.text(terminal_energy_mean*1.1, max_ylim*0.75, 'Mean: {:.2f}'.format(terminal_energy_mean))
+    plt.text(terminal_energy_mean*1.1, max_ylim*0.75, 'Mean: {:.2f}'.format(terminal_energy_mean))
     plt.axvline((terminal_energy_mean + terminal_energy_std), color='k', linestyle='dashed', linewidth=2)
     plt.axvline((terminal_energy_mean - terminal_energy_std), color='k', linestyle='dashed', linewidth=2)
 
