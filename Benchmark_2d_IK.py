@@ -676,8 +676,6 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
     if LIMITS_PLOTS != LIMITS :
         rectangle = plt.Rectangle(xy = (LIMITS[0][0], LIMITS[1][0]), width = LIMITS[0][1]-LIMITS[0][0], height = LIMITS[1][1]-LIMITS[1][0], color = 'orange', fill = False, lw = 4.0, alpha = alpha)
 
-    #save_figure(fig, dpi, dir_path_img, "no_train_region_" + fname_img)
-
     legend_entries = []
 
     if LIMITS_PLOTS != LIMITS or SAMPLE_CIRCLE:
@@ -705,7 +703,6 @@ def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, n_
     X_state_train = X_state_train.detach().cpu()
 
     test_terminal_energy_mean = metrics[0].detach().cpu()
-    test_terminal_energy_std = metrics[1].detach().cpu()
 
     alpha = 0.5
     alpha_train_samples = 0.25
@@ -761,8 +758,6 @@ def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, n_
 
     cb = fig.colorbar(c, ax = ax, extend = 'max')
     cb.ax.plot([0, 1], [test_terminal_energy_mean]*2, 'k', alpha = alpha, lw = 8.0)
-    cb.ax.plot([0, 1], [test_terminal_energy_mean + test_terminal_energy_std]*2, 'k', alpha = alpha, lw = 3.0)
-    cb.ax.plot([0, 1], [test_terminal_energy_mean - test_terminal_energy_std]*2, 'k', alpha = alpha, lw = 3.0)
 
     if SAMPLE_CIRCLE :
         circleInner = plt.Circle((0.0, 0.0), radius = RADIUS_INNER, color = 'orange', fill = False, lw = 4.0, alpha = alpha)
@@ -770,8 +765,6 @@ def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, n_
 
     if LIMITS_PLOTS != LIMITS :
         rectangle = plt.Rectangle(xy = (LIMITS[0][0], LIMITS[1][0]), width = LIMITS[0][1]-LIMITS[0][0], height = LIMITS[1][1]-LIMITS[1][0], color = 'orange', fill = False, lw = 4.0, alpha = alpha)
-
-    #save_figure(fig, dpi, dir_path_img, "no_train_region_" + fname_img)
 
     legend_entries = [
             matplotlib.lines.Line2D([0], [0], lw = 0.0, marker = 'o', color = 'k', alpha = alpha_train_samples, markersize = 10.0, label = 'Train Samples'),
@@ -810,9 +803,6 @@ def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, ind
     jac_norm = torch.norm(jac, p = "fro", dim = -1)
     jac_norm = np.array(jac_norm.detach().cpu().tolist())
 
-    jac_norm_mean = np.mean(jac_norm)
-    jac_norm_std = np.std(jac_norm)
-
     fig, ax = plt.subplots()
 
     plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
@@ -831,11 +821,6 @@ def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, ind
     plt.xscale('log')
     plt.grid(True)
 
-    plt.axvline(jac_norm_mean, color='k', linestyle='dashed', linewidth=4)
-    #plt.text(jac_norm_mean*1.1, max_ylim*0.75, 'Mean: {:.2f}'.format(jac_norm_mean))
-    plt.axvline((jac_norm_mean + jac_norm_std), color='k', linestyle='dashed', linewidth=2)
-    plt.axvline((jac_norm_mean - jac_norm_std), color='k', linestyle='dashed', linewidth=2)
-
     save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
     save_figure(fig, dpi, "", fname_img)
 
@@ -852,9 +837,6 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, dir_path_img, inde
     energy, constraint, terminal_position_distance, _ = compute_energy(model, X_samples)
 
     terminal_energy = np.array(terminal_position_distance.detach().cpu().tolist())
-
-    terminal_energy_mean = np.mean(terminal_energy)
-    terminal_energy_std = np.std(terminal_energy)
 
     fig, ax = plt.subplots()
 
@@ -873,13 +855,6 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, dir_path_img, inde
     ax.hist(x = arr, bins = logbins, density = True, log = True)
     plt.xscale('log')
     plt.grid(True)
-
-    min_ylim, max_ylim = plt.ylim()
-
-    plt.axvline(terminal_energy_mean, color='k', linestyle='dashed', linewidth=4)
-    plt.text(terminal_energy_mean*1.1, max_ylim*0.75, 'Mean: {:.2f}'.format(terminal_energy_mean))
-    plt.axvline((terminal_energy_mean + terminal_energy_std), color='k', linestyle='dashed', linewidth=2)
-    plt.axvline((terminal_energy_mean - terminal_energy_std), color='k', linestyle='dashed', linewidth=2)
 
     save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
     save_figure(fig, dpi, "", fname_img)
