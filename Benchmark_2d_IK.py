@@ -33,7 +33,7 @@ torch.set_default_dtype(DTYPE_TORCH)
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
 SAMPLING_MODE = 0
-IS_CONSTRAINT = False
+IS_CONSTRAINT = True
 
 SAMPLING_STRING = "Sampling Once"
 if SAMPLING_MODE == 1 : SAMPLING_STRING = "Resampling"
@@ -585,7 +585,7 @@ def compute_and_save_joint_angles_plot(model, device, dpi, n_one_dim, dir_path_i
     cb = fig.colorbar(c, ax = axes.ravel().tolist(), extend = 'max')
 
     plt.suptitle(
-        f'\nJoint Angles in Degrees\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        f'\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n\nJoint Angles in Degrees\n2D Two-Linkage Robot Inverse Kinematics\n',
         fontsize = 10,
         fontweight = 'normal',
         horizontalalignment = 'center',
@@ -657,7 +657,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
     ax.set_aspect(aspect = 'equal', adjustable = 'box')
 
     ax.set_title(
-        f'\nJacobian Frobenius Norm Landscape\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        f'\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n\nJacobian Frobenius Norm Landscape\n2D Two-Linkage Robot Inverse Kinematics\n',
         fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
         pad = 5
     )
@@ -746,7 +746,7 @@ def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, n_
     ax.set_aspect(aspect = 'equal', adjustable = 'box')
 
     ax.set_title(
-        f'\nTerminal Energy Landscape in Meters\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        f'\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n\nTerminal Energy Landscape in Meters\n2D Two-Linkage Robot Inverse Kinematics\n',
         fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
         pad = 5
     )
@@ -808,7 +808,7 @@ def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, ind
     plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
 
     ax.set_title(
-        f'\nJacobian Frobenius Norm Histogram\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        f'\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n\nJacobian Frobenius Norm Histogram\n2D Two-Linkage Robot Inverse Kinematics\n',
         fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
         pad = 5
     )
@@ -843,7 +843,7 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, dir_path_img, inde
     plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
 
     ax.set_title(
-        f'\nTerminal Energy Histogram\n2D Two-Linkage Robot Inverse Kinematics\n\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n',
+        f'\nIteration {index}, {SAMPLING_STRING}, {CONSTRAINED_STRING}\n\nTerminal Energy Histogram\n2D Two-Linkage Robot Inverse Kinematics\n',
         fontdict = {'fontsize': 15, 'fontweight': 'normal', 'horizontalalignment': 'center'},
         pad = 5
     )
