@@ -24,9 +24,11 @@ string_title_jacobian_histogram = f'\nJacobian Frobenius Norm Histogram\n2D Two-
 
 N_DIM_THETA = 2
 N_DIM_X = 2
-N_DIM_X_STATE = 1*N_DIM_X
+
 N_TRAJOPT = 1
-N_ITERATIONS = 50000
+
+N_DIM_X_STATE = 1*N_DIM_X
+
 
 LR_INITIAL = 1e-2
 
@@ -92,39 +94,6 @@ def compute_sample():
     return x
 
 
-def draw_fk_joint(origin, joint_pos, index, alpha):
-
-    plt.arrow(
-        origin[0],
-        origin[1],
-        joint_pos[0][index][0] - origin[0],
-        joint_pos[0][index][1] - origin[1],
-        length_includes_head=True,
-        width=0.005,
-        head_length=0.015,
-        head_width=0.025,
-        fc='tab:blue',
-        ec='tab:blue',
-        alpha=alpha
-    )
-
-    for i in range(1, len(joint_pos), 1):
-
-        plt.arrow(
-            joint_pos[i-1][index][0],
-            joint_pos[i-1][index][1],
-            joint_pos[i][index][0] - joint_pos[i-1][index][0],
-            joint_pos[i][index][1] - joint_pos[i-1][index][1],
-            length_includes_head=True,
-            width=0.0075,
-            head_length=0.015,
-            head_width=0.025,
-            fc='tab:blue',
-            ec='tab:blue',
-            alpha=alpha
-        )
-
-
 def save_figure(figure, dpi, dir_path_img, fname_img):
 
     figure.savefig(
@@ -135,17 +104,17 @@ def save_figure(figure, dpi, dir_path_img, fname_img):
     )
 
 
-def visualize_trajectory_and_save_image(x_state_list, x_hat_fk_chain_list, dir_path_img, fname_img):
+def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, fname_img):
 
-    plt.scatter(x_state_list[0], x_state_list[1], c='r', s=100, zorder=-10)
+    plt.scatter(x_state[0], x_state[1], c='r', s=100, zorder=-10)
 
     for t in range(N_TRAJOPT):
 
         plt.arrow(
             FK_ORIGIN[0],
             FK_ORIGIN[1],
-            x_hat_fk_chain_list[0][t][0] - FK_ORIGIN[0],
-            x_hat_fk_chain_list[0][t][1] - FK_ORIGIN[1],
+            x_hat_fk_chain[0, t, 0] - FK_ORIGIN[0],
+            x_hat_fk_chain[0, t, 1] - FK_ORIGIN[1],
             length_includes_head=True,
             width=0.005,
             head_length=0.015,
@@ -154,16 +123,16 @@ def visualize_trajectory_and_save_image(x_state_list, x_hat_fk_chain_list, dir_p
             ec='tab:blue'
         )
 
-        for i in range(1, len(x_hat_fk_chain_list), 1):
+        for i in range(1, len(x_hat_fk_chain), 1):
 
             plt.scatter(
-                x_hat_fk_chain_list[i-1][t][0], x_hat_fk_chain_list[i-1][t][1], c='0.5', s=5)
+                x_hat_fk_chain[i-1, t, 0], x_hat_fk_chain[i-1, t, 1], c='0.5', s=5)
 
             plt.arrow(
-                x_hat_fk_chain_list[i-1][t][0],
-                x_hat_fk_chain_list[i-1][t][1],
-                x_hat_fk_chain_list[i][t][0] - x_hat_fk_chain_list[i-1][t][0],
-                x_hat_fk_chain_list[i][t][1] - x_hat_fk_chain_list[i-1][t][1],
+                x_hat_fk_chain[i-1, t, 0],
+                x_hat_fk_chain[i-1, t, 1],
+                x_hat_fk_chain[i, t, 0] - x_hat_fk_chain[i-1, t, 0],
+                x_hat_fk_chain[i, t, 1] - x_hat_fk_chain[i-1, t, 1],
                 length_includes_head=True,
                 width=0.0075,
                 head_length=0.015,
@@ -172,8 +141,8 @@ def visualize_trajectory_and_save_image(x_state_list, x_hat_fk_chain_list, dir_p
                 ec='tab:blue'
             )
 
-        plt.scatter(x_hat_fk_chain_list[-1][t][0],
-                    x_hat_fk_chain_list[-1][t][1], c='k', s=25)
+        plt.scatter(x_hat_fk_chain[-1, t, 0],
+                    x_hat_fk_chain[-1, t, 1], c='k', s=25)
 
     plt.scatter(FK_ORIGIN[0], FK_ORIGIN[1], c='0.5', s=5)
 

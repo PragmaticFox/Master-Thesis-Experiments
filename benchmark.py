@@ -12,12 +12,11 @@ import datetime
 import torch
 import numpy as np
 
-import matplotlib
-import matplotlib.pyplot as plt
-
 from torch.utils.tensorboard import SummaryWriter
 
-import IK_2d_two_linkage as experiment
+#import IK_2d_two_linkage as experiment
+import IK_3d_three_linkage as experiment
+
 import helper
 
 print(f"PyTorch Version: {torch.__version__}")
@@ -57,7 +56,7 @@ N_ITERATIONS = 50000
 
 N_SAMPLES_TRAIN = 1000
 N_SAMPLES_VAL = 1000
-N_SAMPLES_TEST = 25000
+N_SAMPLES_TEST = 10000
 
 NN_DIM_IN = 1*experiment.N_DIM_X_STATE
 NN_DIM_OUT = 2*experiment.N_DIM_THETA*experiment.N_TRAJOPT
@@ -269,9 +268,11 @@ def compute_and_save_robot_plot(model, x_state, index, fname, dir_path):
 
     index_batch_worst = np.argmax(energy.detach().tolist())
 
+    print(x_hat_fk_chain[index_batch_worst].shape)
+
     experiment.visualize_trajectory_and_save_image(
-        x_state[index_batch_worst].detach().tolist(),
-        x_hat_fk_chain[index_batch_worst].detach().tolist(),
+        x_state[index_batch_worst].detach().cpu(),
+        x_hat_fk_chain[index_batch_worst].detach().cpu(),
         dir_path,
         fname + "_worst_iteration_{:d}.jpg".format(index+1)
     )
@@ -283,8 +284,8 @@ def compute_and_save_robot_plot(model, x_state, index, fname, dir_path):
         index_batch_random = random.randrange(0, n_batch, 1)
 
         experiment.visualize_trajectory_and_save_image(
-            x_state[index_batch_random].detach().tolist(),
-            x_hat_fk_chain[index_batch_random].detach().tolist(),
+            x_state[index_batch_random].detach().cpu(),
+            x_hat_fk_chain[index_batch_random].detach().cpu(),
             dir_path,
             fname +
             "_random_{:d}_of_{:d}_iteration_{:d}.jpg".format(i+1, nb, index+1)
