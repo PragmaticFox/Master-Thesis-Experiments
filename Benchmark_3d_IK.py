@@ -34,7 +34,7 @@ torch.set_default_dtype(DTYPE_TORCH)
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 1
+SAMPLING_MODE = 0
 IS_CONSTRAINT = False
 
 SAMPLING_STRING = "Sampling Once"
@@ -43,6 +43,11 @@ if SAMPLING_MODE == 2 : SAMPLING_STRING = "Expansion Sampling"
 
 CONSTRAINED_STRING = "Not Constrained"
 if IS_CONSTRAINT: CONSTRAINED_STRING = "Constrained"
+
+NAME_HELPER = "3d_ik_"
+
+HEATMAP_HISTOGRAM_NAME = NAME_HELPER + "heatmap_histogram.png"
+JACOBIAN_HISTOGRAM_NAME = NAME_HELPER + "jacobian_histogram.png"
 
 random.seed(42)
 np.random.seed(42)
@@ -94,7 +99,7 @@ LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 LIMITS_PLOTS = LIMITS
 LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
-LENGTHS = N_DIM_THETA*[3.0/N_DIM_THETA]
+LENGTHS = N_DIM_THETA*[1.0/N_DIM_THETA]
 #LENGTHS = N_DIM_THETA*[(3.0 + 1e-3)/N_DIM_THETA]
 
 LR_INITIAL = 1e-2
@@ -599,7 +604,7 @@ compute_and_save_samples_plot(X_state_train_all.detach().cpu(), X_state_val.deta
 print("\nTraining Starts!\n")
 
 time_measure = 0
-nb_actual_iterations = 0
+cur_index = 0
 diffs = []
 
 X_state_train = 0
@@ -611,7 +616,7 @@ for j in range(N_ITERATIONS) :
 
     tic_loop = time.perf_counter()
 
-    nb_actual_iterations += 1
+    cur_index += 1
     current_lr = optimizer.param_groups[0]['lr']
 
     if SAMPLING_MODE == 0 :
@@ -655,7 +660,7 @@ for j in range(N_ITERATIONS) :
     optimizer.step()
     scheduler.step()
 
-    if nb_actual_iterations % TENSORBOARD_UPDATE == 0 or j == 0 or j == N_ITERATIONS - 1 :
+    if cur_index % TENSORBOARD_UPDATE == 0 or j == 0 or j == N_ITERATIONS - 1 :
 
         loss_val = 0
         loss_test = 0
@@ -669,31 +674,29 @@ for j in range(N_ITERATIONS) :
 
             [loss_val, metrics_val] = compute_loss(model, X_state_val)
 
-            tb_writer.add_scalar('Learning Rate', current_lr, nb_actual_iterations)
-            tb_writer.add_scalar('Train Loss', loss_train.detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Mean Train Terminal Position Distance [m]', metrics_train[0].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Stddev Train Terminal Position Distance [m]', metrics_train[1].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Max Train Terminal Position Distance [m]', metrics_train[2].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Val Loss', loss_val.detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Mean Val Terminal Position Distance [m]', metrics_val[0].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Stddev Val Terminal Position Distance [m]', metrics_val[1].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Max Val Terminal Position Distance [m]', metrics_val[2].detach().cpu(), nb_actual_iterations)
-            tb_writer.add_scalar('Loss Gradient Norm', dloss_train_dW, nb_actual_iterations)
+            tb_writer.add_scalar('Learning Rate', current_lr, cur_index)
+            tb_writer.add_scalar('Train Loss', loss_train.detach().cpu(), cur_index)
+            tb_writer.add_scalar('Mean Train Terminal Position Distance [m]', metrics_train[0].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Stddev Train Terminal Position Distance [m]', metrics_train[1].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Max Train Terminal Position Distance [m]', metrics_train[2].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Val Loss', loss_val.detach().cpu(), cur_index)
+            tb_writer.add_scalar('Mean Val Terminal Position Distance [m]', metrics_val[0].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Stddev Val Terminal Position Distance [m]', metrics_val[1].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Max Val Terminal Position Distance [m]', metrics_val[2].detach().cpu(), cur_index)
+            tb_writer.add_scalar('Loss Gradient Norm', dloss_train_dW, cur_index)
 
             if j == N_ITERATIONS - 1 :
 
                 [loss_test, metrics_test] = compute_loss(model, X_state_test)
 
-                tb_writer.add_scalar('Test Loss', loss_test.detach().cpu(), nb_actual_iterations)
-                tb_writer.add_scalar('Mean Test Terminal Position Distance [m]', metrics_test[0].detach().cpu(), nb_actual_iterations)
-                tb_writer.add_scalar('Stddev Test Terminal Position Distance [m]', metrics_test[1].detach().cpu(), nb_actual_iterations)
-                tb_writer.add_scalar('Max Test Terminal Position Distance [m]', metrics_test[2].detach().cpu(), nb_actual_iterations)
+                tb_writer.add_scalar('Test Loss', loss_test.detach().cpu(), cur_index)
+                tb_writer.add_scalar('Mean Test Terminal Position Distance [m]', metrics_test[0].detach().cpu(), cur_index)
+                tb_writer.add_scalar('Stddev Test Terminal Position Distance [m]', metrics_test[1].detach().cpu(), cur_index)
+                tb_writer.add_scalar('Max Test Terminal Position Distance [m]', metrics_test[2].detach().cpu(), cur_index)
 
-        if nb_actual_iterations % PLOT_UPATE == 0 or j == 0 or j == N_ITERATIONS - 1 :
+        if cur_index % PLOT_UPATE == 0 or j == 0 or j == N_ITERATIONS - 1 :
 
-            plot_dpi = SAVEFIG_DPI_FINAL if j == N_ITERATIONS - 1 else SAVEFIG_DPI
-            heatmap_plot_name = "heatmap_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "heatmap_{}.png".format(nb_actual_iterations)
-            jacobian_plot_name = "jacobian_visualization_final_{}.png".format(nb_actual_iterations) if j == N_ITERATIONS - 1 else "jacobian_visualization_{}.png".format(nb_actual_iterations)
+            dpi_plots = SAVEFIG_DPI_FINAL if j == N_ITERATIONS - 1 else SAVEFIG_DPI
 
             metrics = metrics_val
             X_samples = X_state_val
@@ -703,13 +706,13 @@ for j in range(N_ITERATIONS) :
         
             tic = time.perf_counter()
 
-            compute_and_save_heatmap_histogram(j, model, X_samples, metrics, plot_dpi, dir_path_id_plots, heatmap_plot_name)
+            compute_and_save_heatmap_histogram(model, X_samples, dpi_plots, dir_path_id_plots, cur_index, HEATMAP_HISTOGRAM_NAME)
 
             toc = time.perf_counter()
             print(f"{toc - tic:0.2f} [s] for compute_and_save_heatmap_histogram(...)")
             tic = time.perf_counter()
 
-            compute_and_save_jacobian_histogram(j, model, X_samples, plot_dpi, dir_path_id_plots, jacobian_plot_name)
+            compute_and_save_jacobian_histogram(model, X_samples, dpi_plots, dir_path_id_plots, cur_index, JACOBIAN_HISTOGRAM_NAME)
             
             toc = time.perf_counter()
 
@@ -719,12 +722,12 @@ for j in range(N_ITERATIONS) :
     time_measure_tmp = (toc_loop - tic_loop)
     time_measure += time_measure_tmp
 
-    if nb_actual_iterations % TIME_MEASURE_UPDATE == 0 :
-        print(f"{nb_actual_iterations} iterations {time_measure_tmp:0.2f} [s] (total {time_measure:0.2f} [s])")
+    if cur_index % TIME_MEASURE_UPDATE == 0 :
+        print(f"{cur_index} iterations {time_measure_tmp:0.2f} [s] (total {time_measure:0.2f} [s])")
 
 print("\nTraining Process Completed.\n")
 
-save_model(model, nb_actual_iterations, dir_path_id_model, nn_model_state_dict_only_str, nn_model_full_str)
+save_model(model, cur_index, dir_path_id_model, nn_model_state_dict_only_str, nn_model_full_str)
 
 print("\nAll Done!\n")
 
