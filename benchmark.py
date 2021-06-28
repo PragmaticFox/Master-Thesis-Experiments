@@ -30,7 +30,7 @@ torch.set_default_dtype(helper.DTYPE_TORCH)
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
 SAMPLING_MODE = 0
-IS_CONSTRAINED = True
+IS_CONSTRAINED = False
 
 random.seed(42)
 np.random.seed(42)
@@ -54,7 +54,7 @@ dir_path_id = pathlib.Path(
 dir_path_id_model = pathlib.Path(dir_path_id, "model")
 dir_path_id_plots = pathlib.Path(dir_path_id, "plots")
 
-N_ITERATIONS = 50000
+N_ITERATIONS = 25000
 
 N_SAMPLES_TRAIN = 1000
 N_SAMPLES_VAL = 1000

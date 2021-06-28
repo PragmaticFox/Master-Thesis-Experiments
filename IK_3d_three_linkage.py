@@ -31,8 +31,9 @@ N_DIM_X_STATE = 1*N_DIM_X
 LR_INITIAL = 1e-2
 
 # LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99925 # for 10k
-# LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99975 # for 30k
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99985  # for 50k
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99960 # for 25k
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99975 # for 30k
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99985  # for 50k
 # LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
 
 FK_ORIGIN = [0.0, 0.0, 0.0]
@@ -65,6 +66,8 @@ def fk(theta):
     rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
     rt_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
 
+    #print(theta[0])
+
     for i in range(N_DIM_THETA):
 
         if (i % 3 == 0):
@@ -86,8 +89,8 @@ def fk(theta):
             # rotation around y-axis (xz-plane)
             # homogeneous coordinates
 
-            rt_hom_i[:, i, 0, 3] = LENGTHS[i]
-            #rt_hom_i[:, i, 1, 3] = LENGTHS[i]
+            #rt_hom_i[:, i, 0, 3] = LENGTHS[i]
+            rt_hom_i[:, i, 1, 3] = LENGTHS[i]
             #rt_hom_i[:, i, 2, 3] = LENGTHS[i]
 
             rt_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
@@ -100,9 +103,9 @@ def fk(theta):
             # rotation around z-axis (xy-plane)
             # homogeneous coordinates
 
-            rt_hom_i[:, i, 0, 3] = LENGTHS[i]
+            #rt_hom_i[:, i, 0, 3] = LENGTHS[i]
             #rt_hom_i[:, i, 1, 3] = LENGTHS[i]
-            #rt_hom_i[:, i, 2, 3] = LENGTHS[i]
+            rt_hom_i[:, i, 2, 3] = LENGTHS[i]
 
             rt_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
             rt_hom_i[:, i, 0, 1] = -torch.sin(theta[:, i])
@@ -112,6 +115,7 @@ def fk(theta):
         rt_hom[:, i+1] = torch.matmul(torch.clone(rt_hom[:, i]), torch.clone(rt_hom_i[:, i]))
         p_final[:, i+1] = torch.matmul(rt_hom[:, i+1], p)
 
+        #print(p_final[0, 1:, :-1])
     return p_final[:, 1:, :-1]
 
 
