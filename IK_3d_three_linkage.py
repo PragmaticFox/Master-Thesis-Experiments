@@ -63,9 +63,7 @@ def fk(theta):
     p = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
     p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1).to(device)
     rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
-    #rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, 1, 1, 1).to(device)
-    rt_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
-        n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
+    rt_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
 
     for i in range(N_DIM_THETA):
 
@@ -74,7 +72,7 @@ def fk(theta):
             # rotation around x-axis (yz-plane)
             # homogeneous coordinates
 
-            #rt_hom_i[:, i, 0, 3] = LENGTHS[i]
+            rt_hom_i[:, i, 0, 3] = LENGTHS[i]
             #rt_hom_i[:, i, 1, 3] = LENGTHS[i]
             #rt_hom_i[:, i, 2, 3] = LENGTHS[i]
 
@@ -88,7 +86,7 @@ def fk(theta):
             # rotation around y-axis (xz-plane)
             # homogeneous coordinates
 
-            #rt_hom_i[:, i, 0, 3] = LENGTHS[i]
+            rt_hom_i[:, i, 0, 3] = LENGTHS[i]
             #rt_hom_i[:, i, 1, 3] = LENGTHS[i]
             #rt_hom_i[:, i, 2, 3] = LENGTHS[i]
 
@@ -111,12 +109,6 @@ def fk(theta):
             rt_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
             rt_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
         
-        #tmp = torch.matmul(rt_hom[:, i], rt_hom_i[:, i]).reshape(shape = (n_batch_times_n_trajOpt, 1, 4, 4))
-
-        #print(tmp.shape)
-        #print(rt_hom.shape)
-        #rt_hom = torch.cat(tensors = (rt_hom, tmp), dim = 1)
-        #print(rt_hom.shape)
         rt_hom[:, i+1] = torch.matmul(torch.clone(rt_hom[:, i]), torch.clone(rt_hom_i[:, i]))
         p_final[:, i+1] = torch.matmul(rt_hom[:, i+1], p)
 
@@ -184,7 +176,7 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
             x_hat_fk_chain[0, t, 2] - FK_ORIGIN[2],
             color='b',
             alpha=0.8,
-            normalize = True
+            normalize = False
         )
 
         for i in range(1, N_DIM_THETA, 1):
@@ -200,10 +192,10 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
                 x_hat_fk_chain[i, t, 2] - x_hat_fk_chain[i-1, t, 2],
                 color='b',
                 alpha=0.8,
-                normalize = True
+                normalize = False
             )
 
-    ax.scatter(x_hat_fk_chain[-1, t, 0], x_hat_fk_chain[-1, t, 1], x_hat_fk_chain[-1, t, 2], c='k', s=10)
+        ax.scatter(x_hat_fk_chain[-1, t, 0], x_hat_fk_chain[-1, t, 1], x_hat_fk_chain[-1, t, 2], c='k', s=10)
 
     ax.scatter(FK_ORIGIN[0], FK_ORIGIN[1], FK_ORIGIN[2], c='0.5', s=10)
 

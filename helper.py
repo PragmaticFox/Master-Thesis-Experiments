@@ -12,7 +12,7 @@ SAVEFIG_DPI_FINAL = 600
 
 TIME_MEASURE_UPDATE = 100
 TENSORBOARD_UPDATE = 500
-PLOT_UPATE = 2*TENSORBOARD_UPDATE
+PLOT_UPATE = 10*TENSORBOARD_UPDATE
 
 JOINT_PLOT_NAME = "joint_plot.png"
 HEATMAP_PLOT_NAME = "heatmap_plot.png"
@@ -172,3 +172,4 @@ def convert_constrained_boolean_to_string(is_constrained):
         constrained_string = "Constrained"
 
     return constrained_string
+

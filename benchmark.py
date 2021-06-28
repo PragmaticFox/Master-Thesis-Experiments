@@ -270,13 +270,11 @@ def compute_and_save_robot_plot(model, x_state, index, fname, dir_path):
 
     index_batch_worst = np.argmax(energy.detach().tolist())
 
-    #print(x_hat_fk_chain[index_batch_worst].shape)
-
     experiment.visualize_trajectory_and_save_image(
         x_state[index_batch_worst].detach().cpu(),
         x_hat_fk_chain[index_batch_worst].detach().cpu(),
         dir_path,
-        fname + "_worst_iteration_{:d}.jpg".format(index+1)
+        fname + "_worst_iteration.jpg"
     )
 
     nb = 10
@@ -290,7 +288,7 @@ def compute_and_save_robot_plot(model, x_state, index, fname, dir_path):
             x_hat_fk_chain[index_batch_random].detach().cpu(),
             dir_path,
             fname +
-            "_random_{:d}_of_{:d}_iteration_{:d}.jpg".format(i+1, nb, index+1)
+            "_random_{:d}_of_{:d}.jpg".format(i, nb)
         )
 
 
