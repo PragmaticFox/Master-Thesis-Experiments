@@ -56,8 +56,9 @@ dir_path_id_plots = pathlib.Path(dir_path_id, "plots")
 
 N_ITERATIONS = 25000
 
-N_SAMPLES_TRAIN = 1000
+N_SAMPLES_TRAIN = 10000
 N_SAMPLES_VAL = 1000
+00
 N_SAMPLES_TEST = 10000
 
 NN_DIM_IN = 1*experiment.N_DIM_X_STATE
@@ -288,7 +289,7 @@ def compute_and_save_robot_plot(model, x_state, index, fname, dir_path):
             x_hat_fk_chain[index_batch_random].detach().cpu(),
             dir_path,
             fname +
-            "_random_{:d}_of_{:d}.jpg".format(i, nb)
+            "_random_{:d}_of_{:d}.jpg".format(i+1, nb)
         )
 
 
