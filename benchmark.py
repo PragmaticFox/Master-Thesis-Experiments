@@ -40,8 +40,8 @@ torch.set_deterministic(True)
 torch.backends.cudnn.benchmark = False
 # torch.autograd.set_detect_anomaly(True)
 
-dir_path_id_partial = pathlib.Path(
-    "D:/trajectory_optimization/master_thesis_experiments", experiment.identifier_string)
+dir_path_id_partial = pathlib.Path("D:/trajectory_optimization/master_thesis_experiments", experiment.identifier_string)
+#dir_path_id_partial = pathlib.Path("D:/trajectory_optimization/master_thesis_experiments", experiment.identifier_string)
 dtstring = str(datetime.datetime.now().replace(microsecond=0))
 char_replace = [' ', '-', ':']
 for c in char_replace:
