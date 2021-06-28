@@ -37,8 +37,8 @@ np.random.seed(42)
 torch.manual_seed(42)
 # only works with newer PyTorch versions
 #torch.use_deterministic_algorithms(True)
-torch.backends.cudnn.benchmark = False
-torch.autograd.set_detect_anomaly(True)
+#torch.backends.cudnn.benchmark = False
+#torch.autograd.set_detect_anomaly(True)
 
 #directory_path = "D:/trajectory_optimization/master_thesis_experiments"
 directory_path = pathlib.Path(__file__).parent.resolve()
@@ -270,7 +270,7 @@ def compute_and_save_robot_plot(model, x_state, index, fname, dir_path):
 
     index_batch_worst = np.argmax(energy.detach().tolist())
 
-    print(x_hat_fk_chain[index_batch_worst].shape)
+    #print(x_hat_fk_chain[index_batch_worst].shape)
 
     experiment.visualize_trajectory_and_save_image(
         x_state[index_batch_worst].detach().cpu(),
@@ -475,6 +475,13 @@ for j in range(N_ITERATIONS):
 
             tic = time.perf_counter()
 
+            compute_and_save_robot_plot(model, X_samples, cur_index, "robot_plot", dir_path_id_plots)
+
+            toc = time.perf_counter()
+            print(f"{toc - tic:0.2f} [s] for compute_and_save_robot_plot(...)")
+
+            tic = time.perf_counter()
+
             experiment.compute_and_save_joint_angles_plot(
                 model, device, plot_dpi, n_one_dim, dir_path_id_plots, cur_index,
                 experiment.identifier_string + helper.JOINT_PLOT_NAME,
@@ -482,8 +489,7 @@ for j in range(N_ITERATIONS):
             )
 
             toc = time.perf_counter()
-            print(
-                f"{toc - tic:0.2f} [s] for compute_and_save_joint_angles_plot(...)")
+            print(f"{toc - tic:0.2f} [s] for compute_and_save_joint_angles_plot(...)")
 
             tic = time.perf_counter()
 
@@ -546,9 +552,6 @@ for j in range(N_ITERATIONS):
     if cur_index % helper.TIME_MEASURE_UPDATE == 0:
         print(
             f"{cur_index} iterations {time_measure_tmp:0.2f} [s] (total {time_measure:0.2f} [s])")
-
-compute_and_save_robot_plot(model, X_state_test, j,
-                            "robot_plot", dir_path_id_plots)
 
 print("\nTraining Process Completed.\n")
 

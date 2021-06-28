@@ -61,14 +61,13 @@ def fk(theta):
     n_dim_theta = theta.shape[1]
 
     p = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
-    p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(
-        1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1).to(device)
-    #rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
-    rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, 1, 1, 1).to(device)
+    p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1).to(device)
+    rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
+    #rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, 1, 1, 1).to(device)
     rt_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
         n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
 
-    for i in range(n_dim_theta):
+    for i in range(N_DIM_THETA):
 
         if (i % 3 == 0):
 
@@ -112,13 +111,13 @@ def fk(theta):
             rt_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
             rt_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
         
-        tmp = torch.matmul(rt_hom[:, i], rt_hom_i[:, i]).reshape(shape = (n_batch_times_n_trajOpt, 1, 4, 4))
+        #tmp = torch.matmul(rt_hom[:, i], rt_hom_i[:, i]).reshape(shape = (n_batch_times_n_trajOpt, 1, 4, 4))
 
-        print(tmp.shape)
-        print(rt_hom.shape)
-        rt_hom = torch.cat(tensors = (rt_hom, tmp), dim = 1)
-        print(rt_hom.shape)
-        #rt_hom[:, i+1] = torch.matmul(rt_hom[:, i], rt_hom_i[:, i])
+        #print(tmp.shape)
+        #print(rt_hom.shape)
+        #rt_hom = torch.cat(tensors = (rt_hom, tmp), dim = 1)
+        #print(rt_hom.shape)
+        rt_hom[:, i+1] = torch.matmul(torch.clone(rt_hom[:, i]), torch.clone(rt_hom_i[:, i]))
         p_final[:, i+1] = torch.matmul(rt_hom[:, i+1], p)
 
     return p_final[:, 1:, :-1]
