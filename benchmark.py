@@ -36,12 +36,14 @@ random.seed(42)
 np.random.seed(42)
 torch.manual_seed(42)
 # only works with newer PyTorch versions
-torch.set_deterministic(True)
+#torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
-# torch.autograd.set_detect_anomaly(True)
+torch.autograd.set_detect_anomaly(True)
 
-dir_path_id_partial = pathlib.Path("D:/trajectory_optimization/master_thesis_experiments", experiment.identifier_string)
-#dir_path_id_partial = pathlib.Path("D:/trajectory_optimization/master_thesis_experiments", experiment.identifier_string)
+#directory_path = "D:/trajectory_optimization/master_thesis_experiments"
+directory_path = pathlib.Path(__file__).parent.resolve()
+dir_path_id_partial = pathlib.Path(directory_path, "experiments/" + experiment.identifier_string)
+
 dtstring = str(datetime.datetime.now().replace(microsecond=0))
 char_replace = [' ', '-', ':']
 for c in char_replace:
