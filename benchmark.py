@@ -2,7 +2,6 @@
 
 import os
 import sys
-import math
 import time
 import shutil
 import random
@@ -14,10 +13,10 @@ import numpy as np
 
 from torch.utils.tensorboard import SummaryWriter
 
+# local import
+import helper
 #import IK_2d_two_linkage as experiment
 import IK_3d_three_linkage as experiment
-
-import helper
 
 print(f"PyTorch Version: {torch.__version__}")
 
@@ -29,7 +28,7 @@ torch.set_default_dtype(helper.DTYPE_TORCH)
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 1
+SAMPLING_MODE = 0
 IS_CONSTRAINED = False
 
 random.seed(42)
@@ -40,9 +39,8 @@ torch.manual_seed(42)
 #torch.backends.cudnn.benchmark = False
 #torch.autograd.set_detect_anomaly(True)
 
-#directory_path = "D:/trajectory_optimization/master_thesis_experiments"
-directory_path = pathlib.Path(__file__).parent.resolve()
-dir_path_id_partial = pathlib.Path(directory_path, "experiments/" + experiment.identifier_string)
+directory_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "experiments")
+dir_path_id_partial = pathlib.Path(directory_path, experiment.identifier_string)
 
 dtstring = str(datetime.datetime.now().replace(microsecond=0))
 char_replace = [' ', '-', ':']
@@ -58,7 +56,6 @@ N_ITERATIONS = 25000
 
 N_SAMPLES_TRAIN = 10000
 N_SAMPLES_VAL = 1000
-00
 N_SAMPLES_TEST = 10000
 
 NN_DIM_IN = 1*experiment.N_DIM_X_STATE
@@ -140,6 +137,10 @@ class Model(torch.nn.Module):
 
 
 def initialize_directories():
+
+    if not directory_path.exists():
+
+        directory_path.mkdir()
 
     if not dir_path_id_partial.exists():
 

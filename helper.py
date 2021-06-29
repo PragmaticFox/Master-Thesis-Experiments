@@ -1,8 +1,8 @@
 #!/bin/python3
 
-import numpy as np
 import torch
 import pathlib
+import numpy as np
 
 DTYPE_NUMPY = np.float64
 DTYPE_TORCH = torch.float64
