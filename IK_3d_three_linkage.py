@@ -7,6 +7,7 @@ import pathlib
 import torch
 import numpy as np
 
+import matplotlib
 import matplotlib.pyplot as plt
 
 # local import
@@ -50,7 +51,6 @@ LIMITS_PLOTS = LIMITS
 LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
 LENGTHS = N_DIM_THETA*[1.0/N_DIM_THETA]
-#LENGTHS = N_DIM_THETA*[(3.0 + 1e-3)/N_DIM_THETA]
 
 
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
@@ -66,8 +66,6 @@ def fk(theta):
     p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1).to(device)
     rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
     rt_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
-
-    #print(theta[0])
 
     for i in range(N_DIM_THETA):
 
@@ -90,8 +88,8 @@ def fk(theta):
             # rotation around y-axis (xz-plane)
             # homogeneous coordinates
 
-            #rt_hom_i[:, i, 0, 3] = LENGTHS[i]
-            rt_hom_i[:, i, 1, 3] = LENGTHS[i]
+            rt_hom_i[:, i, 0, 3] = LENGTHS[i]
+            #rt_hom_i[:, i, 1, 3] = LENGTHS[i]
             #rt_hom_i[:, i, 2, 3] = LENGTHS[i]
 
             rt_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
@@ -104,9 +102,9 @@ def fk(theta):
             # rotation around z-axis (xy-plane)
             # homogeneous coordinates
 
-            #rt_hom_i[:, i, 0, 3] = LENGTHS[i]
+            rt_hom_i[:, i, 0, 3] = LENGTHS[i]
             #rt_hom_i[:, i, 1, 3] = LENGTHS[i]
-            rt_hom_i[:, i, 2, 3] = LENGTHS[i]
+            #rt_hom_i[:, i, 2, 3] = LENGTHS[i]
 
             rt_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
             rt_hom_i[:, i, 0, 1] = -torch.sin(theta[:, i])
@@ -116,7 +114,6 @@ def fk(theta):
         rt_hom[:, i+1] = torch.matmul(torch.clone(rt_hom[:, i]), torch.clone(rt_hom_i[:, i]))
         p_final[:, i+1] = torch.matmul(rt_hom[:, i+1], p)
 
-        #print(p_final[0, 1:, :-1])
     return p_final[:, 1:, :-1]
 
 
@@ -212,6 +209,8 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
 
     save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
 
+    save_figure(plt.gcf(), helper.SAVEFIG_DPI, "", fname_img)
+
     plt.close()
 
 
@@ -275,7 +274,129 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
 def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, is_constrained, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
 
-    return
+    X_state_train = X_state_train.detach().cpu()
+
+    X_state_train = X_state_train[torch.sqrt(X_state_train[:, 2] ** 2) < 1e-3]
+
+    test_terminal_energy_mean = metrics[0].detach().cpu()
+
+    alpha = 0.5
+    alpha_train_samples = 0.25
+
+    dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
+    dimY = np.linspace(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1], n_one_dim)
+    dimZ = np.linspace(LIMITS_PLOTS[2][0], LIMITS_PLOTS[2][1], n_one_dim)
+
+    dimX, dimY, dimZ = np.meshgrid(dimX, dimY, dimZ)
+
+    dimXz = torch.zeros_like(torch.tensor(dimX)).numpy()
+    dimZz = torch.zeros_like(torch.tensor(dimY)).numpy()
+    dimZz = torch.zeros_like(torch.tensor(dimZ)).numpy()
+
+    x_state = torch.tensor(np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
+
+    terminal_energy = torch.zeros((x_state.shape[0])).to(device)
+
+    with torch.no_grad():
+
+        if n_one_dim > 100:
+
+            n_splits = 100
+
+            delta = n_one_dim*n_one_dim // n_splits
+
+            for split in range(n_splits):
+                energy_tmp, constraint_tmp, terminal_position_distance_tmp, _ = compute_energy(
+                    model, x_state[split*delta:(split+1)*delta], is_constrained)
+                # energy_tmp
+                terminal_energy[split*delta:(split+1) *
+                                delta] = terminal_position_distance_tmp
+
+        else:
+
+            energy, constraint, terminal_position_distance, _ = compute_energy(
+                model, x_state, is_constrained)
+            terminal_energy = terminal_position_distance
+
+    terminal_energy = np.array(terminal_energy.detach().cpu().reshape((n_one_dim, n_one_dim, n_one_dim)).tolist())
+
+    terminal_energy_orig = torch.clone(torch.tensor(terminal_energy))
+    condition = terminal_energy_orig < 1e-3
+
+    terminal_energy = terminal_energy[condition]
+    dimX = dimX[condition]
+    dimY = dimY[condition]
+    dimZ = dimZ[condition]
+
+    # plot
+
+    #fig, ax = plt.subplots()
+    ax = plt.axes(projection='3d')
+
+    #plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
+
+    ax.set_aspect(aspect='auto', adjustable='box')
+
+    ax.set_title(
+        title_string,
+        fontdict=fontdict,
+        pad=5
+    )
+
+    ax.scatter(xs = dimX, ys = dimY, zs = dimZ, zdir = 'z', s = 20, c = terminal_energy, depthshade = True, alpha = 0.9)
+
+    fig = plt.gcf()
+
+    '''
+
+    ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
+    c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
+                norm=matplotlib.colors.LogNorm(vmin=terminal_energy_min, vmax=terminal_energy_max))
+
+    ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=2.0,
+    marker='o', color='k', ls='', alpha=alpha_train_samples)
+
+    cb = fig.colorbar(c, ax=ax, extend='max')
+    cb.ax.plot([0, 1], [test_terminal_energy_mean]*2, 'k', alpha=alpha, lw=8.0)
+
+    if SAMPLE_CIRCLE:
+        circleInner = plt.Circle(
+            (0.0, 0.0), radius=RADIUS_INNER, color='orange', fill=False, lw=4.0, alpha=alpha)
+        circleOuter = plt.Circle(
+            (0.0, 0.0), radius=RADIUS_OUTER, color='orange', fill=False, lw=4.0, alpha=alpha)
+
+    if LIMITS_PLOTS != LIMITS:
+        rectangle = plt.Rectangle(xy=(LIMITS[0][0], LIMITS[1][0]), width=LIMITS[0][1]-LIMITS[0]
+                                  [0], height=LIMITS[1][1]-LIMITS[1][0], color='orange', fill=False, lw=4.0, alpha=alpha)
+
+    legend_entries = [
+        matplotlib.lines.Line2D([0], [0], lw=0.0, marker='o', color='k',
+                                alpha=alpha_train_samples, markersize=10.0, label='Train Samples'),
+        matplotlib.patches.Patch(
+            color='k', alpha=alpha, label='Test Mean ± Std')
+    ]
+
+    if LIMITS_PLOTS != LIMITS or SAMPLE_CIRCLE:
+
+        legend_entries = legend_entries + [matplotlib.patches.Patch(color='orange', alpha=alpha, label='Sampling Area')]
+
+        if SAMPLE_CIRCLE:
+            ax.add_patch(circleInner)
+            ax.add_patch(circleOuter)
+
+        if LIMITS_PLOTS != LIMITS:
+            ax.add_patch(rectangle)
+
+    plt.legend(loc='upper right', handles=legend_entries)
+
+
+    '''
+
+    save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
+    save_figure(fig, dpi, "", fname_img)
+
+    # close the plot handle
+    plt.close('all')
 
 
 def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, index, fname_img, fontdict, title_string):

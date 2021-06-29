@@ -3,3 +3,4 @@ experiments/*
 .vscode/*
 runs/*
 *.png
+*.jpg
