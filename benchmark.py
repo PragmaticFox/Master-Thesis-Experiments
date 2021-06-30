@@ -25,6 +25,8 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 torch.set_default_dtype(helper.DTYPE_TORCH)
 
+IS_PLOT_REGION = True
+
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
@@ -54,18 +56,24 @@ dir_path_id = pathlib.Path(
 dir_path_id_model = pathlib.Path(dir_path_id, "model")
 dir_path_id_plots = pathlib.Path(dir_path_id, "plots")
 
+# order matters for directory creation
+directories = [
+    directory_path,
+    dir_path_id_partial,
+    dir_path_id,
+    dir_path_id_model,
+    dir_path_id_plots
+]
+
 N_ITERATIONS = 25000
 
 N_SAMPLES_TRAIN = 100
-N_SAMPLES_VAL = 2500
+N_SAMPLES_VAL = 1000
 N_SAMPLES_TEST = 10000
 
 NN_DIM_IN = 1*experiment.N_DIM_X_STATE
 NN_DIM_OUT = 2*experiment.N_DIM_THETA*experiment.N_TRAJOPT
 NN_DIM_IN_TO_OUT = 256
-
-
-''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
 
 
 class Model(torch.nn.Module):
@@ -138,47 +146,7 @@ class Model(torch.nn.Module):
         return theta
 
 
-def initialize_directories():
-
-    if not directory_path.exists():
-
-        directory_path.mkdir()
-
-    if not dir_path_id_partial.exists():
-
-        dir_path_id_partial.mkdir()
-
-    if not dir_path_id.exists():
-
-        dir_path_id.mkdir()
-
-    if not dir_path_id_plots.exists():
-
-        dir_path_id_plots.mkdir()
-
-    if not dir_path_id_model.exists():
-
-        dir_path_id_model.mkdir()
-
-
-def compute_loss(model, x_state):
-
-    energy, constraint, terminal_position_distance, x_hat_fk_chain = experiment.compute_energy(
-        model, x_state, IS_CONSTRAINED)
-
-    loss = torch.mean(energy)
-
-    metric0 = torch.mean(terminal_position_distance)
-    metric1 = torch.std(terminal_position_distance)
-    metric2 = torch.max(terminal_position_distance)
-
-    return loss, [metric0, metric1, metric2]
-
-
-''' ---------------------------------------------- Benchmarking ---------------------------------------------- '''
-
-
-initialize_directories()
+helper.initialize_directories(directories)
 
 # saves a copy of the current python script into the folder
 shutil.copy(__file__, pathlib.Path(dir_path_id, os.path.basename(__file__)))
@@ -206,6 +174,16 @@ file_handle_logger = open(pathlib.Path(
 
 sys_stdout_original = sys.stdout
 sys.stdout = helper.Logger(sys_stdout_original, file_handle_logger)
+
+if IS_PLOT_REGION :
+
+    helper.sample_joint_angles(random.uniform, experiment.CONSTRAINTS)
+
+    theta = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(N_SAMPLES_TRAIN)], dtype = helper.DTYPE_TORCH).to(device)
+
+    print(theta.shape)
+
+    exit(0)
 
 model = Model().to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=experiment.LR_INITIAL)
@@ -279,7 +257,7 @@ for j in range(N_ITERATIONS):
 
                 distance_index += 1
 
-    [loss_train, metrics_train] = compute_loss(model, X_state_train)
+    [loss_train, metrics_train] = helper.compute_loss(experiment.compute_energy, model, X_state_train, IS_CONSTRAINED)
 
     optimizer.zero_grad()
     loss_train.backward()
@@ -300,7 +278,7 @@ for j in range(N_ITERATIONS):
 
             dloss_train_dW = helper.compute_dloss_dW(model)
 
-            [loss_val, metrics_val] = compute_loss(model, X_state_val)
+            [loss_val, metrics_val] = helper.compute_loss(experiment.compute_energy, model, X_state_val, IS_CONSTRAINED)
 
             tb_writer.add_scalar('Learning Rate', current_lr, cur_index)
             tb_writer.add_scalar(
@@ -324,7 +302,7 @@ for j in range(N_ITERATIONS):
 
             if j == N_ITERATIONS - 1:
 
-                [loss_test, metrics_test] = compute_loss(model, X_state_test)
+                [loss_test, metrics_test] = helper.compute_loss(experiment.compute_energy, model, X_state_test, IS_CONSTRAINED)
 
                 tb_writer.add_scalar(
                     'Test Loss', loss_test.detach().cpu(), cur_index)
@@ -356,7 +334,7 @@ for j in range(N_ITERATIONS):
 
             tic = time.perf_counter()
 
-            helper.compute_and_save_robot_plot(random, experiment, model, X_samples, IS_CONSTRAINED, "robot_plot", dir_path_id_plots)
+            helper.compute_and_save_robot_plot(random.randrange, experiment.compute_energy, experiment.visualize_trajectory_and_save_image, model, X_samples, IS_CONSTRAINED, "robot_plot", dir_path_id_plots)
 
             toc = time.perf_counter()
             print(f"{toc - tic:0.2f} [s] for compute_and_save_robot_plot(...)")
@@ -453,3 +431,4 @@ print("\nAll Done!\n")
 
 sys.stdout = sys_stdout_original
 file_handle_logger.close()
+

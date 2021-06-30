@@ -56,12 +56,22 @@ class Logger(object):
             f.flush()
 
 
+def initialize_directories(directories):
+
+    # note that the order of directory creation might matter
+
+    for dir in directories :
+
+        if not dir.exists() :
+
+            dir.mkdir()
+
+
 def compute_sample_helper(rng, limits, n):
 
     x = []
     for i in range(n):
-        x += [limits[i][0] +
-              rng.uniform(0, 1)*(limits[i][1] - limits[i][0])]
+        x += [limits[i][0] + rng.uniform(0, 1)*(limits[i][1] - limits[i][0])]
 
     return x
 
@@ -86,6 +96,17 @@ def compute_sample(rng, limits, is_sample_circle, radius_outer, radius_inner):
             x = compute_sample_helper(rng, limits, n)
 
             r = np.linalg.norm(x, ord=2)
+
+    return x
+
+
+def sample_joint_angles(uniform, constraints):
+
+    n = len(constraints)
+    x = []
+
+    for i in range(n) :
+        x += [constraints[i][0] + uniform(0, 1)*(constraints[i][1] - constraints[i][0])]
 
     return x
 
@@ -148,6 +169,20 @@ def soft_bound_constraint(lower_limit, upper_limit, eps_rel, stiffness, x):
     epsilon = (upper_limit - lower_limit) * eps_rel
 
     return soft_lower_bound_constraint(lower_limit, epsilon, stiffness, x) + soft_upper_bound_constraint(upper_limit, epsilon, stiffness, x)
+
+
+def compute_loss(compute_energy, model, x_state, is_constrained):
+
+    energy, constraint, terminal_position_distance, x_hat_fk_chain = compute_energy(
+        model, x_state, is_constrained)
+
+    loss = torch.mean(energy)
+
+    metric0 = torch.mean(terminal_position_distance)
+    metric1 = torch.std(terminal_position_distance)
+    metric2 = torch.max(terminal_position_distance)
+
+    return loss, [metric0, metric1, metric2]
 
 
 def compute_dloss_dW(model):
@@ -270,16 +305,16 @@ def convert_constrained_boolean_to_string(is_constrained):
     return constrained_string
 
 
-def compute_and_save_robot_plot(rng, experiment, model, x_state, is_constrained, fname, dir_path):
+def compute_and_save_robot_plot(randrange, compute_energy, visualize_trajectory_and_save_image, model, x_state, is_constrained, fname, dir_path):
 
     n_batch = x_state.shape[0]
 
-    energy, constraint, terminal_position_distance, x_hat_fk_chain = experiment.compute_energy(
+    energy, constraint, terminal_position_distance, x_hat_fk_chain = compute_energy(
         model, x_state, is_constrained)
 
     index_batch_worst = np.argmax(energy.detach().tolist())
 
-    experiment.visualize_trajectory_and_save_image(
+    visualize_trajectory_and_save_image(
         x_state[index_batch_worst].detach().cpu(),
         x_hat_fk_chain[index_batch_worst].detach().cpu(),
         dir_path,
@@ -290,9 +325,9 @@ def compute_and_save_robot_plot(rng, experiment, model, x_state, is_constrained,
 
     for i in range(nb):
 
-        index_batch_random = rng.randrange(0, n_batch, 1)
+        index_batch_random = randrange(0, n_batch, 1)
 
-        experiment.visualize_trajectory_and_save_image(
+        visualize_trajectory_and_save_image(
             x_state[index_batch_random].detach().cpu(),
             x_hat_fk_chain[index_batch_random].detach().cpu(),
             dir_path,
