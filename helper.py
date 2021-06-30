@@ -29,6 +29,8 @@ plots_fontdict = {'fontsize': 15, 'fontweight': 'normal',
                   'horizontalalignment': 'center'}
 
 
+''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
+
 class Logger(object):
 
     '''
@@ -52,6 +54,100 @@ class Logger(object):
         for f in self.files:
 
             f.flush()
+
+
+def compute_sample_helper(rng, limits, n):
+
+    x = []
+    for i in range(n):
+        x += [limits[i][0] +
+              rng.uniform(0, 1)*(limits[i][1] - limits[i][0])]
+
+    return x
+
+
+def compute_sample(rng, limits, is_sample_circle, radius_outer, radius_inner):
+
+    n = len(limits)
+
+    x = compute_sample_helper(rng, limits, n)
+
+    if is_sample_circle:
+
+        if radius_outer <= radius_inner:
+
+            print(f"Make sure radius_outer > radius_inner!")
+            exit(1)
+
+        r = np.linalg.norm(x, ord=2)
+
+        while r >= radius_outer or r < radius_inner:
+
+            x = compute_sample_helper(rng, limits, n)
+
+            r = np.linalg.norm(x, ord=2)
+
+    return x
+
+
+def soft_lower_bound_constraint(limit, epsilon, stiffness, x):
+
+    x = x - limit
+    x[x >= epsilon] = 0.0
+
+    a1 = stiffness
+    b1 = -0.5 * a1 * epsilon
+    c1 = -1.0 / 3 * (-b1 - a1 * epsilon) * epsilon - 1.0 / \
+        2 * a1 * epsilon * epsilon - b1 * epsilon
+
+    a2 = (-b1 - a1 * epsilon) / (epsilon * epsilon)
+    b2 = a1
+    c2 = b1
+    d2 = c1
+
+    xx = torch.clone(x)
+
+    y = x[xx < 0.0]
+    z = x[xx < epsilon]
+
+    x[xx < epsilon] = 1.0 / 3.0 * a2 * z * \
+        z * z + 0.5 * b2 * z * z + c2 * z + d2
+    x[xx < 0.0] = 0.5 * a1 * y * y + b1 * y + c1
+
+    return x
+
+
+def soft_upper_bound_constraint(limit, epsilon, stiffness, x):
+
+    x = x - limit
+    x[x <= -epsilon] = 0.0
+
+    a1 = stiffness
+    b1 = 0.5*a1*epsilon
+    c1 = 1./6. * a1*epsilon*epsilon
+
+    a2 = 1./(2.*epsilon)*a1
+    b2 = a1
+    c2 = 0.5*a1*epsilon
+    d2 = 1./6.*a1*epsilon*epsilon
+
+    xx = torch.clone(x)
+
+    y = x[xx > 0.0]
+    z = x[xx > -epsilon]
+
+    x[xx > -epsilon] = 1.0 / 3.0 * a2 * z * \
+        z * z + 0.5 * b2 * z * z + c2 * z + d2
+    x[xx > 0.0] = 0.5 * a1 * y * y + b1 * y + c1
+
+    return x
+
+
+def soft_bound_constraint(lower_limit, upper_limit, eps_rel, stiffness, x):
+
+    epsilon = (upper_limit - lower_limit) * eps_rel
+
+    return soft_lower_bound_constraint(lower_limit, epsilon, stiffness, x) + soft_upper_bound_constraint(upper_limit, epsilon, stiffness, x)
 
 
 def compute_dloss_dW(model):
@@ -172,4 +268,51 @@ def convert_constrained_boolean_to_string(is_constrained):
         constrained_string = "Constrained"
 
     return constrained_string
+
+
+def compute_and_save_robot_plot(rng, experiment, model, x_state, is_constrained, fname, dir_path):
+
+    n_batch = x_state.shape[0]
+
+    energy, constraint, terminal_position_distance, x_hat_fk_chain = experiment.compute_energy(
+        model, x_state, is_constrained)
+
+    index_batch_worst = np.argmax(energy.detach().tolist())
+
+    experiment.visualize_trajectory_and_save_image(
+        x_state[index_batch_worst].detach().cpu(),
+        x_hat_fk_chain[index_batch_worst].detach().cpu(),
+        dir_path,
+        fname + "_worst_iteration.jpg"
+    )
+
+    nb = 10
+
+    for i in range(nb):
+
+        index_batch_random = rng.randrange(0, n_batch, 1)
+
+        experiment.visualize_trajectory_and_save_image(
+            x_state[index_batch_random].detach().cpu(),
+            x_hat_fk_chain[index_batch_random].detach().cpu(),
+            dir_path,
+            fname +
+            "_random_{:d}_of_{:d}.jpg".format(i+1, nb)
+        )
+
+
+def save_figure(figure, dpi, dir_path_img, fname_img):
+
+    figure.savefig(
+        fname=pathlib.Path(dir_path_img, fname_img),
+        bbox_inches="tight",
+        dpi=dpi
+        #pil_kwargs = {'optimize': True, 'quality': 75}
+    )
+
+
+def save_model(model, iterations, string_path, string_dict_only, string_full):
+    torch.save(model, pathlib.Path(string_path, string_full))
+    torch.save(model.state_dict(), pathlib.Path(string_path, string_dict_only))
+    print("{} Saved Current State for Evaluation.\n".format(iterations))
 

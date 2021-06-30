@@ -72,39 +72,6 @@ def fk(theta):
     return p[:, 1:, :]
 
 
-def compute_sample():
-
-    x = [LIMITS[0][0] + random.uniform(0, 1)*(LIMITS[0][1] - LIMITS[0][0]),
-         LIMITS[1][0] + random.uniform(0, 1)*(LIMITS[1][1] - LIMITS[1][0])]
-
-    if SAMPLE_CIRCLE:
-
-        if RADIUS_OUTER <= RADIUS_INNER:
-
-            print(f"Make sure RADIUS_OUTER > RADIUS_INNER!")
-            exit(1)
-
-        r = np.linalg.norm(x, ord=2)
-
-        while r >= RADIUS_OUTER or r < RADIUS_INNER:
-
-            x = [LIMITS[0][0] + random.uniform(0, 1)*(LIMITS[0][1] - LIMITS[0][0]),
-                 LIMITS[1][0] + random.uniform(0, 1)*(LIMITS[1][1] - LIMITS[1][0])]
-            r = np.linalg.norm(x, ord=2)
-
-    return x
-
-
-def save_figure(figure, dpi, dir_path_img, fname_img):
-
-    figure.savefig(
-        fname=pathlib.Path(dir_path_img, fname_img),
-        bbox_inches="tight",
-        dpi=dpi
-        #pil_kwargs = {'optimize': True, 'quality': 75}
-    )
-
-
 def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, fname_img):
 
     plt.scatter(x_state[0], x_state[1], c='r', s=100, zorder=-10)
@@ -152,7 +119,7 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
 
     plt.gca().set_aspect('equal', adjustable='box')
 
-    save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
+    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
 
     plt.close()
 
@@ -168,7 +135,7 @@ def compute_and_save_samples_plot(X_state_train, X_state_val, X_state_test, dir_
 
     plt.gca().set_aspect('equal', adjustable='box')
 
-    save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
+    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
 
     plt.close()
 
@@ -305,8 +272,8 @@ def compute_and_save_joint_angles_plot(model, device, dpi, n_one_dim, dir_path_i
             axes[0].add_patch(rectangle1)
             axes[1].add_patch(rectangle2)
 
-    save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
+    helper.save_figure(fig, dpi, "", fname_img)
 
     # close the plot handle
     plt.close()
@@ -394,8 +361,8 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
     plt.legend(loc='upper right', handles=legend_entries)
 
-    save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
+    helper.save_figure(fig, dpi, "", fname_img)
 
     # close the plot handle
     plt.close('all')
@@ -503,8 +470,8 @@ def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, is
 
     plt.legend(loc='upper right', handles=legend_entries)
 
-    save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
+    helper.save_figure(fig, dpi, "", fname_img)
 
     # close the plot handle
     plt.close('all')
@@ -588,6 +555,3 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, di
     # close the plot handle
     plt.close('all')
 
-
-
-''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''

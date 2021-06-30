@@ -35,14 +35,12 @@ random.seed(42)
 np.random.seed(42)
 torch.manual_seed(42)
 # only works with newer PyTorch versions
-# torch.use_deterministic_algorithms(True)
+#torch.use_deterministic_algorithms(True)
 #torch.backends.cudnn.benchmark = False
-# torch.autograd.set_detect_anomaly(True)
+#torch.autograd.set_detect_anomaly(True)
 
-directory_path = pathlib.Path(pathlib.Path(
-    __file__).parent.resolve(), "experiments")
-dir_path_id_partial = pathlib.Path(
-    directory_path, experiment.identifier_string)
+directory_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "experiments")
+dir_path_id_partial = pathlib.Path(directory_path, experiment.identifier_string)
 
 dtstring = str(datetime.datetime.now().replace(microsecond=0))
 char_replace = [' ', '-', ':']
@@ -138,6 +136,18 @@ class Model(torch.nn.Module):
         return theta
 
 
+def sample_joint_angles(constraints):
+
+    n = len(constraints)
+    x = []
+
+    for i in range(n) :
+        x += [constraints[i][0] + random.uniform(0, 1)*(constraints[i][1] - constraints[i][0])]
+
+    return x
+
+
+
 def initialize_directories():
 
     if not directory_path.exists():
@@ -161,6 +171,90 @@ def initialize_directories():
         dir_path_id_model.mkdir()
 
 
+def compute_dloss_dW(model):
+
+    dloss_dW = 0
+    weight_count = 0
+
+    for param in model.parameters():
+
+        if not param.grad is None:
+
+            weight_count += 1
+            param_norm = param.grad.data.norm(2)
+            dloss_dW = dloss_dW + param_norm.item() ** 2
+
+    if weight_count == 0:
+
+        weight_count = 1
+
+        print("[Warning in function compute_dloss_dW] Weight_count is 0, perhaps a bug?")
+
+    dloss_dW /= weight_count
+
+    return dloss_dW
+
+
+def soft_lower_bound_constraint(limit, epsilon, stiffness, x):
+
+    x = x - limit
+    x[x >= epsilon] = 0.0
+
+    a1 = stiffness
+    b1 = -0.5 * a1 * epsilon
+    c1 = -1.0 / 3 * (-b1 - a1 * epsilon) * epsilon - 1.0 / \
+        2 * a1 * epsilon * epsilon - b1 * epsilon
+
+    a2 = (-b1 - a1 * epsilon) / (epsilon * epsilon)
+    b2 = a1
+    c2 = b1
+    d2 = c1
+
+    xx = torch.clone(x)
+
+    y = x[xx < 0.0]
+    z = x[xx < epsilon]
+
+    x[xx < epsilon] = 1.0 / 3.0 * a2 * z * \
+        z * z + 0.5 * b2 * z * z + c2 * z + d2
+    x[xx < 0.0] = 0.5 * a1 * y * y + b1 * y + c1
+
+    return x
+
+
+def soft_upper_bound_constraint(limit, epsilon, stiffness, x):
+
+    x = x - limit
+    x[x <= -epsilon] = 0.0
+
+    a1 = stiffness
+    b1 = 0.5*a1*epsilon
+    c1 = 1./6. * a1*epsilon*epsilon
+
+    a2 = 1./(2.*epsilon)*a1
+    b2 = a1
+    c2 = 0.5*a1*epsilon
+    d2 = 1./6.*a1*epsilon*epsilon
+
+    xx = torch.clone(x)
+
+    y = x[xx > 0.0]
+    z = x[xx > -epsilon]
+
+    x[xx > -epsilon] = 1.0 / 3.0 * a2 * z * \
+        z * z + 0.5 * b2 * z * z + c2 * z + d2
+    x[xx > 0.0] = 0.5 * a1 * y * y + b1 * y + c1
+
+    return x
+
+
+def soft_bound_constraint(lower_limit, upper_limit, eps_rel, stiffness, x):
+
+    epsilon = (upper_limit - lower_limit) * eps_rel
+
+    return soft_lower_bound_constraint(lower_limit, epsilon, stiffness, x) + soft_upper_bound_constraint(upper_limit, epsilon, stiffness, x)
+
+
 def compute_loss(model, x_state):
 
     energy, constraint, terminal_position_distance, x_hat_fk_chain = experiment.compute_energy(
@@ -175,7 +269,44 @@ def compute_loss(model, x_state):
     return loss, [metric0, metric1, metric2]
 
 
-''' ---------------------------------------------- Benchmarking ---------------------------------------------- '''
+def save_model(model, iterations, string_path, string_dict_only, string_full):
+    torch.save(model, pathlib.Path(string_path, string_full))
+    torch.save(model.state_dict(), pathlib.Path(string_path, string_dict_only))
+    print("{} Saved Current State for Evaluation.\n".format(iterations))
+
+
+def compute_and_save_robot_plot(model, x_state, index, fname, dir_path):
+
+    n_batch = x_state.shape[0]
+
+    energy, constraint, terminal_position_distance, x_hat_fk_chain = experiment.compute_energy(
+        model, x_state, IS_CONSTRAINED)
+
+    index_batch_worst = np.argmax(energy.detach().tolist())
+
+    experiment.visualize_trajectory_and_save_image(
+        x_state[index_batch_worst].detach().cpu(),
+        x_hat_fk_chain[index_batch_worst].detach().cpu(),
+        dir_path,
+        fname + "_worst_iteration.jpg"
+    )
+
+    nb = 10
+
+    for i in range(nb):
+
+        index_batch_random = random.randrange(0, n_batch, 1)
+
+        experiment.visualize_trajectory_and_save_image(
+            x_state[index_batch_random].detach().cpu(),
+            x_hat_fk_chain[index_batch_random].detach().cpu(),
+            dir_path,
+            fname +
+            "_random_{:d}_of_{:d}.jpg".format(i+1, nb)
+        )
+
+
+''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
 
 
 initialize_directories()
@@ -214,11 +345,11 @@ scheduler = torch.optim.lr_scheduler.MultiplicativeLR(
 
 tb_writer = SummaryWriter()
 
-X_state_train_all = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
+X_state_train_all = torch.tensor([experiment.compute_sample() for _ in range(
     N_SAMPLES_TRAIN)], dtype=helper.DTYPE_TORCH).to(device)
-X_state_val = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
+X_state_val = torch.tensor([experiment.compute_sample() for _ in range(
     N_SAMPLES_VAL)], dtype=helper.DTYPE_TORCH).to(device)
-X_state_test = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
+X_state_test = torch.tensor([experiment.compute_sample() for _ in range(
     N_SAMPLES_TEST)], dtype=helper.DTYPE_TORCH).to(device)
 
 experiment.compute_and_save_samples_plot(X_state_train_all.detach().cpu(), X_state_val.detach(
@@ -249,7 +380,7 @@ for j in range(N_ITERATIONS):
 
     elif SAMPLING_MODE == 1:
 
-        X_state_train = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
+        X_state_train = torch.tensor([experiment.compute_sample() for _ in range(
             N_SAMPLES_TRAIN)], dtype=helper.DTYPE_TORCH).to(device)
 
     elif SAMPLING_MODE == 2:
@@ -298,7 +429,7 @@ for j in range(N_ITERATIONS):
 
         with torch.no_grad():
 
-            dloss_train_dW = helper.compute_dloss_dW(model)
+            dloss_train_dW = compute_dloss_dW(model)
 
             [loss_val, metrics_val] = compute_loss(model, X_state_val)
 
@@ -356,7 +487,7 @@ for j in range(N_ITERATIONS):
 
             tic = time.perf_counter()
 
-            helper.compute_and_save_robot_plot(random, experiment, model, X_samples, IS_CONSTRAINED, "robot_plot", dir_path_id_plots)
+            compute_and_save_robot_plot(model, X_samples, cur_index, "robot_plot", dir_path_id_plots)
 
             toc = time.perf_counter()
             print(f"{toc - tic:0.2f} [s] for compute_and_save_robot_plot(...)")
@@ -370,22 +501,12 @@ for j in range(N_ITERATIONS):
             )
 
             toc = time.perf_counter()
-            print(
-                f"{toc - tic:0.2f} [s] for compute_and_save_joint_angles_plot(...)")
+            print(f"{toc - tic:0.2f} [s] for compute_and_save_joint_angles_plot(...)")
 
             tic = time.perf_counter()
 
             experiment.compute_and_save_heatmap_plot(
-                random,
-                model,
-                device,
-                X_state_train,
-                metrics,
-                plot_dpi,
-                IS_CONSTRAINED,
-                n_one_dim,
-                dir_path_id_plots,
-                cur_index,
+                model, device, X_state_train, metrics, plot_dpi, IS_CONSTRAINED, n_one_dim, dir_path_id_plots, cur_index,
                 experiment.identifier_string + helper.HEATMAP_PLOT_NAME,
                 helper.plots_fontdict,
                 string_tmp + experiment.string_title_heatmap_plot
@@ -446,7 +567,7 @@ for j in range(N_ITERATIONS):
 
 print("\nTraining Process Completed.\n")
 
-helper.save_model(model, cur_index, dir_path_id_model,
+save_model(model, cur_index, dir_path_id_model,
            helper.nn_model_state_dict_only_str, helper.nn_model_full_str)
 
 print("\nAll Done!\n")

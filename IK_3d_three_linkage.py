@@ -8,7 +8,9 @@ import torch
 import numpy as np
 
 import matplotlib
+import matplotlib.pylab as pl
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 # local import
 import helper
@@ -23,7 +25,7 @@ string_title_jacobian_plot = f'\nJacobian Frobenius Norm Landscape\n3D Three-Lin
 string_title_heatmap_histogram = f'\nTerminal Energy Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
 string_title_jacobian_histogram = f'\nJacobian Frobenius Norm Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
 
-N_DIM_THETA = 3
+N_DIM_THETA = 30
 N_DIM_X = 3
 
 N_TRAJOPT = 1
@@ -33,7 +35,7 @@ N_DIM_X_STATE = 1*N_DIM_X
 LR_INITIAL = 1e-2
 
 # LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99925 # for 10k
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99960 # for 25k
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99950 # for 25k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99975 # for 30k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99985  # for 50k
 # LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
@@ -41,7 +43,7 @@ LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99960 # for 25k
 FK_ORIGIN = [0.0, 0.0, 0.0]
 
 RADIUS_INNER = 0.0
-RADIUS_OUTER = 1.0
+RADIUS_OUTER = 0.5
 
 SAMPLE_CIRCLE = True
 
@@ -117,49 +119,6 @@ def fk(theta):
     return p_final[:, 1:, :-1]
 
 
-def compute_sample():
-
-    x = [
-        LIMITS[0][0] + random.uniform(0, 1)*(LIMITS[0][1] - LIMITS[0][0]),
-        LIMITS[1][0] + random.uniform(0, 1)*(LIMITS[1][1] - LIMITS[1][0]),
-        LIMITS[2][0] + random.uniform(0, 1)*(LIMITS[2][1] - LIMITS[2][0])
-    ]
-
-    if SAMPLE_CIRCLE:
-
-        if RADIUS_OUTER <= RADIUS_INNER:
-
-            print(f"Make sure RADIUS_OUTER > RADIUS_INNER!")
-            exit(1)
-
-        r = np.linalg.norm(x, ord=2)
-
-        while r >= RADIUS_OUTER or r < RADIUS_INNER:
-
-            x = [
-                LIMITS[0][0] +
-                random.uniform(0, 1)*(LIMITS[0][1] - LIMITS[0][0]),
-                LIMITS[1][0] +
-                random.uniform(0, 1)*(LIMITS[1][1] - LIMITS[1][0]),
-                LIMITS[2][0] +
-                random.uniform(0, 1)*(LIMITS[2][1] - LIMITS[2][0])
-            ]
-
-            r = np.linalg.norm(x, ord=2)
-
-    return x
-
-
-def save_figure(figure, dpi, dir_path_img, fname_img):
-
-    figure.savefig(
-        fname=pathlib.Path(dir_path_img, fname_img),
-        bbox_inches="tight",
-        dpi=dpi
-        #pil_kwargs = {'optimize': True, 'quality': 75}
-    )
-
-
 def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, fname_img):
 
     fig = plt.figure()
@@ -207,9 +166,9 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
 
     plt.gca().set_aspect('auto', adjustable='box')
 
-    save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
+    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
 
-    save_figure(plt.gcf(), helper.SAVEFIG_DPI, "", fname_img)
+    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, "", fname_img)
 
     plt.close()
 
@@ -227,7 +186,7 @@ def compute_and_save_samples_plot(X_state_train, X_state_val, X_state_test, dir_
 
     plt.gca().set_aspect('auto', adjustable='box')
 
-    save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
+    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
 
     plt.close('all')
 
@@ -272,7 +231,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
     return
 
 
-def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, is_constrained, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dpi, is_constrained, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
 
     X_state_train = X_state_train.detach().cpu()
 
@@ -280,22 +239,14 @@ def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, is
 
     test_terminal_energy_mean = metrics[0].detach().cpu()
 
+    n_samples = 10000
+
     alpha = 0.5
     alpha_train_samples = 0.25
 
-    dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
-    dimY = np.linspace(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1], n_one_dim)
-    dimZ = np.linspace(LIMITS_PLOTS[2][0], LIMITS_PLOTS[2][1], n_one_dim)
+    x_state = torch.tensor([helper.compute_sample(rng, LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER) for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
 
-    dimX, dimY, dimZ = np.meshgrid(dimX, dimY, dimZ)
-
-    dimXz = torch.zeros_like(torch.tensor(dimX)).numpy()
-    dimZz = torch.zeros_like(torch.tensor(dimY)).numpy()
-    dimZz = torch.zeros_like(torch.tensor(dimZ)).numpy()
-
-    x_state = torch.tensor(np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
-
-    terminal_energy = torch.zeros((x_state.shape[0])).to(device)
+    terminal_energy = torch.zeros((n_samples)).to(device)
 
     with torch.no_grad():
 
@@ -318,11 +269,16 @@ def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, is
                 model, x_state, is_constrained)
             terminal_energy = terminal_position_distance
 
-    terminal_energy = np.array(terminal_energy.detach().cpu().reshape((n_one_dim, n_one_dim, n_one_dim)).tolist())
+    terminal_energy = terminal_energy.detach().cpu()
+    terminal_energy_min = terminal_energy.min()
+    terminal_energy_max = terminal_energy.max()
 
-    terminal_energy_orig = torch.clone(torch.tensor(terminal_energy))
-    condition = terminal_energy_orig < 1e-3
+    dimX = x_state[:, 0].detach().cpu()
+    dimY = x_state[:, 1].detach().cpu()
+    dimZ = x_state[:, 2].detach().cpu()
 
+    terminal_energy_orig = torch.tensor(terminal_energy).clone().detach()
+    condition = terminal_energy_orig < 1e-1
     terminal_energy = terminal_energy[condition]
     dimX = dimX[condition]
     dimY = dimY[condition]
@@ -333,7 +289,7 @@ def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, is
     #fig, ax = plt.subplots()
     ax = plt.axes(projection='3d')
 
-    #plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
+    plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
 
     ax.set_aspect(aspect='auto', adjustable='box')
 
@@ -343,57 +299,36 @@ def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, is
         pad=5
     )
 
-    ax.scatter(xs = dimX, ys = dimY, zs = dimZ, zdir = 'z', s = 20, c = terminal_energy, depthshade = True, alpha = 0.9)
+    cmap = pl.cm.RdBu
+    my_cmap = cmap(np.arange(cmap.N))
+    my_cmap[:,-1] = np.flip(np.logspace(-6, 0, cmap.N))
+    #print(my_cmap[:,-1])
+    my_cmap = ListedColormap(my_cmap)
+
+    c = ax.scatter(
+        xs = dimX,
+        ys = dimY,
+        zs = dimZ,
+        zdir = 'z',
+        s = 20,
+        c = terminal_energy,
+        depthshade = True,
+        cmap = my_cmap,
+        norm = matplotlib.colors.LogNorm(vmin = 1e-5, vmax = 1e+1)
+        #alpha = 0.75
+    )
+
+    ax.set_xlim(-1.0, 1.0)
+    ax.set_ylim(-1.0, 1.0)
+    ax.set_zlim(-1.0, 1.0)
 
     fig = plt.gcf()
-
-    '''
-
-    ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
-    c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
-                norm=matplotlib.colors.LogNorm(vmin=terminal_energy_min, vmax=terminal_energy_max))
-
-    ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=2.0,
-    marker='o', color='k', ls='', alpha=alpha_train_samples)
 
     cb = fig.colorbar(c, ax=ax, extend='max')
     cb.ax.plot([0, 1], [test_terminal_energy_mean]*2, 'k', alpha=alpha, lw=8.0)
 
-    if SAMPLE_CIRCLE:
-        circleInner = plt.Circle(
-            (0.0, 0.0), radius=RADIUS_INNER, color='orange', fill=False, lw=4.0, alpha=alpha)
-        circleOuter = plt.Circle(
-            (0.0, 0.0), radius=RADIUS_OUTER, color='orange', fill=False, lw=4.0, alpha=alpha)
-
-    if LIMITS_PLOTS != LIMITS:
-        rectangle = plt.Rectangle(xy=(LIMITS[0][0], LIMITS[1][0]), width=LIMITS[0][1]-LIMITS[0]
-                                  [0], height=LIMITS[1][1]-LIMITS[1][0], color='orange', fill=False, lw=4.0, alpha=alpha)
-
-    legend_entries = [
-        matplotlib.lines.Line2D([0], [0], lw=0.0, marker='o', color='k',
-                                alpha=alpha_train_samples, markersize=10.0, label='Train Samples'),
-        matplotlib.patches.Patch(
-            color='k', alpha=alpha, label='Test Mean ± Std')
-    ]
-
-    if LIMITS_PLOTS != LIMITS or SAMPLE_CIRCLE:
-
-        legend_entries = legend_entries + [matplotlib.patches.Patch(color='orange', alpha=alpha, label='Sampling Area')]
-
-        if SAMPLE_CIRCLE:
-            ax.add_patch(circleInner)
-            ax.add_patch(circleOuter)
-
-        if LIMITS_PLOTS != LIMITS:
-            ax.add_patch(rectangle)
-
-    plt.legend(loc='upper right', handles=legend_entries)
-
-
-    '''
-
-    save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
+    helper.save_figure(fig, dpi, "", fname_img)
 
     # close the plot handle
     plt.close('all')
@@ -477,5 +412,3 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, di
     # close the plot handle
     plt.close('all')
 
-
-''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
