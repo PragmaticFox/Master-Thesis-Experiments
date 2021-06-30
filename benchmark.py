@@ -11,6 +11,11 @@ import datetime
 import torch
 import numpy as np
 
+import matplotlib
+import matplotlib.pylab as pl
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+
 from torch.utils.tensorboard import SummaryWriter
 
 # local import
@@ -25,7 +30,7 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 torch.set_default_dtype(helper.DTYPE_TORCH)
 
-IS_PLOT_REGION = True
+IS_ONLY_PLOT_REGION = False
 
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
@@ -67,9 +72,11 @@ directories = [
 
 N_ITERATIONS = 25000
 
-N_SAMPLES_TRAIN = 100
+N_SAMPLES_TRAIN = 1000
 N_SAMPLES_VAL = 1000
 N_SAMPLES_TEST = 10000
+
+N_SAMPLES_THETA = 1000000
 
 NN_DIM_IN = 1*experiment.N_DIM_X_STATE
 NN_DIM_OUT = 2*experiment.N_DIM_THETA*experiment.N_TRAJOPT
@@ -175,13 +182,9 @@ file_handle_logger = open(pathlib.Path(
 sys_stdout_original = sys.stdout
 sys.stdout = helper.Logger(sys_stdout_original, file_handle_logger)
 
-if IS_PLOT_REGION :
+experiment.compute_and_save_joint_angles_region_plot(device, N_SAMPLES_THETA, helper.SAVEFIG_DPI, dir_path_id_plots, experiment.identifier_string + "joint_angles_region_plot")
 
-    helper.sample_joint_angles(random.uniform, experiment.CONSTRAINTS)
-
-    theta = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(N_SAMPLES_TRAIN)], dtype = helper.DTYPE_TORCH).to(device)
-
-    print(theta.shape)
+if IS_ONLY_PLOT_REGION :
 
     exit(0)
 

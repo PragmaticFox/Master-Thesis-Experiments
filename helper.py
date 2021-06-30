@@ -100,13 +100,13 @@ def compute_sample(rng, limits, is_sample_circle, radius_outer, radius_inner):
     return x
 
 
-def sample_joint_angles(uniform, constraints):
+def sample_joint_angles(rng, constraints):
 
     n = len(constraints)
     x = []
 
     for i in range(n) :
-        x += [constraints[i][0] + uniform(0, 1)*(constraints[i][1] - constraints[i][0])]
+        x += [constraints[i][0] + rng.uniform(0, 1)*(constraints[i][1] - constraints[i][0])]
 
     return x
 
@@ -219,66 +219,6 @@ def save_figure(figure, dpi, dir_path_img, fname_img):
     )
 
 
-def soft_lower_bound_constraint(limit, epsilon, stiffness, x):
-
-    x = x - limit
-    x[x >= epsilon] = 0.0
-
-    a1 = stiffness
-    b1 = -0.5 * a1 * epsilon
-    c1 = -1.0 / 3 * (-b1 - a1 * epsilon) * epsilon - 1.0 / \
-        2 * a1 * epsilon * epsilon - b1 * epsilon
-
-    a2 = (-b1 - a1 * epsilon) / (epsilon * epsilon)
-    b2 = a1
-    c2 = b1
-    d2 = c1
-
-    xx = torch.clone(x)
-
-    y = x[xx < 0.0]
-    z = x[xx < epsilon]
-
-    x[xx < epsilon] = 1.0 / 3.0 * a2 * z * \
-        z * z + 0.5 * b2 * z * z + c2 * z + d2
-    x[xx < 0.0] = 0.5 * a1 * y * y + b1 * y + c1
-
-    return x
-
-
-def soft_upper_bound_constraint(limit, epsilon, stiffness, x):
-
-    x = x - limit
-    x[x <= -epsilon] = 0.0
-
-    a1 = stiffness
-    b1 = 0.5*a1*epsilon
-    c1 = 1./6. * a1*epsilon*epsilon
-
-    a2 = 1./(2.*epsilon)*a1
-    b2 = a1
-    c2 = 0.5*a1*epsilon
-    d2 = 1./6.*a1*epsilon*epsilon
-
-    xx = torch.clone(x)
-
-    y = x[xx > 0.0]
-    z = x[xx > -epsilon]
-
-    x[xx > -epsilon] = 1.0 / 3.0 * a2 * z * \
-        z * z + 0.5 * b2 * z * z + c2 * z + d2
-    x[xx > 0.0] = 0.5 * a1 * y * y + b1 * y + c1
-
-    return x
-
-
-def soft_bound_constraint(lower_limit, upper_limit, eps_rel, stiffness, x):
-
-    epsilon = (upper_limit - lower_limit) * eps_rel
-
-    return soft_lower_bound_constraint(lower_limit, epsilon, stiffness, x) + soft_upper_bound_constraint(upper_limit, epsilon, stiffness, x)
-
-
 def save_model(model, iterations, string_path, string_dict_only, string_full):
     torch.save(model, pathlib.Path(string_path, string_full))
     torch.save(model.state_dict(), pathlib.Path(string_path, string_dict_only))
@@ -321,7 +261,7 @@ def compute_and_save_robot_plot(randrange, compute_energy, visualize_trajectory_
         fname + "_worst_iteration.jpg"
     )
 
-    nb = 10
+    nb = 5
 
     for i in range(nb):
 

@@ -52,7 +52,7 @@ LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0]]
 
 LENGTHS = N_DIM_THETA*[1.0/N_DIM_THETA]
 
-CONSTRAINTS = [[0.0, 2.0*math.pi], [0.0, 2.0*math.pi]]
+CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
 
@@ -118,6 +118,9 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
     plt.xlim([-1.0, 1.0])
     plt.ylim([-1.0, 1.0])
 
+    plt.xlabel("x")
+    plt.ylabel("y")
+
     plt.gca().set_aspect('equal', adjustable='box')
 
     helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
@@ -133,6 +136,9 @@ def compute_and_save_samples_plot(X_state_train, X_state_val, X_state_test, dir_
              ms=1.0, marker='o', color='g', ls='')
     plt.plot(X_state_test[:, 0], X_state_test[:, 1],
              ms=1.0, marker='o', color='r', ls='')
+
+    plt.xlabel("x")
+    plt.ylabel("y")
 
     plt.gca().set_aspect('equal', adjustable='box')
 
@@ -232,7 +238,11 @@ def compute_and_save_joint_angles_plot(model, device, dpi, n_one_dim, dir_path_i
         axes[i].axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
         c = axes[i].pcolormesh(dimX, dimY, theta_hat[:, :,  -1, i],
                                cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
+    
         #c = axes[i].pcolormesh(dimX, dimY, theta_hat[:, :,  -1, i], cmap = 'twilight', shading = 'gouraud', vmin = rad_min, vmax = rad_max)
+
+        axes[i].set_xlabel("x")
+        axes[i].set_ylabel("y")
 
     cb = fig.colorbar(c, ax=axes.ravel().tolist(), extend='max')
 
@@ -360,6 +370,9 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
         if LIMITS_PLOTS != LIMITS:
             ax.add_patch(rectangle)
 
+    plt.xlabel("x")
+    plt.ylabel("y")
+
     plt.legend(loc='upper right', handles=legend_entries)
 
     helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
@@ -469,6 +482,9 @@ def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, is
         if LIMITS_PLOTS != LIMITS:
             ax.add_patch(rectangle)
 
+    plt.xlabel("x")
+    plt.ylabel("y")
+
     plt.legend(loc='upper right', handles=legend_entries)
 
     helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
@@ -556,3 +572,7 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, di
     # close the plot handle
     plt.close('all')
 
+
+def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_path_img, fname_img):
+
+    return

@@ -25,7 +25,7 @@ string_title_jacobian_plot = f'\nJacobian Frobenius Norm Landscape\n3D Three-Lin
 string_title_heatmap_histogram = f'\nTerminal Energy Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
 string_title_jacobian_histogram = f'\nJacobian Frobenius Norm Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
 
-N_DIM_THETA = 30
+N_DIM_THETA = 3
 N_DIM_X = 3
 
 N_TRAJOPT = 1
@@ -43,19 +43,18 @@ LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99950 # for 25k
 FK_ORIGIN = [0.0, 0.0, 0.0]
 
 RADIUS_INNER = 0.0
-RADIUS_OUTER = 0.5
+RADIUS_OUTER = 1.0
 
 SAMPLE_CIRCLE = True
 
-LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
+LIMITS = [[-0.5, 0.5], [-0.1, 0.1], [0.5, 0.75]]
 
 LIMITS_PLOTS = LIMITS
-LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
+#LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
 LENGTHS = N_DIM_THETA*[1.0/N_DIM_THETA]
 
-CONSTRAINTS = [[0.0, 2.0*math.pi], [0.0, 2.0*math.pi], [0.0, 2.0*math.pi]]
-
+CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
 
@@ -69,53 +68,62 @@ def fk(theta):
     p = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
     p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1).to(device)
     rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
-    rt_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
+    r_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
+    t_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
 
     for i in range(N_DIM_THETA):
-
+        '''
         if (i % 3 == 0):
 
             # rotation around x-axis (yz-plane)
             # homogeneous coordinates
 
-            rt_hom_i[:, i, 0, 3] = LENGTHS[i]
-            #rt_hom_i[:, i, 1, 3] = LENGTHS[i]
-            #rt_hom_i[:, i, 2, 3] = LENGTHS[i]
+            #t_hom_i[:, i, 0, 3] = LENGTHS[i]
+            t_hom_i[:, i, 1, 3] = LENGTHS[i]
+            #t_hom_i[:, i, 2, 3] = LENGTHS[i]
 
-            rt_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
-            rt_hom_i[:, i, 1, 2] = -torch.sin(theta[:, i])
-            rt_hom_i[:, i, 2, 1] = torch.sin(theta[:, i])
-            rt_hom_i[:, i, 2, 2] = torch.cos(theta[:, i])
+            r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
+            r_hom_i[:, i, 1, 2] = -torch.sin(theta[:, i])
+            r_hom_i[:, i, 2, 1] = torch.sin(theta[:, i])
+            r_hom_i[:, i, 2, 2] = torch.cos(theta[:, i])
+        '''
 
-        if (i % 3 == 1):
+        if (i % 3 < 2):
 
             # rotation around y-axis (xz-plane)
             # homogeneous coordinates
 
-            rt_hom_i[:, i, 0, 3] = LENGTHS[i]
-            #rt_hom_i[:, i, 1, 3] = LENGTHS[i]
-            #rt_hom_i[:, i, 2, 3] = LENGTHS[i]
+            t_hom_i[:, i, 0, 3] = LENGTHS[i]
+            #t_hom_i[:, i, 1, 3] = LENGTHS[i]
+            #t_hom_i[:, i, 2, 3] = LENGTHS[i]
 
-            rt_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
-            rt_hom_i[:, i, 0, 2] = torch.sin(theta[:, i])
-            rt_hom_i[:, i, 2, 0] = -torch.sin(theta[:, i])
-            rt_hom_i[:, i, 2, 2] = torch.cos(theta[:, i])
+            r_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
+            r_hom_i[:, i, 0, 2] = torch.sin(theta[:, i])
+            r_hom_i[:, i, 2, 0] = -torch.sin(theta[:, i])
+            r_hom_i[:, i, 2, 2] = torch.cos(theta[:, i])
 
         if (i % 3 == 2):
 
             # rotation around z-axis (xy-plane)
             # homogeneous coordinates
 
-            rt_hom_i[:, i, 0, 3] = LENGTHS[i]
-            #rt_hom_i[:, i, 1, 3] = LENGTHS[i]
-            #rt_hom_i[:, i, 2, 3] = LENGTHS[i]
+            t_hom_i[:, i, 0, 3] = LENGTHS[i]
+            #t_hom_i[:, i, 1, 3] = LENGTHS[i]
+            #t_hom_i[:, i, 2, 3] = LENGTHS[i]
 
-            rt_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
-            rt_hom_i[:, i, 0, 1] = -torch.sin(theta[:, i])
-            rt_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
-            rt_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
+            r_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
+            r_hom_i[:, i, 0, 1] = -torch.sin(theta[:, i])
+            r_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
+            r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
+
+        #print(t_hom_i[0])
+        #print(r_hom_i[0])
         
-        rt_hom[:, i+1] = torch.matmul(torch.clone(rt_hom[:, i]), torch.clone(rt_hom_i[:, i]))
+        tmp = torch.matmul(torch.clone(rt_hom[:, i]), torch.clone(r_hom_i[:, i]))
+        rt_hom[:, i+1] = torch.matmul(torch.clone(tmp), torch.clone(t_hom_i[:, i]))
+        
+        #tmp = torch.matmul(torch.clone(r_hom_i[:, i]), torch.clone(t_hom_i[:, i]))
+        #rt_hom[:, i+1] = torch.matmul(torch.clone(tmp), torch.clone(rt_hom[:, i]))       
         p_final[:, i+1] = torch.matmul(rt_hom[:, i+1], p)
 
     return p_final[:, 1:, :-1]
@@ -165,6 +173,10 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
     ax.set_xlim(-1.0, 1.0)
     ax.set_ylim(-1.0, 1.0)
     ax.set_zlim(-1.0, 1.0)
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
 
     plt.gca().set_aspect('auto', adjustable='box')
 
@@ -241,7 +253,7 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
 
     test_terminal_energy_mean = metrics[0].detach().cpu()
 
-    n_samples = 10000
+    n_samples = 25000
 
     alpha = 0.5
     alpha_train_samples = 0.25
@@ -279,13 +291,6 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
     dimY = x_state[:, 1].detach().cpu()
     dimZ = x_state[:, 2].detach().cpu()
 
-    terminal_energy_orig = torch.tensor(terminal_energy).clone().detach()
-    condition = terminal_energy_orig < 1e-1
-    terminal_energy = terminal_energy[condition]
-    dimX = dimX[condition]
-    dimY = dimY[condition]
-    dimZ = dimZ[condition]
-
     # plot
 
     #fig, ax = plt.subplots()
@@ -303,7 +308,7 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
 
     cmap = pl.cm.RdBu
     my_cmap = cmap(np.arange(cmap.N))
-    my_cmap[:,-1] = np.flip(np.logspace(-6, 0, cmap.N))
+    my_cmap[:,-1] = np.flip(np.logspace(-2, 0, cmap.N))
     #print(my_cmap[:,-1])
     my_cmap = ListedColormap(my_cmap)
 
@@ -316,13 +321,17 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
         c = terminal_energy,
         depthshade = True,
         cmap = my_cmap,
-        norm = matplotlib.colors.LogNorm(vmin = 1e-5, vmax = 1e+1)
+        norm = matplotlib.colors.LogNorm(vmin = terminal_energy_min, vmax = terminal_energy_max)
         #alpha = 0.75
     )
 
-    ax.set_xlim(-1.0, 1.0)
-    ax.set_ylim(-1.0, 1.0)
-    ax.set_zlim(-1.0, 1.0)
+    ax.set_xlim(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1])
+    ax.set_ylim(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1])
+    ax.set_zlim(LIMITS_PLOTS[2][0], LIMITS_PLOTS[2][1])
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
 
     fig = plt.gcf()
 
@@ -414,3 +423,120 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, di
     # close the plot handle
     plt.close('all')
 
+
+def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_path_img, fname_img):
+
+    theta = torch.tensor([helper.sample_joint_angles(random, CONSTRAINTS) for _ in range(n_samples_theta)], dtype = helper.DTYPE_TORCH).to(device)
+
+    x_fk_chain = fk(theta)
+
+    x_fk_chain = torch.reshape(input = x_fk_chain, shape = (n_samples_theta, N_TRAJOPT, N_DIM_THETA, N_DIM_X_STATE))
+    x_fk_chain = torch.transpose(input = x_fk_chain, dim0 = 1, dim1 = 2)
+    x_fk_chain = x_fk_chain.detach().cpu()
+
+    xs = x_fk_chain[:, -1, -1, 0]
+    ys = x_fk_chain[:, -1, -1, 1]
+    zs = x_fk_chain[:, -1, -1, 2]
+
+    xs_min = xs.min()
+    xs_max = xs.max()
+
+    ys_min = ys.min()
+    ys_max = ys.max()
+
+    zs_min = zs.min()
+    zs_max = zs.max()
+
+    x_min = min(xs_min, LIMITS[0][0])
+    x_max = max(xs_max, LIMITS[0][1])
+
+    y_min = min(ys_min, LIMITS[1][0])
+    y_max = max(ys_max, LIMITS[1][1])
+
+    z_min = min(zs_min, LIMITS[2][0])
+    z_max = max(zs_max, LIMITS[2][1])
+
+    ax = plt.axes(projection = '3d')
+
+    ax.plot(xs, ys, zs, ms = 1.0, marker = 'o', color = 'b', ls = '', alpha = 0.5)
+
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    ax.set_zlim(z_min, z_max)
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+
+    ax.set_title(
+        f"\nx = [{xs_min}, {xs_max}]\ny = [{ys_min}, {ys_max}]\nz = [{zs_min}, {zs_max}]\n",
+        #fontdict=fontdict,
+        pad=5
+    )
+
+    plt.gca().set_aspect('auto', adjustable='box')
+
+    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, "", identifier_string + "joint_angles_region_plot_3d.png")
+
+    plt.close('all')
+
+    n_slices = 10.0
+
+    delta = (zs_max - zs_min) / n_slices
+
+    for i in range(int(n_slices)) :
+
+        ax = plt.axes()
+
+        indices_max = zs <= zs_min + (i+1)*delta
+
+        xs_ = xs[indices_max]
+        ys_ = ys[indices_max]
+        zs_ = zs[indices_max]
+
+        indices_min = zs_ >= zs_min + i*delta
+
+        xs__ = xs_[indices_min]
+        ys__ = ys_[indices_min]
+        zs__ = zs_[indices_min]
+
+        xs_min__ = xs__.min()
+        xs_max__ = xs__.max()
+
+        ys_min__ = ys__.min()
+        ys_max__ = ys__.max()
+
+        zs_min__ = zs__.min()
+        zs_max__ = zs__.max()
+
+        ax.plot(xs__, ys__, ms = 1.0, marker = 'o', color = 'b', ls = '', alpha = 0.5)
+
+        x_min__ = min(xs_min__, LIMITS[0][0])
+        x_max__ = max(xs_max__, LIMITS[0][1])
+
+        y_min__ = min(ys_min__, LIMITS[1][0])
+        y_max__ = max(ys_max__, LIMITS[1][1])
+
+        z_min__ = min(zs_min__, LIMITS[2][0])
+        z_max__ = max(zs_max__, LIMITS[2][1])
+
+        ax.set_xlim(x_min__, x_max__)
+        ax.set_ylim(y_min__, y_max__)
+
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+    
+        ax.set_title(
+            f"\nx = [{xs_min__}, {xs_max__}]\ny = [{ys_min__}, {ys_max__}]\nz = [{zs_min__}, {zs_max__}]\n",
+            #fontdict=fontdict,
+            pad=5
+        )
+
+        plt.gca().set_aspect('auto', adjustable='box')
+
+        fig = plt.gcf()
+
+        helper.save_figure(fig, dpi, "", str(i+1) + "_" + fname_img)
+        helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
+
+        plt.close('all')
