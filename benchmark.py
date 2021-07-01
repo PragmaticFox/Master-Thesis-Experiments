@@ -30,16 +30,16 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 1
+SAMPLING_MODE = 0
 IS_CONSTRAINED = False
 
 random.seed(42)
 np.random.seed(42)
 torch.manual_seed(42)
 # only works with newer PyTorch versions
-# torch.use_deterministic_algorithms(True)
-#torch.backends.cudnn.benchmark = False
-torch.autograd.set_detect_anomaly(True)
+torch.use_deterministic_algorithms(True)
+torch.backends.cudnn.benchmark = False
+# torch.autograd.set_detect_anomaly(True)
 
 directory_path = pathlib.Path(pathlib.Path(
     __file__).parent.resolve(), "experiments")
@@ -177,9 +177,10 @@ file_handle_logger = open(pathlib.Path(
 sys_stdout_original = sys.stdout
 sys.stdout = helper.Logger(sys_stdout_original, file_handle_logger)
 
-experiment.compute_and_save_joint_angles_region_plot(device, N_SAMPLES_THETA, helper.SAVEFIG_DPI, dir_path_id_plots, experiment.identifier_string + "joint_angles_region_plot")
+experiment.compute_and_save_joint_angles_region_plot(
+    device, random, N_SAMPLES_THETA, helper.SAVEFIG_DPI, dir_path_id_plots, experiment.identifier_string + "joint_angles_region_plot")
 
-if IS_ONLY_PLOT_REGION :
+if IS_ONLY_PLOT_REGION:
 
     exit(0)
 
@@ -255,7 +256,8 @@ for j in range(N_ITERATIONS):
 
                 distance_index += 1
 
-    [loss_train, metrics_train] = helper.compute_loss(experiment.compute_energy, model, X_state_train, IS_CONSTRAINED)
+    [loss_train, metrics_train] = helper.compute_loss(
+        experiment.compute_energy, model, X_state_train, IS_CONSTRAINED)
 
     optimizer.zero_grad()
     loss_train.backward()
@@ -276,7 +278,8 @@ for j in range(N_ITERATIONS):
 
             dloss_train_dW = helper.compute_dloss_dW(model)
 
-            [loss_val, metrics_val] = helper.compute_loss(experiment.compute_energy, model, X_state_val, IS_CONSTRAINED)
+            [loss_val, metrics_val] = helper.compute_loss(
+                experiment.compute_energy, model, X_state_val, IS_CONSTRAINED)
 
             tb_writer.add_scalar('Learning Rate', current_lr, cur_index)
             tb_writer.add_scalar(
@@ -300,7 +303,8 @@ for j in range(N_ITERATIONS):
 
             if j == N_ITERATIONS - 1:
 
-                [loss_test, metrics_test] = helper.compute_loss(experiment.compute_energy, model, X_state_test, IS_CONSTRAINED)
+                [loss_test, metrics_test] = helper.compute_loss(
+                    experiment.compute_energy, model, X_state_test, IS_CONSTRAINED)
 
                 tb_writer.add_scalar(
                     'Test Loss', loss_test.detach().cpu(), cur_index)
@@ -332,7 +336,8 @@ for j in range(N_ITERATIONS):
 
             tic = time.perf_counter()
 
-            helper.compute_and_save_robot_plot(random.randrange, experiment.compute_energy, experiment.visualize_trajectory_and_save_image, model, X_samples, IS_CONSTRAINED, "robot_plot", dir_path_id_plots)
+            helper.compute_and_save_robot_plot(random.randrange, experiment.compute_energy,
+                                               experiment.visualize_trajectory_and_save_image, model, X_samples, IS_CONSTRAINED, "robot_plot", dir_path_id_plots)
 
             toc = time.perf_counter()
             print(f"{toc - tic:0.2f} [s] for compute_and_save_robot_plot(...)")
@@ -423,10 +428,9 @@ for j in range(N_ITERATIONS):
 print("\nTraining Process Completed.\n")
 
 helper.save_model(model, cur_index, dir_path_id_model,
-           helper.nn_model_state_dict_only_str, helper.nn_model_full_str)
+                  helper.nn_model_state_dict_only_str, helper.nn_model_full_str)
 
 print("\nAll Done!\n")
 
 sys.stdout = sys_stdout_original
 file_handle_logger.close()
-

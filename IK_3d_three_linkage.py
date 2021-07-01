@@ -1,9 +1,6 @@
 #!/bin/python3
 
 import math
-import random
-import pathlib
-
 import torch
 import numpy as np
 
@@ -19,7 +16,7 @@ IS_UR5_ROBOT = True
 
 identifier_string = "IK_3d_"
 
-if IS_UR5_ROBOT :
+if IS_UR5_ROBOT:
 
     identifier_string += "UR5_"
 
@@ -33,13 +30,13 @@ string_title_jacobian_histogram = f'\nJacobian Frobenius Norm Histogram\n3D Thre
 
 N_DIM_THETA = 3
 
-if IS_UR5_ROBOT :
+if IS_UR5_ROBOT:
 
     N_DIM_THETA = 12
 
 N_DIM_JOINTS = N_DIM_THETA
 
-if IS_UR5_ROBOT :
+if IS_UR5_ROBOT:
 
     N_DIM_JOINTS = N_DIM_THETA // 2
 
@@ -52,9 +49,9 @@ N_DIM_X_STATE = 1*N_DIM_X
 LR_INITIAL = 1e-2
 
 # LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99925 # for 10k
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99950 # for 25k
-#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99975 # for 30k
-#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99985  # for 50k
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99950  # for 25k
+# LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99975 # for 30k
+# LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99985  # for 50k
 # LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
 
 FK_ORIGIN = [0.0, 0.0, 0.0]
@@ -66,14 +63,14 @@ SAMPLE_CIRCLE = True
 
 LIMITS = [[-0.5, 0.5], [-0.1, 0.1], [0.5, 0.75]]
 
-if IS_UR5_ROBOT :
+if IS_UR5_ROBOT:
 
     LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
 LIMITS_PLOTS = LIMITS
 #LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
-if IS_UR5_ROBOT :
+if IS_UR5_ROBOT:
 
     LIMITS_PLOTS = LIMITS
     #LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
@@ -83,18 +80,19 @@ LENGTHS = N_DIM_THETA*[1.0/N_DIM_THETA]
 
 CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
-if IS_UR5_ROBOT :
+if IS_UR5_ROBOT:
 
     CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
 
 
-def dh_matrix(n, theta, alpha, d, r) :
+def dh_matrix(n, theta, alpha, d, r):
 
     device = theta.device
 
-    transform = torch.reshape(torch.eye(4,4), shape = (1, 4, 4)).repeat(n, 1, 1).to(device)
+    transform = torch.reshape(torch.eye(4, 4), shape=(
+        1, 4, 4)).repeat(n, 1, 1).to(device)
 
     transform[:, 0, 0] = torch.cos(theta)
     transform[:, 0, 1] = - torch.sin(theta) * torch.cos(alpha)
@@ -119,32 +117,44 @@ def fk(theta):
     n_batch_times_n_trajOpt = theta.shape[0]
     n_dim_theta = theta.shape[1]
 
-    if IS_UR5_ROBOT :
+    if IS_UR5_ROBOT:
 
-        transform = torch.reshape(torch.eye(4,4), shape = (1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta//2 + 1, 1, 1).to(device)
+        transform = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
+            n_batch_times_n_trajOpt, n_dim_theta//2 + 1, 1, 1).to(device)
 
-        transform[:, 1] = torch.matmul(transform[:, 0].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 0], theta[:, 1], 0.089159, 0.0).clone())
-        transform[:, 2] = torch.matmul(transform[:, 1].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 2], theta[:, 3], 0.0, -0.425).clone())
-        transform[:, 3] = torch.matmul(transform[:, 2].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 4], theta[:, 5], 0.0, -0.39225).clone())
-        transform[:, 4] = torch.matmul(transform[:, 3].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 6], theta[:, 7], 0.10915, 0.0).clone())
-        transform[:, 5] = torch.matmul(transform[:, 4].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 8], theta[:, 9], 0.09465, 0.0).clone())
-        transform[:, 6] = torch.matmul(transform[:, 5].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 10], theta[:, 11], 0.0823, 0.0).clone())
+        transform[:, 1] = torch.matmul(transform[:, 0].clone(), dh_matrix(
+            n_batch_times_n_trajOpt, theta[:, 0], theta[:, 1], 0.089159, 0.0).clone())
+        transform[:, 2] = torch.matmul(transform[:, 1].clone(), dh_matrix(
+            n_batch_times_n_trajOpt, theta[:, 2], theta[:, 3], 0.0, -0.425).clone())
+        transform[:, 3] = torch.matmul(transform[:, 2].clone(), dh_matrix(
+            n_batch_times_n_trajOpt, theta[:, 4], theta[:, 5], 0.0, -0.39225).clone())
+        transform[:, 4] = torch.matmul(transform[:, 3].clone(), dh_matrix(
+            n_batch_times_n_trajOpt, theta[:, 6], theta[:, 7], 0.10915, 0.0).clone())
+        transform[:, 5] = torch.matmul(transform[:, 4].clone(), dh_matrix(
+            n_batch_times_n_trajOpt, theta[:, 8], theta[:, 9], 0.09465, 0.0).clone())
+        transform[:, 6] = torch.matmul(transform[:, 5].clone(), dh_matrix(
+            n_batch_times_n_trajOpt, theta[:, 10], theta[:, 11], 0.0823, 0.0).clone())
 
-        p  = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
-        p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape = (1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta//2, 1).to(device)
+        p = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
+        p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(
+            1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta//2, 1).to(device)
 
-        for i in range(n_dim_theta//2) :
-                
+        for i in range(n_dim_theta//2):
+
             p_final[:, i] = torch.matmul(torch.clone(transform[:, i+1]), p)
 
-        #return p_final[:, :, :-1], transform[:, 6, :3, :3]
+        # return p_final[:, :, :-1], transform[:, 6, :3, :3]
         return p_final[:, :, :-1]
 
     p = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
-    p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1).to(device)
-    rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
-    r_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
-    t_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
+    p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(
+        1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1).to(device)
+    rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
+        n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
+    r_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
+        n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
+    t_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
+        n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
 
     for i in range(N_DIM_THETA):
         '''
@@ -191,14 +201,16 @@ def fk(theta):
             r_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
             r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
 
-        #print(t_hom_i[0])
-        #print(r_hom_i[0])
-        
-        tmp = torch.matmul(torch.clone(rt_hom[:, i]), torch.clone(r_hom_i[:, i]))
-        rt_hom[:, i+1] = torch.matmul(torch.clone(tmp), torch.clone(t_hom_i[:, i]))
-        
+        # print(t_hom_i[0])
+        # print(r_hom_i[0])
+
+        tmp = torch.matmul(torch.clone(
+            rt_hom[:, i]), torch.clone(r_hom_i[:, i]))
+        rt_hom[:, i+1] = torch.matmul(torch.clone(tmp),
+                                      torch.clone(t_hom_i[:, i]))
+
         #tmp = torch.matmul(torch.clone(r_hom_i[:, i]), torch.clone(t_hom_i[:, i]))
-        #rt_hom[:, i+1] = torch.matmul(torch.clone(tmp), torch.clone(rt_hom[:, i]))       
+        #rt_hom[:, i+1] = torch.matmul(torch.clone(tmp), torch.clone(rt_hom[:, i]))
         p_final[:, i+1] = torch.matmul(rt_hom[:, i+1], p)
 
     return p_final[:, 1:, :-1]
@@ -222,12 +234,13 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
             x_hat_fk_chain[0, t, 2] - FK_ORIGIN[2],
             color='b',
             alpha=0.8,
-            normalize = False
+            normalize=False
         )
 
         for i in range(1, N_DIM_JOINTS, 1):
 
-            ax.scatter(x_hat_fk_chain[i-1, t, 0], x_hat_fk_chain[i-1, t, 1], x_hat_fk_chain[i-1, t, 2], c='0.5', s=10)
+            ax.scatter(x_hat_fk_chain[i-1, t, 0], x_hat_fk_chain[i-1,
+                       t, 1], x_hat_fk_chain[i-1, t, 2], c='0.5', s=10)
 
             ax.quiver(
                 x_hat_fk_chain[i-1, t, 0],
@@ -238,10 +251,11 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
                 x_hat_fk_chain[i, t, 2] - x_hat_fk_chain[i-1, t, 2],
                 color='b',
                 alpha=0.8,
-                normalize = False
+                normalize=False
             )
 
-        ax.scatter(x_hat_fk_chain[-1, t, 0], x_hat_fk_chain[-1, t, 1], x_hat_fk_chain[-1, t, 2], c='k', s=10)
+        ax.scatter(x_hat_fk_chain[-1, t, 0], x_hat_fk_chain[-1,
+                   t, 1], x_hat_fk_chain[-1, t, 2], c='k', s=10)
 
     ax.scatter(FK_ORIGIN[0], FK_ORIGIN[1], FK_ORIGIN[2], c='0.5', s=10)
 
@@ -333,7 +347,8 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
     alpha = 0.5
     alpha_train_samples = 0.25
 
-    x_state = torch.tensor([helper.compute_sample(rng, LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER) for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
+    x_state = torch.tensor([helper.compute_sample(rng, LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER)
+                           for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
 
     terminal_energy = torch.zeros((n_samples)).to(device)
 
@@ -371,7 +386,8 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
     #fig, ax = plt.subplots()
     ax = plt.axes(projection='3d')
 
-    plt.subplots_adjust(left=0, bottom=0, right=1.25, top=1.25, wspace=1, hspace=1)
+    plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                        top=1.25, wspace=1, hspace=1)
 
     ax.set_aspect(aspect='auto', adjustable='box')
 
@@ -383,20 +399,21 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
 
     cmap = pl.cm.RdBu
     my_cmap = cmap(np.arange(cmap.N))
-    my_cmap[:,-1] = np.flip(np.logspace(-1.5, 0, cmap.N))
-    #print(my_cmap[:,-1])
+    my_cmap[:, -1] = np.flip(np.logspace(-1.5, 0, cmap.N))
+    # print(my_cmap[:,-1])
     my_cmap = ListedColormap(my_cmap)
 
     c = ax.scatter(
-        xs = dimX,
-        ys = dimY,
-        zs = dimZ,
-        zdir = 'z',
-        s = 20,
-        c = terminal_energy,
-        depthshade = True,
-        cmap = my_cmap,
-        norm = matplotlib.colors.LogNorm(vmin = terminal_energy_min, vmax = terminal_energy_max)
+        xs=dimX,
+        ys=dimY,
+        zs=dimZ,
+        zdir='z',
+        s=20,
+        c=terminal_energy,
+        depthshade=True,
+        cmap=my_cmap,
+        norm=matplotlib.colors.LogNorm(
+            vmin=terminal_energy_min, vmax=terminal_energy_max)
         #alpha = 0.75
     )
 
@@ -499,14 +516,16 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, di
     plt.close('all')
 
 
-def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_path_img, fname_img):
+def compute_and_save_joint_angles_region_plot(device, rng, n_samples_theta, dpi, dir_path_img, fname_img):
 
-    theta = torch.tensor([helper.sample_joint_angles(random, CONSTRAINTS) for _ in range(n_samples_theta)], dtype = helper.DTYPE_TORCH).to(device)
+    theta = torch.tensor([helper.sample_joint_angles(rng, CONSTRAINTS) for _ in range(
+        n_samples_theta)], dtype=helper.DTYPE_TORCH).to(device)
 
     x_fk_chain = fk(theta)
 
-    x_fk_chain = torch.reshape(input = x_fk_chain, shape = (n_samples_theta, N_TRAJOPT, N_DIM_JOINTS, N_DIM_X_STATE))
-    x_fk_chain = torch.transpose(input = x_fk_chain, dim0 = 1, dim1 = 2)
+    x_fk_chain = torch.reshape(input=x_fk_chain, shape=(
+        n_samples_theta, N_TRAJOPT, N_DIM_JOINTS, N_DIM_X_STATE))
+    x_fk_chain = torch.transpose(input=x_fk_chain, dim0=1, dim1=2)
     x_fk_chain = x_fk_chain.detach().cpu()
 
     xs = x_fk_chain[:, -1, -1, 0]
@@ -531,9 +550,9 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
     z_min = min(zs_min, LIMITS[2][0])
     z_max = max(zs_max, LIMITS[2][1])
 
-    ax = plt.axes(projection = '3d')
+    ax = plt.axes(projection='3d')
 
-    ax.plot(xs, ys, zs, ms = 1.0, marker = 'o', color = 'b', ls = '', alpha = 0.5)
+    ax.plot(xs, ys, zs, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
 
     ax.set_xlim(x_min, x_max)
     ax.set_ylim(y_min, y_max)
@@ -545,13 +564,14 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
 
     ax.set_title(
         f"\nx = [{xs_min}, {xs_max}]\ny = [{ys_min}, {ys_max}]\nz = [{zs_min}, {zs_max}]\n",
-        #fontdict=fontdict,
+        # fontdict=fontdict,
         pad=5
     )
 
     plt.gca().set_aspect('auto', adjustable='box')
 
-    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, "", identifier_string + "joint_angles_region_plot_3d.png")
+    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, "",
+                       identifier_string + "joint_angles_region_plot_3d.png")
 
     plt.close('all')
 
@@ -559,7 +579,7 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
 
     delta = (zs_max - zs_min) / n_slices
 
-    for i in range(int(n_slices)) :
+    for i in range(int(n_slices)):
 
         ax = plt.axes()
 
@@ -584,7 +604,7 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
         zs_min__ = zs__.min()
         zs_max__ = zs__.max()
 
-        ax.plot(xs__, ys__, ms = 1.0, marker = 'o', color = 'b', ls = '', alpha = 0.5)
+        ax.plot(xs__, ys__, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
 
         x_min__ = min(xs_min__, LIMITS[0][0])
         x_max__ = max(xs_max__, LIMITS[0][1])
@@ -600,10 +620,10 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
 
         ax.set_xlabel("x")
         ax.set_ylabel("y")
-    
+
         ax.set_title(
             f"\nx = [{xs_min__}, {xs_max__}]\ny = [{ys_min__}, {ys_max__}]\nz = [{zs_min__}, {zs_max__}]\n",
-            #fontdict=fontdict,
+            # fontdict=fontdict,
             pad=5
         )
 
@@ -615,4 +635,3 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
         helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
 
         plt.close('all')
-

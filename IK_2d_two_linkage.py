@@ -1,9 +1,6 @@
 #!/bin/python3
 
 import math
-import random
-import pathlib
-
 import torch
 import numpy as np
 
@@ -238,7 +235,7 @@ def compute_and_save_joint_angles_plot(model, device, dpi, n_one_dim, dir_path_i
         axes[i].axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
         c = axes[i].pcolormesh(dimX, dimY, theta_hat[:, :,  -1, i],
                                cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
-    
+
         #c = axes[i].pcolormesh(dimX, dimY, theta_hat[:, :,  -1, i], cmap = 'twilight', shading = 'gouraud', vmin = rad_min, vmax = rad_max)
 
         axes[i].set_xlabel("x")
@@ -573,6 +570,6 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, di
     plt.close('all')
 
 
-def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_path_img, fname_img):
+def compute_and_save_joint_angles_region_plot(device, rng, n_samples_theta, dpi, dir_path_img, fname_img):
 
     return

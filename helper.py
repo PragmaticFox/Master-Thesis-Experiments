@@ -31,6 +31,7 @@ plots_fontdict = {'fontsize': 15, 'fontweight': 'normal',
 
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
 
+
 class Logger(object):
 
     '''
@@ -60,9 +61,9 @@ def initialize_directories(directories):
 
     # note that the order of directory creation might matter
 
-    for dir in directories :
+    for dir in directories:
 
-        if not dir.exists() :
+        if not dir.exists():
 
             dir.mkdir()
 
@@ -105,8 +106,9 @@ def sample_joint_angles(rng, constraints):
     n = len(constraints)
     x = []
 
-    for i in range(n) :
-        x += [constraints[i][0] + rng.uniform(0, 1)*(constraints[i][1] - constraints[i][0])]
+    for i in range(n):
+        x += [constraints[i][0] +
+              rng.uniform(0, 1)*(constraints[i][1] - constraints[i][0])]
 
     return x
 
@@ -290,4 +292,3 @@ def save_model(model, iterations, string_path, string_dict_only, string_full):
     torch.save(model, pathlib.Path(string_path, string_full))
     torch.save(model.state_dict(), pathlib.Path(string_path, string_dict_only))
     print("{} Saved Current State for Evaluation.\n".format(iterations))
-
