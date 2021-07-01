@@ -15,7 +15,13 @@ from matplotlib.colors import ListedColormap
 # local import
 import helper
 
+IS_UR5_ROBOT = True
+
 identifier_string = "IK_3d_"
+
+if IS_UR5_ROBOT :
+
+    identifier_string += "UR5_"
 
 string_title_joint_angles_plot = f'\nJoint Angles in Degrees\n3D Three-Linkage Robot Inverse Kinematics\n'
 
@@ -26,6 +32,17 @@ string_title_heatmap_histogram = f'\nTerminal Energy Histogram\n3D Three-Linkage
 string_title_jacobian_histogram = f'\nJacobian Frobenius Norm Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
 
 N_DIM_THETA = 3
+
+if IS_UR5_ROBOT :
+
+    N_DIM_THETA = 12
+
+N_DIM_JOINTS = N_DIM_THETA
+
+if IS_UR5_ROBOT :
+
+    N_DIM_JOINTS = N_DIM_THETA // 2
+
 N_DIM_X = 3
 
 N_TRAJOPT = 1
@@ -49,14 +66,51 @@ SAMPLE_CIRCLE = True
 
 LIMITS = [[-0.5, 0.5], [-0.1, 0.1], [0.5, 0.75]]
 
+if IS_UR5_ROBOT :
+
+    LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
+
 LIMITS_PLOTS = LIMITS
 #LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
+
+if IS_UR5_ROBOT :
+
+    LIMITS_PLOTS = LIMITS
+    #LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
+
 
 LENGTHS = N_DIM_THETA*[1.0/N_DIM_THETA]
 
 CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
+if IS_UR5_ROBOT :
+
+    CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
+
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
+
+
+def dh_matrix(n, theta, alpha, d, r) :
+
+    device = theta.device
+
+    transform = torch.reshape(torch.eye(4,4), shape = (1, 4, 4)).repeat(n, 1, 1).to(device)
+
+    transform[:, 0, 0] = torch.cos(theta)
+    transform[:, 0, 1] = - torch.sin(theta) * torch.cos(alpha)
+    transform[:, 0, 2] = torch.sin(theta) * torch.sin(alpha)
+    transform[:, 0, 3] = r * torch.cos(theta)
+
+    transform[:, 1, 0] = torch.sin(theta)
+    transform[:, 1, 1] = torch.cos(theta) * torch.cos(alpha)
+    transform[:, 1, 2] = - torch.cos(theta) * torch.sin(alpha)
+    transform[:, 1, 3] = r * torch.sin(theta)
+
+    transform[:, 2, 1] = torch.sin(alpha)
+    transform[:, 2, 2] = torch.cos(alpha)
+    transform[:, 2, 3] = d
+
+    return transform
 
 
 def fk(theta):
@@ -64,6 +118,27 @@ def fk(theta):
     device = theta.device
     n_batch_times_n_trajOpt = theta.shape[0]
     n_dim_theta = theta.shape[1]
+
+    if IS_UR5_ROBOT :
+
+        transform = torch.reshape(torch.eye(4,4), shape = (1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta//2 + 1, 1, 1).to(device)
+
+        transform[:, 1] = torch.matmul(transform[:, 0].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 0], theta[:, 1], 0.089159, 0.0).clone())
+        transform[:, 2] = torch.matmul(transform[:, 1].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 2], theta[:, 3], 0.0, -0.425).clone())
+        transform[:, 3] = torch.matmul(transform[:, 2].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 4], theta[:, 5], 0.0, -0.39225).clone())
+        transform[:, 4] = torch.matmul(transform[:, 3].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 6], theta[:, 7], 0.10915, 0.0).clone())
+        transform[:, 5] = torch.matmul(transform[:, 4].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 8], theta[:, 9], 0.09465, 0.0).clone())
+        transform[:, 6] = torch.matmul(transform[:, 5].clone(), dh_matrix(n_batch_times_n_trajOpt, theta[:, 10], theta[:, 11], 0.0823, 0.0).clone())
+
+        p  = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
+        p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape = (1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta//2, 1).to(device)
+
+        for i in range(n_dim_theta//2) :
+                
+            p_final[:, i] = torch.matmul(torch.clone(transform[:, i+1]), p)
+
+        #return p_final[:, :, :-1], transform[:, 6, :3, :3]
+        return p_final[:, :, :-1]
 
     p = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
     p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1).to(device)
@@ -150,7 +225,7 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
             normalize = False
         )
 
-        for i in range(1, N_DIM_THETA, 1):
+        for i in range(1, N_DIM_JOINTS, 1):
 
             ax.scatter(x_hat_fk_chain[i-1, t, 0], x_hat_fk_chain[i-1, t, 1], x_hat_fk_chain[i-1, t, 2], c='0.5', s=10)
 
@@ -214,7 +289,7 @@ def compute_energy(model, x_state, is_constrained):
     x_hat_fk_chain = fk(theta_hat)
 
     x_hat_fk_chain = torch.reshape(input=x_hat_fk_chain, shape=(
-        n_batch, N_TRAJOPT, N_DIM_THETA, N_DIM_X_STATE))
+        n_batch, N_TRAJOPT, N_DIM_JOINTS, N_DIM_X_STATE))
     x_hat_fk_chain = torch.transpose(input=x_hat_fk_chain, dim0=1, dim1=2)
 
     x_hat_state = x_hat_fk_chain[:, -1, -1, :]
@@ -308,7 +383,7 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
 
     cmap = pl.cm.RdBu
     my_cmap = cmap(np.arange(cmap.N))
-    my_cmap[:,-1] = np.flip(np.logspace(-2, 0, cmap.N))
+    my_cmap[:,-1] = np.flip(np.logspace(-1.5, 0, cmap.N))
     #print(my_cmap[:,-1])
     my_cmap = ListedColormap(my_cmap)
 
@@ -430,7 +505,7 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
 
     x_fk_chain = fk(theta)
 
-    x_fk_chain = torch.reshape(input = x_fk_chain, shape = (n_samples_theta, N_TRAJOPT, N_DIM_THETA, N_DIM_X_STATE))
+    x_fk_chain = torch.reshape(input = x_fk_chain, shape = (n_samples_theta, N_TRAJOPT, N_DIM_JOINTS, N_DIM_X_STATE))
     x_fk_chain = torch.transpose(input = x_fk_chain, dim0 = 1, dim1 = 2)
     x_fk_chain = x_fk_chain.detach().cpu()
 
@@ -540,3 +615,4 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
         helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
 
         plt.close('all')
+

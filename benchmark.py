@@ -11,11 +11,6 @@ import datetime
 import torch
 import numpy as np
 
-import matplotlib
-import matplotlib.pylab as pl
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-
 from torch.utils.tensorboard import SummaryWriter
 
 # local import
@@ -35,7 +30,7 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 1
+SAMPLING_MODE = 0
 IS_CONSTRAINED = False
 
 random.seed(42)
@@ -44,7 +39,7 @@ torch.manual_seed(42)
 # only works with newer PyTorch versions
 # torch.use_deterministic_algorithms(True)
 #torch.backends.cudnn.benchmark = False
-# torch.autograd.set_detect_anomaly(True)
+torch.autograd.set_detect_anomaly(True)
 
 directory_path = pathlib.Path(pathlib.Path(
     __file__).parent.resolve(), "experiments")
@@ -72,7 +67,7 @@ directories = [
 
 N_ITERATIONS = 25000
 
-N_SAMPLES_TRAIN = 1000
+N_SAMPLES_TRAIN = 100
 N_SAMPLES_VAL = 1000
 N_SAMPLES_TEST = 10000
 
