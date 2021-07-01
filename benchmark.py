@@ -30,7 +30,7 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 0
+SAMPLING_MODE = 1
 IS_CONSTRAINED = False
 
 random.seed(42)
@@ -67,7 +67,7 @@ directories = [
 
 N_ITERATIONS = 25000
 
-N_SAMPLES_TRAIN = 100
+N_SAMPLES_TRAIN = 1000
 N_SAMPLES_VAL = 1000
 N_SAMPLES_TEST = 10000
 
