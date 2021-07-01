@@ -506,6 +506,7 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, di
     hist, bins = np.histogram(arr, bins=25)
     logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
     ax.hist(x=arr, bins=logbins, density=True, log=True)
+    ax.axvline(arr.mean(), color='k', linestyle='dashed', linewidth=1)
     plt.xscale('log')
     plt.grid(True)
 
