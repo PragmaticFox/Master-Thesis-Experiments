@@ -379,7 +379,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
     plt.close('all')
 
 
-def compute_and_save_heatmap_plot(model, device, X_state_train, metrics, dpi, is_constrained, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dpi, is_constrained, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
 
     X_state_train = X_state_train.detach().cpu()
 

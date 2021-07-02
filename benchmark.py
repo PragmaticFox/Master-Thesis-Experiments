@@ -15,8 +15,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 # local import
 import helper
-#import IK_2d_two_linkage as experiment
-import IK_3d_three_linkage as experiment
+import IK_2d_two_linkage as experiment
+#import IK_3d_three_linkage as experiment
 
 print(f"PyTorch Version: {torch.__version__}")
 
@@ -30,8 +30,8 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 2
-IS_CONSTRAINED = False
+SAMPLING_MODE = 0
+IS_CONSTRAINED = True
 
 random.seed(42)
 np.random.seed(42)
@@ -52,6 +52,7 @@ for c in char_replace:
     dtstring = dtstring.replace(c, '_')
 
 dir_path_id = pathlib.Path(
+    
     dir_path_id_partial, experiment.identifier_string + "_" + dtstring)
 dir_path_id_model = pathlib.Path(dir_path_id, "model")
 dir_path_id_plots = pathlib.Path(dir_path_id, "plots")
@@ -67,11 +68,11 @@ directories = [
 
 N_ITERATIONS = 25000
 
-N_SAMPLES_TRAIN = 10
+N_SAMPLES_TRAIN = 100
 N_SAMPLES_VAL = 1000
 N_SAMPLES_TEST = 25000
 
-N_SAMPLES_THETA = 100000
+N_SAMPLES_THETA = 50000
 
 NN_DIM_IN = 1*experiment.N_DIM_X_STATE
 NN_DIM_OUT = 2*experiment.N_DIM_THETA*experiment.N_TRAJOPT

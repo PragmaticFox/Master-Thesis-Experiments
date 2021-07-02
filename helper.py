@@ -116,7 +116,14 @@ def sample_joint_angles(rng, constraints):
 def soft_lower_bound_constraint(limit, epsilon, stiffness, x):
 
     x = x - limit
-    x[x >= epsilon] = 0.0
+
+    xx = torch.clone(x)
+
+    condition = xx >= epsilon
+    indices = torch.nonzero(condition)
+
+    if len(indices) > 0 :
+        x[indices[0]] = 0.0
 
     a1 = stiffness
     b1 = -0.5 * a1 * epsilon
@@ -127,8 +134,6 @@ def soft_lower_bound_constraint(limit, epsilon, stiffness, x):
     b2 = a1
     c2 = b1
     d2 = c1
-
-    xx = torch.clone(x)
 
     y = x[xx < 0.0]
     z = x[xx < epsilon]
@@ -143,7 +148,14 @@ def soft_lower_bound_constraint(limit, epsilon, stiffness, x):
 def soft_upper_bound_constraint(limit, epsilon, stiffness, x):
 
     x = x - limit
-    x[x <= -epsilon] = 0.0
+
+    xx = torch.clone(x)
+
+    condition = xx <= -epsilon
+    indices = torch.nonzero(condition)
+
+    if len(indices) > 0 :
+        x[indices[0]] = 0.0
 
     a1 = stiffness
     b1 = 0.5*a1*epsilon
@@ -154,10 +166,8 @@ def soft_upper_bound_constraint(limit, epsilon, stiffness, x):
     c2 = 0.5*a1*epsilon
     d2 = 1./6.*a1*epsilon*epsilon
 
-    xx = torch.clone(x)
-
-    y = x[xx > 0.0]
     z = x[xx > -epsilon]
+    y = x[xx > 0.0]
 
     x[xx > -epsilon] = 1.0 / 3.0 * a2 * z * \
         z * z + 0.5 * b2 * z * z + c2 * z + d2
