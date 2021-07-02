@@ -31,7 +31,7 @@ IS_ONLY_PLOT_REGION = False
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
 SAMPLING_MODE = 0
-IS_CONSTRAINED = True
+IS_CONSTRAINED = False
 
 random.seed(42)
 np.random.seed(42)
@@ -66,7 +66,7 @@ directories = [
     dir_path_id_plots
 ]
 
-N_ITERATIONS = 25000
+N_ITERATIONS = 100000
 
 N_SAMPLES_TRAIN = 100
 N_SAMPLES_VAL = 1000
@@ -80,11 +80,11 @@ NN_DIM_IN_TO_OUT = 256
 
 LR_INITIAL = 1e-2
 
-#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99925 # for 10k
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.9995 # for 25k
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99910 # for 10k
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99965 # for 25k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99975 # for 30k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99985  # for 50k
-#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
 
 
 class Model(torch.nn.Module):
@@ -387,6 +387,7 @@ for j in range(N_ITERATIONS):
 
             tic = time.perf_counter()
 
+            '''
             n_one_dim_jac = 300 if j == N_ITERATIONS - 1 else 30
             experiment.compute_and_save_jacobian_plot(
                 model, device, X_state_train, plot_dpi, n_one_dim_jac, dir_path_id_plots, cur_index,
@@ -394,6 +395,7 @@ for j in range(N_ITERATIONS):
                 helper.plots_fontdict,
                 string_tmp + experiment.string_title_jacobian_plot
             )
+            '''
 
             toc = time.perf_counter()
             print(
@@ -414,12 +416,14 @@ for j in range(N_ITERATIONS):
 
             tic = time.perf_counter()
 
+            '''
             experiment.compute_and_save_jacobian_histogram(
                 model, X_samples, plot_dpi, dir_path_id_plots, cur_index,
                 experiment.identifier_string + helper.JACOBIAN_HISTOGRAM_NAME,
                 helper.plots_fontdict,
                 string_tmp + experiment.string_title_jacobian_histogram
             )
+            '''
 
             toc = time.perf_counter()
 
@@ -432,7 +436,7 @@ for j in range(N_ITERATIONS):
 
     if cur_index % helper.TIME_MEASURE_UPDATE == 0:
         print(
-            f"{cur_index} iterations {time_measure_tmp:0.2f} [s] (total {time_measure:0.2f} [s])")
+            f"{cur_index} iterations {current_lr} lr {time_measure_tmp:0.2f} [s] (total {time_measure:0.2f} [s])")
 
 print("\nTraining Process Completed.\n")
 
