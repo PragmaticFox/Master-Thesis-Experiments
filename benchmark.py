@@ -52,7 +52,7 @@ for c in char_replace:
     dtstring = dtstring.replace(c, '_')
 
 dir_path_id = pathlib.Path(
-    
+
     dir_path_id_partial, experiment.identifier_string + "_" + dtstring)
 dir_path_id_model = pathlib.Path(dir_path_id, "model")
 dir_path_id_plots = pathlib.Path(dir_path_id, "plots")
@@ -66,7 +66,7 @@ directories = [
     dir_path_id_plots
 ]
 
-N_ITERATIONS = 25000
+N_ITERATIONS = 100000
 
 N_SAMPLES_TRAIN = 100
 N_SAMPLES_VAL = 1000
@@ -77,6 +77,13 @@ N_SAMPLES_THETA = 50000
 NN_DIM_IN = 1*experiment.N_DIM_X_STATE
 NN_DIM_OUT = 2*experiment.N_DIM_THETA*experiment.N_TRAJOPT
 NN_DIM_IN_TO_OUT = 256
+
+LR_INITIAL = 1e-2
+
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99925 # for 10k
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99975 # for 30k
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99985  # for 50k
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
 
 
 class Model(torch.nn.Module):
@@ -186,9 +193,9 @@ if IS_ONLY_PLOT_REGION:
     exit(0)
 
 model = Model().to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=experiment.LR_INITIAL)
+optimizer = torch.optim.Adam(model.parameters(), lr=LR_INITIAL)
 scheduler = torch.optim.lr_scheduler.MultiplicativeLR(
-    optimizer, lr_lambda=lambda epoch: experiment.LR_SCHEDULER_MULTIPLICATIVE_REDUCTION)
+    optimizer, lr_lambda=lambda epoch: LR_SCHEDULER_MULTIPLICATIVE_REDUCTION)
 
 tb_writer = SummaryWriter()
 

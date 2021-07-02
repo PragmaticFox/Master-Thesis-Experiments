@@ -120,10 +120,8 @@ def soft_lower_bound_constraint(limit, epsilon, stiffness, x):
     xx = torch.clone(x)
 
     condition = xx >= epsilon
-    indices = torch.nonzero(condition)
-
-    if len(indices) > 0 :
-        x[indices[0]] = 0.0
+    if len(condition) > 0 :
+        x[condition] = torch.zeros_like(x[condition])
 
     a1 = stiffness
     b1 = -0.5 * a1 * epsilon
@@ -152,10 +150,8 @@ def soft_upper_bound_constraint(limit, epsilon, stiffness, x):
     xx = torch.clone(x)
 
     condition = xx <= -epsilon
-    indices = torch.nonzero(condition)
-
-    if len(indices) > 0 :
-        x[indices[0]] = 0.0
+    if len(condition) > 0 :
+        x[condition] = torch.zeros_like(x[condition])
 
     a1 = stiffness
     b1 = 0.5*a1*epsilon
