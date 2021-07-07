@@ -15,8 +15,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 # local import
 import helper
-import IK_2d_two_linkage as experiment
-#import IK_3d_three_linkage as experiment
+#import IK_2d_two_linkage as experiment
+import IK_3d_three_linkage as experiment
 
 print(f"PyTorch Version: {torch.__version__}")
 
@@ -66,13 +66,13 @@ directories = [
     dir_path_id_plots
 ]
 
-N_ITERATIONS = 100000
+N_ITERATIONS = 10000
 
-N_SAMPLES_TRAIN = 100
-N_SAMPLES_VAL = 1000
-N_SAMPLES_TEST = 25000
+N_SAMPLES_TRAIN = 1000
+N_SAMPLES_VAL = 10000
+N_SAMPLES_TEST = 100000
 
-N_SAMPLES_THETA = 50000
+N_SAMPLES_THETA = 10000
 
 NN_DIM_IN = 1*experiment.N_DIM_X_STATE
 NN_DIM_OUT = 2*experiment.N_DIM_THETA*experiment.N_TRAJOPT
@@ -80,11 +80,12 @@ NN_DIM_IN_TO_OUT = 256
 
 LR_INITIAL = 1e-2
 
-#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99910 # for 10k
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99925 # for 10k
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99960 # for 20k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99965 # for 25k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99975 # for 30k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99985  # for 50k
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
 
 
 class Model(torch.nn.Module):
@@ -249,21 +250,27 @@ for j in range(N_ITERATIONS):
                 (X_state_train_all - X_state_train[0]), p=2, dim=-1)
             distances_indices_sorted = torch.argsort(
                 distances, descending=False)
+            X_state_train_all = X_state_train_all[distances_indices_sorted]
             distance_index = 1
 
         else:
 
             if distance_index < N_SAMPLES_TRAIN and j % 2 == 0:
 
-                rel_index = distances_indices_sorted[distance_index]
+                #rel_index = distances_indices_sorted[distance_index]
 
                 # ablation experiment, just take the next index, not the nearest sample from the first sample
                 #rel_index = distance_index
 
-                X_state_train = torch.cat(
-                    (X_state_train, X_state_train_all[rel_index:rel_index+1]), dim=0)
+                #offset = max(N_SAMPLES_TRAIN // 500, 1)
+                offset = 1
+                if distance_index + offset > N_SAMPLES_TRAIN :
+                    offset = N_SAMPLES_TRAIN - distance_index
 
-                distance_index += 1
+                X_state_train = torch.cat(
+                    (X_state_train, X_state_train_all[distance_index:distance_index+offset]), dim=0)
+
+                distance_index += offset
 
     [loss_train, metrics_train] = helper.compute_loss(
         experiment.compute_energy, model, X_state_train, IS_CONSTRAINED)

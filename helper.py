@@ -12,7 +12,7 @@ SAVEFIG_DPI_FINAL = 600
 
 TIME_MEASURE_UPDATE = 100
 TENSORBOARD_UPDATE = 500
-PLOT_UPATE = 10*TENSORBOARD_UPDATE
+PLOT_UPATE = 2*TENSORBOARD_UPDATE
 
 JOINT_PLOT_NAME = "joint_plot.png"
 HEATMAP_PLOT_NAME = "heatmap_plot.png"
@@ -298,3 +298,4 @@ def save_model(model, iterations, string_path, string_dict_only, string_full):
     torch.save(model, pathlib.Path(string_path, string_full))
     torch.save(model.state_dict(), pathlib.Path(string_path, string_dict_only))
     print("{} Saved Current State for Evaluation.\n".format(iterations))
+

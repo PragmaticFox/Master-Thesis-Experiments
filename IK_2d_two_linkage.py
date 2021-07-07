@@ -7,6 +7,10 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
+# fixes "Fail to allocate bitmap" issue
+# https://github.com/matplotlib/mplfinance/issues/386#issuecomment-869950969
+matplotlib.use("Agg")
+
 # local import
 import helper
 
@@ -565,3 +569,4 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, di
 def compute_and_save_joint_angles_region_plot(device, rng, n_samples_theta, dpi, dir_path_img, fname_img):
 
     return
+

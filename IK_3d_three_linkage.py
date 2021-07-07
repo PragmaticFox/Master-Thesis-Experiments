@@ -9,6 +9,10 @@ import matplotlib.pylab as pl
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
+# fixes "Fail to allocate bitmap" issue
+# https://github.com/matplotlib/mplfinance/issues/386#issuecomment-869950969
+matplotlib.use("Agg")
+
 # local import
 import helper
 
@@ -16,7 +20,7 @@ IS_UR5_ROBOT = True
 
 identifier_string = "IK_3d_"
 
-if IS_UR5_ROBOT:
+if IS_UR5_ROBOT :
 
     identifier_string += "UR5_"
 
@@ -27,6 +31,16 @@ string_title_jacobian_plot = f'\nJacobian Frobenius Norm Landscape\n3D Three-Lin
 
 string_title_heatmap_histogram = f'\nTerminal Energy Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
 string_title_jacobian_histogram = f'\nJacobian Frobenius Norm Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
+
+if IS_UR5_ROBOT :
+
+    string_title_joint_angles_plot = f'\nJoint Angles in Degrees\n3D UR5 Robot Inverse Kinematics\n'
+
+    string_title_heatmap_plot = f'\nTerminal Energy Landscape in Meters\n3D UR5 Robot Inverse Kinematics\n'
+    string_title_jacobian_plot = f'\nJacobian Frobenius Norm Landscape\n3D UR5 Robot Inverse Kinematics\n'
+
+    string_title_heatmap_histogram = f'\nTerminal Energy Histogram\n3D UR5 Robot Inverse Kinematics\n'
+    string_title_jacobian_histogram = f'\nJacobian Frobenius Norm Histogram\n3D UR5 Robot Inverse Kinematics\n'
 
 N_DIM_THETA = 3
 
@@ -48,31 +62,33 @@ N_DIM_X_STATE = 1*N_DIM_X
 
 FK_ORIGIN = [0.0, 0.0, 0.0]
 
-RADIUS_INNER = 0.0
-RADIUS_OUTER = 0.8
-
 SAMPLE_CIRCLE = True
 
-LIMITS = [[-0.5, 0.5], [-0.1, 0.1], [0.5, 0.75]]
+RADIUS_INNER = 0.0
+RADIUS_OUTER = 1.0
 
-if IS_UR5_ROBOT:
+LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
+
+N_SLICES = 5.0
+
+if IS_UR5_ROBOT :
+
+    RADIUS_INNER = 0.0
+    RADIUS_OUTER = 0.7
 
     LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
 LIMITS_PLOTS = LIMITS
 #LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
-if IS_UR5_ROBOT:
+if IS_UR5_ROBOT :
 
     LIMITS_PLOTS = LIMITS
     #LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
-
-LENGTHS = N_DIM_THETA*[1.0/N_DIM_THETA]
-
 CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
-if IS_UR5_ROBOT:
+if IS_UR5_ROBOT :
 
     CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
@@ -150,20 +166,20 @@ def fk(theta):
 
     for i in range(N_DIM_THETA):
         '''
-        if (i % 3 == 0):
+        if (i % 3 == 2):
 
             # rotation around x-axis (yz-plane)
             # homogeneous coordinates
 
             #t_hom_i[:, i, 0, 3] = LENGTHS[i]
-            t_hom_i[:, i, 1, 3] = LENGTHS[i]
-            #t_hom_i[:, i, 2, 3] = LENGTHS[i]
+            #t_hom_i[:, i, 1, 3] = LENGTHS[i]
+            t_hom_i[:, i, 2, 3] = 0.2
 
             r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
             r_hom_i[:, i, 1, 2] = -torch.sin(theta[:, i])
             r_hom_i[:, i, 2, 1] = torch.sin(theta[:, i])
             r_hom_i[:, i, 2, 2] = torch.cos(theta[:, i])
-        '''
+
 
         if (i % 3 < 2):
 
@@ -179,27 +195,64 @@ def fk(theta):
             r_hom_i[:, i, 2, 0] = -torch.sin(theta[:, i])
             r_hom_i[:, i, 2, 2] = torch.cos(theta[:, i])
 
-        if (i % 3 == 2):
+        if (i % 3 == 0 and i % 3 == 1):
 
             # rotation around z-axis (xy-plane)
             # homogeneous coordinates
 
-            t_hom_i[:, i, 0, 3] = LENGTHS[i]
-            #t_hom_i[:, i, 1, 3] = LENGTHS[i]
-            #t_hom_i[:, i, 2, 3] = LENGTHS[i]
+            #t_hom_i[:, i, 0, 3] = 0.5
+            #t_hom_i[:, i, 1, 3] = 0.5
+            t_hom_i[:, i, 2, 3] =  0.5
 
             r_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
             r_hom_i[:, i, 0, 1] = -torch.sin(theta[:, i])
             r_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
             r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
 
+        '''
+
+        if i % 3 == 2:
+
+            # rotation around z-axis (xy-plane)
+            # homogeneous coordinates
+
+            t_hom_i[:, i, 1, 3] = 1.0
+
+            r_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
+            r_hom_i[:, i, 0, 1] = -torch.sin(theta[:, i])
+            r_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
+            r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
+
+        if i % 3 == 1 :
+
+            # rotation around z-axis (xy-plane)
+            # homogeneous coordinates
+
+            t_hom_i[:, i, 0, 3] = 1.0
+
+            r_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
+            r_hom_i[:, i, 0, 1] = -torch.sin(theta[:, i])
+            r_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
+            r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
+
+
+        if i % 3 == 0 :
+
+            # rotation around x-axis (yz-plane)
+            # homogeneous coordinates
+
+            t_hom_i[:, i, 1, 3] = 1.0
+
+            r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
+            r_hom_i[:, i, 1, 2] = -torch.sin(theta[:, i])
+            r_hom_i[:, i, 2, 1] = torch.sin(theta[:, i])
+            r_hom_i[:, i, 2, 2] = torch.cos(theta[:, i])
+
         # print(t_hom_i[0])
         # print(r_hom_i[0])
 
-        tmp = torch.matmul(torch.clone(
-            rt_hom[:, i]), torch.clone(r_hom_i[:, i]))
-        rt_hom[:, i+1] = torch.matmul(torch.clone(tmp),
-                                      torch.clone(t_hom_i[:, i]))
+        tmp = torch.matmul(torch.clone(rt_hom[:, i]), torch.clone(r_hom_i[:, i]))
+        rt_hom[:, i+1] = torch.matmul(torch.clone(tmp),torch.clone(t_hom_i[:, i]))
 
         #tmp = torch.matmul(torch.clone(r_hom_i[:, i]), torch.clone(t_hom_i[:, i]))
         #rt_hom[:, i+1] = torch.matmul(torch.clone(tmp), torch.clone(rt_hom[:, i]))
@@ -265,7 +318,8 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
 
     helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, "", fname_img)
 
-    plt.close()
+    # close the plot handle
+    plt.close("all")
 
 
 def compute_and_save_samples_plot(X_state_train, X_state_val, X_state_test, dir_path_img, fname_img):
@@ -283,6 +337,7 @@ def compute_and_save_samples_plot(X_state_train, X_state_val, X_state_test, dir_
 
     helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
 
+    # close the plot handle
     plt.close('all')
 
 
@@ -327,17 +382,12 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
 
 def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dpi, is_constrained, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
-
-    X_state_train = X_state_train.detach().cpu()
-
-    X_state_train = X_state_train[torch.sqrt(X_state_train[:, 2] ** 2) < 1e-3]
-
+    
     test_terminal_energy_mean = metrics[0].detach().cpu()
 
     n_samples = 25000
 
     alpha = 0.5
-    alpha_train_samples = 0.25
 
     x_state = torch.tensor([helper.compute_sample(rng, LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER)
                            for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
@@ -391,7 +441,7 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
 
     cmap = pl.cm.RdBu
     my_cmap = cmap(np.arange(cmap.N))
-    my_cmap[:, -1] = np.flip(np.logspace(-1.5, 0, cmap.N))
+    my_cmap[:, -1] = np.logspace(-2, 0, cmap.N)
     # print(my_cmap[:,-1])
     my_cmap = ListedColormap(my_cmap)
 
@@ -427,6 +477,106 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
 
     # close the plot handle
     plt.close('all')
+
+    delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
+
+    for i in range(int(N_SLICES)):
+
+        xs = X_state_train[:, 0].detach().cpu()
+        ys = X_state_train[:, 1].detach().cpu()
+        zs = X_state_train[:, 2].detach().cpu()
+
+        z_min = LIMITS_PLOTS[2][0] + i*delta_z
+        z_max = LIMITS_PLOTS[2][0] + (i+1)*delta_z
+
+        indices_max = zs <= z_max
+
+        xs_ = xs[indices_max]
+        ys_ = ys[indices_max]
+        zs_ = zs[indices_max]
+
+        indices_min = zs_ >= z_min
+
+        xs__ = xs_[indices_min]
+        ys__ = ys_[indices_min]
+        zs__ = zs_[indices_min]
+
+        test_terminal_energy_mean = metrics[0].detach().cpu()
+
+        alpha = 0.5
+        alpha_train_samples = 0.25
+
+        dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
+        dimY = np.linspace(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1], n_one_dim)
+
+        dimX, dimY = np.meshgrid(dimX, dimY)
+
+        dimZ = np.array([z_min + rng.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
+
+        x_state = torch.tensor(
+            np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
+
+        terminal_energy = torch.zeros((x_state.shape[0])).to(device)
+
+        with torch.no_grad():
+
+            if n_one_dim > 100:
+
+                n_splits = 100
+
+                delta = n_one_dim*n_one_dim // n_splits
+
+                for split in range(n_splits):
+                    energy_tmp, constraint_tmp, terminal_position_distance_tmp, _ = compute_energy(
+                        model, x_state[split*delta:(split+1)*delta], is_constrained)
+                    # energy_tmp
+                    terminal_energy[split*delta:(split+1) *
+                                    delta] = terminal_position_distance_tmp
+
+            else:
+
+                energy, constraint, terminal_position_distance, _ = compute_energy(
+                    model, x_state, is_constrained)
+                terminal_energy = terminal_position_distance
+
+        terminal_energy = np.array(terminal_energy.detach(
+        ).cpu().reshape((n_one_dim, n_one_dim)).tolist())
+        terminal_energy_min = terminal_energy.min()
+        terminal_energy_max = terminal_energy.max()
+
+        # plot
+
+        fig, ax = plt.subplots()
+
+        plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                            top=1.25, wspace=1, hspace=1)
+
+        ax.set_aspect(aspect='equal', adjustable='box')
+
+        ax.set_title(
+            f"\nz = [{z_min}, {z_max}]\n" + title_string,
+            fontdict=fontdict,
+            pad=5
+        )
+
+        ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
+        c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
+                        norm=matplotlib.colors.LogNorm(vmin=terminal_energy_min, vmax=terminal_energy_max))
+
+        ax.plot(xs__, ys__, ms=2.0,
+                marker='o', color='k', ls='', alpha=alpha_train_samples)
+
+        cb = fig.colorbar(c, ax=ax, extend='max')
+        cb.ax.plot([0, 1], [test_terminal_energy_mean]*2, 'k', alpha=alpha, lw=8.0)
+
+        plt.xlabel("x")
+        plt.ylabel("y")
+
+        helper.save_figure(fig, dpi, "", str(i+1) + "_" + fname_img)
+        helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
+
+        # close the plot handle
+        plt.close('all')
 
 
 def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, index, fname_img, fontdict, title_string):
@@ -566,13 +716,12 @@ def compute_and_save_joint_angles_region_plot(device, rng, n_samples_theta, dpi,
     helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, "",
                        identifier_string + "joint_angles_region_plot_3d.png")
 
+    # close the plot handle
     plt.close('all')
 
-    n_slices = 10.0
+    delta = (zs_max - zs_min) / N_SLICES
 
-    delta = (zs_max - zs_min) / n_slices
-
-    for i in range(int(n_slices)):
+    for i in range(int(N_SLICES)):
 
         ax = plt.axes()
 
@@ -627,4 +776,5 @@ def compute_and_save_joint_angles_region_plot(device, rng, n_samples_theta, dpi,
         helper.save_figure(fig, dpi, "", str(i+1) + "_" + fname_img)
         helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
 
+        # close the plot handle
         plt.close('all')
