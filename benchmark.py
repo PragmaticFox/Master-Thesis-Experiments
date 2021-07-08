@@ -80,7 +80,7 @@ NN_DIM_IN_TO_OUT = 256
 
 LR_INITIAL = 1e-2
 
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99925 # for 10k
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99930 # for 10k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99960 # for 20k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99965 # for 25k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99975 # for 30k
@@ -338,7 +338,7 @@ for j in range(N_ITERATIONS):
 
         if cur_index % helper.PLOT_UPATE == 0 or j == 0 or j == N_ITERATIONS - 1:
 
-            n_one_dim = 1000 if j == N_ITERATIONS - 1 else 50
+            n_one_dim = 500 if j == N_ITERATIONS - 1 else 50
             plot_dpi = helper.SAVEFIG_DPI_FINAL if j == N_ITERATIONS - 1 else helper.SAVEFIG_DPI
 
             metrics = metrics_val
@@ -417,7 +417,7 @@ for j in range(N_ITERATIONS):
             tic = time.perf_counter()
 
 
-            n_one_dim_jac = 100 if j == N_ITERATIONS - 1 else 30
+            n_one_dim_jac = 200 if j == N_ITERATIONS - 1 else 20
             experiment.compute_and_save_jacobian_plot(
                 random,
                 model,

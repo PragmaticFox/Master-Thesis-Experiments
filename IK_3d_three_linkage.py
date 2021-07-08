@@ -16,7 +16,7 @@ matplotlib.use("Agg")
 # local import
 import helper
 
-IS_UR5_ROBOT = True
+IS_UR5_ROBOT = False
 
 identifier_string = "IK_3d_"
 
