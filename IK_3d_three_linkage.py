@@ -371,14 +371,251 @@ def compute_energy(model, x_state, is_constrained):
     return energy, constraint_bound, terminal_position_distance, x_hat_fk_chain
 
 
-def compute_and_save_joint_angles_plot(model, device, dpi, n_one_dim, dir_path_img, index, fname_img, title_string):
+def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
 
-    return
+    delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
+
+    for i in range(int(N_SLICES)) :
+
+        z_min = LIMITS_PLOTS[2][0] + i*delta_z
+        z_max = LIMITS_PLOTS[2][0] + (i+1)*delta_z
+
+        dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
+        dimY = np.linspace(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1], n_one_dim)
+
+        dimX, dimY = np.meshgrid(dimX, dimY)
+
+        dimZ = np.array([z_min + rng.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
+
+        x_state = torch.tensor(
+            np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
+
+        theta_hat = torch.zeros((n_one_dim*n_one_dim, N_TRAJOPT, N_DIM_THETA))
+
+        with torch.no_grad():
+
+            if n_one_dim > 100:
+
+                n_splits = 100
+
+                delta = n_one_dim*n_one_dim // n_splits
+
+                for split in range(n_splits):
+                    theta_hat_tmp = model(x_state[split*delta:(split+1)*delta])
+                    # print(theta_hat_tmp.shape)
+                    # print(theta_hat[split*delta:(split+1)*delta].shape)
+                    #print(torch.reshape(theta_hat_tmp, (delta, N_TRAJOPT, N_DIM_THETA)).shape)
+                    theta_hat[split*delta:(split+1)*delta] = torch.reshape(
+                        theta_hat_tmp, (delta, N_TRAJOPT, N_DIM_THETA))
+
+            else:
+
+                theta_hat = model(x_state)
+
+        theta_hat = (theta_hat % (2.0 * math.pi)) * 180.0 / math.pi
+
+        theta_hat = torch.reshape(input=theta_hat, shape=(
+            n_one_dim, n_one_dim, N_TRAJOPT, N_DIM_THETA)).detach().cpu()
+
+        rad_min = 0.0
+        rad_max = 360.0
+
+        c = 0
+
+        for j in range(N_DIM_THETA):
+
+            # plot
+
+            fig, ax = plt.subplots()
+
+            plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                                top=1.25, wspace=1, hspace=1)
+
+            ax.set_aspect(aspect='equal', adjustable='box')
+
+            ax.set_title(
+                f'\nJoint {j+1}\n' + f"\nz = [{z_min}, {z_max}]\n" + title_string,
+                fontdict=fontdict,
+                pad=5
+            )
+
+            #print(theta_hat[:,:,-1,j])
+
+            ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
+            c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
+
+            cb = fig.colorbar(c, ax=ax, extend='max')
+
+            plt.xlabel("x")
+            plt.ylabel("y")
+
+            helper.save_figure(fig, dpi, "", str(i+1) + "_" + str(j+1) + "_" + fname_img)
+            helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + str(j+1) + "_" + fname_img)
+
+            # close the plot handle
+            plt.close('all')
 
 
-def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
 
-    return
+    n_samples = 2500
+
+    x_state = torch.tensor([helper.compute_sample(rng, LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER)
+                           for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
+
+    jac = torch.zeros(size=(n_samples, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+
+    for i in range(n_samples):
+        jac[i] = torch.reshape(torch.autograd.functional.jacobian(
+            model, x_state[i:i+1], create_graph=False, strict=False), shape=(N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+
+    jac_norm = torch.norm(jac.reshape(n_samples, N_TRAJOPT*N_DIM_THETA*N_DIM_X), p="fro", dim=-1)
+    jac_norm = np.array(jac_norm.detach().cpu().tolist())
+    jac_norm_min = jac_norm.min()
+    jac_norm_max = jac_norm.max()
+
+    dimX = x_state[:, 0].detach().cpu()
+    dimY = x_state[:, 1].detach().cpu()
+    dimZ = x_state[:, 2].detach().cpu()
+
+    # plot
+
+    #fig, ax = plt.subplots()
+    ax = plt.axes(projection='3d')
+
+    plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                        top=1.25, wspace=1, hspace=1)
+
+    ax.set_aspect(aspect='auto', adjustable='box')
+
+    ax.set_title(
+        title_string,
+        fontdict=fontdict,
+        pad=5
+    )
+
+    cmap = pl.cm.RdBu
+    my_cmap = cmap(np.arange(cmap.N))
+    my_cmap[:, -1] = np.logspace(-2, 0, cmap.N)
+    # print(my_cmap[:,-1])
+    my_cmap = ListedColormap(my_cmap)
+
+    c = ax.scatter(
+        xs=dimX,
+        ys=dimY,
+        zs=dimZ,
+        zdir='z',
+        s=20,
+        c=jac_norm,
+        depthshade=True,
+        cmap=my_cmap,
+        norm=matplotlib.colors.LogNorm(
+            vmin=jac_norm_min, vmax=jac_norm_max)
+        #alpha = 0.75
+    )
+
+    ax.set_xlim(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1])
+    ax.set_ylim(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1])
+    ax.set_zlim(LIMITS_PLOTS[2][0], LIMITS_PLOTS[2][1])
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+
+    fig = plt.gcf()
+
+    cb = fig.colorbar(c, ax=ax, extend='max')
+
+    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
+    helper.save_figure(fig, dpi, "", fname_img)
+
+    # close the plot handle
+    plt.close('all')
+
+    delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
+
+    for i in range(int(N_SLICES)) :
+
+        xs = X_state_train[:, 0].detach().cpu()
+        ys = X_state_train[:, 1].detach().cpu()
+        zs = X_state_train[:, 2].detach().cpu()
+
+        z_min = LIMITS_PLOTS[2][0] + i*delta_z
+        z_max = LIMITS_PLOTS[2][0] + (i+1)*delta_z
+
+        indices_max = zs <= z_max
+
+        xs_ = xs[indices_max]
+        ys_ = ys[indices_max]
+        zs_ = zs[indices_max]
+
+        indices_min = zs_ >= z_min
+
+        xs__ = xs_[indices_min]
+        ys__ = ys_[indices_min]
+        zs__ = zs_[indices_min]
+
+        alpha = 0.5
+        alpha_train_samples = 0.25
+
+        dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
+        dimY = np.linspace(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1], n_one_dim)
+
+        dimX, dimY = np.meshgrid(dimX, dimY)
+
+        dimZ = np.array([z_min + rng.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
+
+        x_state = torch.tensor(
+            np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
+
+        jac = torch.zeros(
+            size=(n_one_dim*n_one_dim, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+
+        for j in range(n_one_dim*n_one_dim):
+            jac[j] = torch.reshape(torch.autograd.functional.jacobian(
+                model, x_state[j:j+1], create_graph=False, strict=False), shape=(N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+
+        jac_norm = torch.reshape(jac, shape=(
+            n_one_dim, n_one_dim, N_TRAJOPT*N_DIM_THETA*N_DIM_X))
+        jac_norm = torch.norm(jac_norm, p="fro", dim=-1)
+
+        jac_norm = np.array(jac_norm.detach().cpu().reshape(
+            (n_one_dim, n_one_dim)).tolist())
+        jac_norm_min = jac_norm.min()
+        jac_norm_max = jac_norm.max()
+
+        # plot
+
+        fig, ax = plt.subplots()
+
+        plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                            top=1.25, wspace=1, hspace=1)
+
+        ax.set_aspect(aspect='equal', adjustable='box')
+
+        ax.set_title(
+            f"\nz = [{z_min}, {z_max}]\n" + title_string,
+            fontdict=fontdict,
+            pad=5
+        )
+
+        ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
+        c = ax.pcolormesh(dimX, dimY, jac_norm, cmap='RdBu', shading='gouraud',
+                        norm=matplotlib.colors.LogNorm(vmin=jac_norm_min, vmax=jac_norm_max))
+
+        ax.plot(xs__, ys__, ms=2.0,
+                marker='o', color='k', ls='', alpha=alpha_train_samples)
+
+        cb = fig.colorbar(c, ax=ax, extend='max')
+
+        plt.xlabel("x")
+        plt.ylabel("y")
+
+        helper.save_figure(fig, dpi, "", str(i+1) + "_" + fname_img)
+        helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
+
+        # close the plot handle
+        plt.close('all')
 
 
 def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dpi, is_constrained, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
@@ -579,9 +816,13 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
         plt.close('all')
 
 
-def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img, index, fname_img, fontdict, title_string):
 
     n_samples = X_samples.shape[0]
+
+    X_samples[:min(helper.N_JACOBIAN_HIST_SAMPLES, n_samples)]
+
+    n_samples = helper.N_JACOBIAN_HIST_SAMPLES
 
     jac = torch.zeros(size=(n_samples, N_TRAJOPT *
                             N_DIM_THETA, N_DIM_X)).to(X_samples.device)
@@ -620,7 +861,7 @@ def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, ind
     plt.close('all')
 
 
-def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, index, fname_img, fontdict, title_string):
 
     n_samples = X_samples.shape[0]
 
@@ -659,7 +900,7 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, di
     plt.close('all')
 
 
-def compute_and_save_joint_angles_region_plot(device, rng, n_samples_theta, dpi, dir_path_img, fname_img):
+def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi, dir_path_img, fname_img):
 
     theta = torch.tensor([helper.sample_joint_angles(rng, CONSTRAINTS) for _ in range(
         n_samples_theta)], dtype=helper.DTYPE_TORCH).to(device)

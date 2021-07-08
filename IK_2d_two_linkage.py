@@ -170,7 +170,7 @@ def compute_energy(model, x_state, is_constrained):
     return energy, constraint_bound, terminal_position_distance, x_hat_fk_chain
 
 
-def compute_and_save_joint_angles_plot(model, device, dpi, n_one_dim, dir_path_img, index, fname_img, title_string):
+def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
 
     alpha = 0.5
 
@@ -283,7 +283,7 @@ def compute_and_save_joint_angles_plot(model, device, dpi, n_one_dim, dir_path_i
     plt.close()
 
 
-def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
 
     X_state_train = X_state_train.detach().cpu()
 
@@ -487,9 +487,13 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
     plt.close('all')
 
 
-def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img, index, fname_img, fontdict, title_string):
 
     n_samples = X_samples.shape[0]
+
+    X_samples[:min(helper.N_JACOBIAN_HIST_SAMPLES, n_samples)]
+
+    n_samples = helper.N_JACOBIAN_HIST_SAMPLES
 
     jac = torch.zeros(size=(n_samples, N_TRAJOPT *
                             N_DIM_THETA, N_DIM_X)).to(X_samples.device)
@@ -528,7 +532,7 @@ def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, ind
     plt.close('all')
 
 
-def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, index, fname_img, fontdict, title_string):
 
     n_samples = X_samples.shape[0]
 
@@ -566,7 +570,7 @@ def compute_and_save_heatmap_histogram(model, X_samples, dpi, is_constrained, di
     plt.close('all')
 
 
-def compute_and_save_joint_angles_region_plot(device, rng, n_samples_theta, dpi, dir_path_img, fname_img):
+def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi, dir_path_img, fname_img):
 
     return
 

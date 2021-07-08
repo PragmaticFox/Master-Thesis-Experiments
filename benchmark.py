@@ -188,7 +188,12 @@ sys_stdout_original = sys.stdout
 sys.stdout = helper.Logger(sys_stdout_original, file_handle_logger)
 
 experiment.compute_and_save_joint_angles_region_plot(
-    device, random, N_SAMPLES_THETA, helper.SAVEFIG_DPI, dir_path_id_plots, experiment.identifier_string + "joint_angles_region_plot")
+    random,
+    device,
+    N_SAMPLES_THETA,
+    helper.SAVEFIG_DPI,
+    dir_path_id_plots,
+    experiment.identifier_string + "joint_angles_region_plot")
 
 if IS_ONLY_PLOT_REGION:
 
@@ -351,9 +356,17 @@ for j in range(N_ITERATIONS):
             string_tmp = f'\nIteration {cur_index}, {sampling_string}, {constrained_string}\n'
 
             tic = time.perf_counter()
-
-            helper.compute_and_save_robot_plot(random.randrange, experiment.compute_energy,
-                                               experiment.visualize_trajectory_and_save_image, model, X_samples, IS_CONSTRAINED, "robot_plot", dir_path_id_plots)
+  
+            helper.compute_and_save_robot_plot(
+                random.randrange,
+                experiment.compute_energy,
+                experiment.visualize_trajectory_and_save_image,
+                model,
+                X_samples,
+                IS_CONSTRAINED,
+                "robot_plot",
+                dir_path_id_plots
+            )
 
             toc = time.perf_counter()
             print(f"{toc - tic:0.2f} [s] for compute_and_save_robot_plot(...)")
@@ -361,10 +374,19 @@ for j in range(N_ITERATIONS):
             tic = time.perf_counter()
 
             experiment.compute_and_save_joint_angles_plot(
-                model, device, plot_dpi, n_one_dim, dir_path_id_plots, cur_index,
+                random,
+                model,
+                device,
+                X_state_train,
+                plot_dpi,
+                n_one_dim,
+                dir_path_id_plots,
+                cur_index,
                 experiment.identifier_string + helper.JOINT_PLOT_NAME,
+                helper.plots_fontdict,
                 string_tmp + experiment.string_title_joint_angles_plot
             )
+
 
             toc = time.perf_counter()
             print(
@@ -394,15 +416,22 @@ for j in range(N_ITERATIONS):
 
             tic = time.perf_counter()
 
-            '''
-            n_one_dim_jac = 300 if j == N_ITERATIONS - 1 else 30
+
+            n_one_dim_jac = 100 if j == N_ITERATIONS - 1 else 30
             experiment.compute_and_save_jacobian_plot(
-                model, device, X_state_train, plot_dpi, n_one_dim_jac, dir_path_id_plots, cur_index,
+                random,
+                model,
+                device,
+                X_state_train,
+                plot_dpi,
+                n_one_dim_jac,
+                dir_path_id_plots,
+                cur_index,
                 experiment.identifier_string + helper.JACOBIAN_PLOT_NAME,
                 helper.plots_fontdict,
                 string_tmp + experiment.string_title_jacobian_plot
             )
-            '''
+
 
             toc = time.perf_counter()
             print(
@@ -411,7 +440,13 @@ for j in range(N_ITERATIONS):
             tic = time.perf_counter()
 
             experiment.compute_and_save_heatmap_histogram(
-                model, X_samples, plot_dpi, IS_CONSTRAINED, dir_path_id_plots, cur_index,
+                random,
+                model,
+                X_samples,
+                plot_dpi,
+                IS_CONSTRAINED,
+                dir_path_id_plots,
+                cur_index,
                 experiment.identifier_string + helper.HEATMAP_HISTOGRAM_NAME,
                 helper.plots_fontdict,
                 string_tmp + experiment.string_title_heatmap_histogram
@@ -423,14 +458,17 @@ for j in range(N_ITERATIONS):
 
             tic = time.perf_counter()
 
-            '''
             experiment.compute_and_save_jacobian_histogram(
-                model, X_samples, plot_dpi, dir_path_id_plots, cur_index,
+                random,
+                model,
+                X_samples,
+                plot_dpi,
+                dir_path_id_plots,
+                cur_index,
                 experiment.identifier_string + helper.JACOBIAN_HISTOGRAM_NAME,
                 helper.plots_fontdict,
                 string_tmp + experiment.string_title_jacobian_histogram
             )
-            '''
 
             toc = time.perf_counter()
 
