@@ -521,7 +521,7 @@ def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img
 
     hist, bins = np.histogram(arr, bins=25)
     logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
-    ax.hist(x=arr, bins=logbins, density=True, log=True)
+    ax.hist(x=arr, bins=logbins, density=False, log=True)
     plt.xscale('log')
     plt.grid(True)
 
@@ -559,7 +559,7 @@ def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constraine
 
     hist, bins = np.histogram(arr, bins=25)
     logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
-    ax.hist(x=arr, bins=logbins, density=True, log=True)
+    ax.hist(x=arr, bins=logbins, density=False, log=True)
     plt.xscale('log')
     plt.grid(True)
 

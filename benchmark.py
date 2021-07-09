@@ -25,12 +25,12 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 torch.set_default_dtype(helper.DTYPE_TORCH)
 
-IS_ONLY_PLOT_REGION = False
+IS_ONLY_PLOT_REGION = True
 
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 0
+SAMPLING_MODE = 2
 IS_CONSTRAINED = False
 
 random.seed(42)
@@ -72,7 +72,7 @@ N_SAMPLES_TRAIN = 1000
 N_SAMPLES_VAL = 10000
 N_SAMPLES_TEST = 100000
 
-N_SAMPLES_THETA = 10000
+N_SAMPLES_THETA = 1000000
 
 NN_DIM_IN = 1*experiment.N_DIM_X_STATE
 NN_DIM_OUT = 2*experiment.N_DIM_THETA*experiment.N_TRAJOPT
