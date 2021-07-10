@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-# fixes "Fail to allocate bitmap" issue
+# fixes a possible "Fail to allocate bitmap" issue
 # https://github.com/matplotlib/mplfinance/issues/386#issuecomment-869950969
 matplotlib.use("Agg")
 
@@ -33,8 +33,8 @@ N_DIM_X_STATE = 1*N_DIM_X
 
 FK_ORIGIN = [0.0, 0.0]
 
-RADIUS_INNER = 0.25
-RADIUS_OUTER = 0.9
+RADIUS_INNER = 0.0
+RADIUS_OUTER = 1.0
 
 SAMPLE_CIRCLE = True
 

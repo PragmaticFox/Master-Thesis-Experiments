@@ -9,14 +9,14 @@ import matplotlib.pylab as pl
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
-# fixes "Fail to allocate bitmap" issue
+# fixes a possible "Fail to allocate bitmap" issue
 # https://github.com/matplotlib/mplfinance/issues/386#issuecomment-869950969
 matplotlib.use("Agg")
 
 # local import
 import helper
 
-IS_UR5_ROBOT = False
+IS_UR5_ROBOT = True
 
 identifier_string = "IK_3d_"
 

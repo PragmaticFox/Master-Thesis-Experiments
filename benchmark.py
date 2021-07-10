@@ -15,22 +15,22 @@ from torch.utils.tensorboard import SummaryWriter
 
 # local import
 import helper
-#import IK_2d_two_linkage as experiment
-import IK_3d_three_linkage as experiment
+import IK_2d_two_linkage as experiment
+#import IK_3d_three_linkage as experiment
 
 print(f"PyTorch Version: {torch.__version__}")
 
-# is needed to torch.set_deterministic(True) below
+# is needed for torch.use_deterministic_algorithms(True) below
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 torch.set_default_dtype(helper.DTYPE_TORCH)
 
-IS_ONLY_PLOT_REGION = True
+IS_ONLY_PLOT_REGION = False
 
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 2
+SAMPLING_MODE = 0
 IS_CONSTRAINED = False
 
 random.seed(42)
@@ -68,7 +68,7 @@ directories = [
 
 N_ITERATIONS = 10000
 
-N_SAMPLES_TRAIN = 1000
+N_SAMPLES_TRAIN = 10
 N_SAMPLES_VAL = 10000
 N_SAMPLES_TEST = 100000
 
