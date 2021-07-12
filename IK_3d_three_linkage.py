@@ -16,13 +16,13 @@ matplotlib.use("Agg")
 # local import
 import helper
 
-IS_UR5_ROBOT = True
+IS_UR5_ROBOT = False
 
-identifier_string = "IK_3d_"
+identifier_string = "IK_3d_threelinkage_"
 
 if IS_UR5_ROBOT :
 
-    identifier_string += "UR5_"
+    identifier_string = "IK_3d_UR5_"
 
 string_title_joint_angles_plot = f'\nJoint Angles in Degrees\n3D Three-Linkage Robot Inverse Kinematics\n'
 
@@ -74,7 +74,7 @@ N_SLICES = 5.0
 if IS_UR5_ROBOT :
 
     RADIUS_INNER = 0.0
-    RADIUS_OUTER = 0.7
+    RADIUS_OUTER = 0.75
 
     LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 

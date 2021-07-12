@@ -30,7 +30,7 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 0
+SAMPLING_MODE = 1
 IS_CONSTRAINED = False
 
 random.seed(42)
@@ -68,7 +68,7 @@ directories = [
 
 N_ITERATIONS = 10000
 
-N_SAMPLES_TRAIN = 10
+N_SAMPLES_TRAIN = 1000
 N_SAMPLES_VAL = 10000
 N_SAMPLES_TEST = 100000
 
@@ -86,6 +86,10 @@ LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99930 # for 10k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99975 # for 30k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99985  # for 50k
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
+
+# parameters for mode 2
+DIVISOR = 3
+TENTH = 0.1 * N_ITERATIONS
 
 
 class Model(torch.nn.Module):
@@ -260,15 +264,16 @@ for j in range(N_ITERATIONS):
 
         else:
 
-            if distance_index < N_SAMPLES_TRAIN and j % 2 == 0:
+            if distance_index < N_SAMPLES_TRAIN and j % DIVISOR == 0:
 
                 #rel_index = distances_indices_sorted[distance_index]
 
                 # ablation experiment, just take the next index, not the nearest sample from the first sample
                 #rel_index = distance_index
 
-                #offset = max(N_SAMPLES_TRAIN // 500, 1)
-                offset = 1
+
+                # maximally 10% of the iterations needed until full batch
+                offset = max(N_SAMPLES_TRAIN // (TENTH // DIVISOR), 1)
                 if distance_index + offset > N_SAMPLES_TRAIN :
                     offset = N_SAMPLES_TRAIN - distance_index
 
@@ -336,17 +341,19 @@ for j in range(N_ITERATIONS):
                 tb_writer.add_scalar(
                     'Max Test Terminal Position Distance [m]', metrics_test[2].detach().cpu(), cur_index)
 
+        n_one_dim = 500 if j == N_ITERATIONS - 1 else 50
+        plot_dpi = helper.SAVEFIG_DPI_FINAL if j == N_ITERATIONS - 1 else helper.SAVEFIG_DPI
+
+        metrics = metrics_val
+        X_samples = X_state_val
+
+        if j == N_ITERATIONS - 1:
+            metrics = metrics_test
+            X_samples = X_state_test
+
+        print(f"Val / Test Mean+-std: {metrics[0]}+-{metrics[1]}")
+
         if cur_index % helper.PLOT_UPATE == 0 or j == 0 or j == N_ITERATIONS - 1:
-
-            n_one_dim = 500 if j == N_ITERATIONS - 1 else 50
-            plot_dpi = helper.SAVEFIG_DPI_FINAL if j == N_ITERATIONS - 1 else helper.SAVEFIG_DPI
-
-            metrics = metrics_val
-            X_samples = X_state_val
-
-            if j == N_ITERATIONS - 1:
-                metrics = metrics_test
-                X_samples = X_state_test
 
             constrained_string = helper.convert_constrained_boolean_to_string(
                 IS_CONSTRAINED)
@@ -355,6 +362,7 @@ for j in range(N_ITERATIONS):
 
             string_tmp = f'\nIteration {cur_index}, {sampling_string}, {constrained_string}\n'
 
+            '''
             tic = time.perf_counter()
   
             helper.compute_and_save_robot_plot(
@@ -474,6 +482,7 @@ for j in range(N_ITERATIONS):
 
             print(
                 f"{toc - tic:0.2f} [s] for compute_and_save_jacobian_histogram(...)")
+            '''
 
     toc_loop = time.perf_counter()
     time_measure_tmp = (toc_loop - tic_loop)
