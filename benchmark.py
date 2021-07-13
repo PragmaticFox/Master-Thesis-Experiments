@@ -78,7 +78,7 @@ txt_dict = {
     '99percentile': ''
 }
 
-N_ITERATIONS = 100
+N_ITERATIONS = 100000
 
 N_SAMPLES_TRAIN = 10000
 N_SAMPLES_VAL = 10000
