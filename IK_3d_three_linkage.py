@@ -793,6 +793,8 @@ def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img
     jac = torch.zeros(size=(n_samples, N_TRAJOPT * N_DIM_THETA, N_DIM_X)).to(X_samples.device)
     jac = torch.autograd.functional.jacobian(model_sum, X_samples, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
 
+    jac = jac.reshape(n_samples, N_TRAJOPT * N_DIM_THETA * N_DIM_X)
+
     jac_norm = torch.norm(jac, p="fro", dim=-1)
     jac_norm = np.array(jac_norm.detach().cpu().tolist())
 
@@ -809,12 +811,7 @@ def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img
 
     arr = jac_norm.flatten()
 
-    hist, bins = np.histogram(arr, bins=helper.HIST_BINS)
-    logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
-    ax.hist(x=arr, bins=logbins, density=False, log=True)
-
-    plt.xscale('log')
-    plt.grid(True)
+    helper.plot_histogram(plt, ax, arr)
 
     helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
@@ -847,12 +844,7 @@ def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constraine
 
     arr = terminal_energy.flatten()
 
-    hist, bins = np.histogram(arr, bins=helper.HIST_BINS)
-    logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
-    ax.hist(x=arr, bins=logbins, density=False, log=True)
-
-    plt.xscale('log')
-    plt.grid(True)
+    helper.plot_histogram(plt, ax, arr)
 
     helper.save_figure(fig, dpi, dir_path_img, fname_img)
 

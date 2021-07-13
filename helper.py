@@ -361,4 +361,13 @@ def compute_and_save_metrics_txt(txt_dict, test_metrics, n_iterations, dir_path_
 
         text_file.write(txt_merge)
 
-    
+
+def plot_histogram(plt, ax, arr):
+
+    hist, bins = np.histogram(arr, bins = HIST_BINS)
+    logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
+    ax.hist(x = arr, bins = logbins, density = False, log = True, cumulative = False)
+
+    plt.xscale('log')
+    plt.grid(True)
+
