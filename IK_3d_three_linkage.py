@@ -421,16 +421,26 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
 
 def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
-    n_samples = 2500
+    n_samples = n_one_dim*n_one_dim
 
-    x_state = torch.tensor([helper.compute_sample(rng, LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER)
-                           for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
+    x_state = torch.tensor([helper.compute_sample(rng, LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER) for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
 
+    model_sum = lambda x : torch.sum(model(x), axis = 0)
     jac = torch.zeros(size=(n_samples, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
 
-    for i in range(n_samples):
-        jac[i] = torch.reshape(torch.autograd.functional.jacobian(
-            model, x_state[i:i+1], create_graph=False, strict=False), shape=(N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+    if n_one_dim > 100 :
+
+        n_splits = 100
+
+        delta = n_samples // n_splits
+
+        for split in range(n_splits) :
+
+            jac[split*delta:(split+1)*delta] = torch.autograd.functional.jacobian(model_sum, x_state[split*delta:(split+1)*delta], create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
+
+    else :
+
+        jac = torch.autograd.functional.jacobian(model_sum, x_state, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
 
     jac_norm = torch.norm(jac.reshape(n_samples, N_TRAJOPT*N_DIM_THETA*N_DIM_X), p="fro", dim=-1)
     jac_norm = np.array(jac_norm.detach().cpu().tolist())
@@ -529,12 +539,23 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
         x_state = torch.tensor(
             np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
 
-        jac = torch.zeros(
-            size=(n_one_dim*n_one_dim, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+        model_sum = lambda x : torch.sum(model(x), axis = 0)
 
-        for j in range(n_one_dim*n_one_dim):
-            jac[j] = torch.reshape(torch.autograd.functional.jacobian(
-                model, x_state[j:j+1], create_graph=False, strict=False), shape=(N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+        jac = torch.zeros(size=(n_one_dim*n_one_dim, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+
+        if n_one_dim > 100 :
+
+            n_splits = 100
+
+            delta = n_one_dim*n_one_dim // n_splits
+
+            for split in range(n_splits) :
+
+                jac[split*delta:(split+1)*delta] = torch.autograd.functional.jacobian(model_sum, x_state[split*delta:(split+1)*delta], create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
+
+        else :
+
+            jac = torch.autograd.functional.jacobian(model_sum, x_state, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
 
         jac_norm = torch.reshape(jac, shape=(
             n_one_dim, n_one_dim, N_TRAJOPT*N_DIM_THETA*N_DIM_X))
@@ -580,7 +601,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
 def compute_and_save_heatmap_plot(rng, model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
     
-    n_samples = 25000
+    n_samples = n_one_dim*n_one_dim
 
     x_state = torch.tensor([helper.compute_sample(rng, LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER)
                            for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
@@ -768,16 +789,10 @@ def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img
 
     n_samples = X_samples.shape[0]
 
-    X_samples[:min(helper.N_JACOBIAN_HIST_SAMPLES, n_samples)]
+    model_sum = lambda x : torch.sum(model(x), axis = 0)
 
-    n_samples = helper.N_JACOBIAN_HIST_SAMPLES
-
-    jac = torch.zeros(size=(n_samples, N_TRAJOPT *
-                            N_DIM_THETA, N_DIM_X)).to(X_samples.device)
-
-    for i in range(n_samples):
-        jac[i] = torch.reshape(torch.autograd.functional.jacobian(model, X_samples[i:i+1], create_graph=False,
-                                                                  strict=False), shape=(N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+    jac = torch.zeros(size=(n_samples, N_TRAJOPT * N_DIM_THETA, N_DIM_X)).to(X_samples.device)
+    jac = torch.autograd.functional.jacobian(model_sum, X_samples, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
 
     jac_norm = torch.norm(jac, p="fro", dim=-1)
     jac_norm = np.array(jac_norm.detach().cpu().tolist())
@@ -793,12 +808,12 @@ def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img
         pad=5
     )
 
-    arr = jac_norm.flatten() if len(
-        jac_norm.flatten()) < 1000 else jac_norm.flatten()[:1000]
+    arr = jac_norm.flatten()
 
-    hist, bins = np.histogram(arr, bins=25)
+    hist, bins = np.histogram(arr, bins=helper.HIST_BINS)
     logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
     ax.hist(x=arr, bins=logbins, density=False, log=True)
+
     plt.xscale('log')
     plt.grid(True)
 
@@ -833,10 +848,10 @@ def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constraine
 
     arr = terminal_energy.flatten()
 
-    hist, bins = np.histogram(arr, bins=25)
+    hist, bins = np.histogram(arr, bins=helper.HIST_BINS)
     logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
     ax.hist(x=arr, bins=logbins, density=False, log=True)
-    ax.axvline(arr.mean(), color='k', linestyle='dashed', linewidth=1)
+
     plt.xscale('log')
     plt.grid(True)
 

@@ -15,8 +15,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 # local import
 import helper
-import IK_2d_two_linkage as experiment
-#import IK_3d_three_linkage as experiment
+#import IK_2d_two_linkage as experiment
+import IK_3d_three_linkage as experiment
 
 print(f"PyTorch Version: {torch.__version__}")
 
