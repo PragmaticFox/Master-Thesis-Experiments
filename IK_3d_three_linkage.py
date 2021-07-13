@@ -1,7 +1,10 @@
 #!/bin/python3
 
+import os
 import math
 import torch
+import shutil
+import pathlib
 import numpy as np
 
 import matplotlib
@@ -16,7 +19,7 @@ matplotlib.use("Agg")
 # local import
 import helper
 
-IS_UR5_ROBOT = False
+IS_UR5_ROBOT = True
 
 identifier_string = "IK_3d_threelinkage_"
 
@@ -93,6 +96,12 @@ if IS_UR5_ROBOT :
     CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
+
+
+def save_script(directory):
+
+    # saves a copy of the current python script into the folder
+    shutil.copy(__file__, pathlib.Path(directory, os.path.basename(__file__)))
 
 
 def dh_matrix(n, theta, alpha, d, r):
@@ -316,8 +325,6 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
 
     helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img, fname_img)
 
-    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, "", fname_img)
-
     # close the plot handle
     plt.close("all")
 
@@ -371,7 +378,7 @@ def compute_energy(model, x_state, is_constrained):
     return energy, constraint_bound, terminal_position_distance, x_hat_fk_chain
 
 
-def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
 
@@ -439,8 +446,6 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
                 pad=5
             )
 
-            #print(theta_hat[:,:,-1,j])
-
             ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
             c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
 
@@ -449,14 +454,13 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
             plt.xlabel("x")
             plt.ylabel("y")
 
-            helper.save_figure(fig, dpi, "", str(i+1) + "_" + str(j+1) + "_" + fname_img)
             helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + str(j+1) + "_" + fname_img)
 
             # close the plot handle
             plt.close('all')
 
 
-def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     n_samples = 2500
 
@@ -526,9 +530,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     cb = fig.colorbar(c, ax=ax, extend='max')
 
-    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    helper.save_figure(fig, dpi, "", fname_img)
-
+    helper.save_figure(fig, dpi, dir_path_img, fname_img)
     # close the plot handle
     plt.close('all')
 
@@ -611,20 +613,15 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
         plt.xlabel("x")
         plt.ylabel("y")
 
-        helper.save_figure(fig, dpi, "", str(i+1) + "_" + fname_img)
         helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
 
         # close the plot handle
         plt.close('all')
 
 
-def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dpi, is_constrained, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_heatmap_plot(rng, model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
     
-    test_terminal_energy_mean = metrics[0].detach().cpu()
-
     n_samples = 25000
-
-    alpha = 0.5
 
     x_state = torch.tensor([helper.compute_sample(rng, LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER)
                            for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
@@ -707,10 +704,8 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
     fig = plt.gcf()
 
     cb = fig.colorbar(c, ax=ax, extend='max')
-    cb.ax.plot([0, 1], [test_terminal_energy_mean]*2, 'k', alpha=alpha, lw=8.0)
 
-    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    helper.save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
     # close the plot handle
     plt.close('all')
@@ -736,11 +731,7 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
 
         xs__ = xs_[indices_min]
         ys__ = ys_[indices_min]
-        zs__ = zs_[indices_min]
 
-        test_terminal_energy_mean = metrics[0].detach().cpu()
-
-        alpha = 0.5
         alpha_train_samples = 0.25
 
         dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
@@ -804,19 +795,17 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
                 marker='o', color='k', ls='', alpha=alpha_train_samples)
 
         cb = fig.colorbar(c, ax=ax, extend='max')
-        cb.ax.plot([0, 1], [test_terminal_energy_mean]*2, 'k', alpha=alpha, lw=8.0)
 
         plt.xlabel("x")
         plt.ylabel("y")
 
-        helper.save_figure(fig, dpi, "", str(i+1) + "_" + fname_img)
         helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
 
         # close the plot handle
         plt.close('all')
 
 
-def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img, fname_img, fontdict, title_string):
 
     n_samples = X_samples.shape[0]
 
@@ -854,14 +843,13 @@ def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img
     plt.xscale('log')
     plt.grid(True)
 
-    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    helper.save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
     # close the plot handle
     plt.close('all')
 
 
-def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
 
     n_samples = X_samples.shape[0]
 
@@ -893,8 +881,7 @@ def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constraine
     plt.xscale('log')
     plt.grid(True)
 
-    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    helper.save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
     # close the plot handle
     plt.close('all')
@@ -954,7 +941,7 @@ def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi,
 
     plt.gca().set_aspect('auto', adjustable='box')
 
-    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, "",
+    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img,
                        identifier_string + "joint_angles_region_plot_3d.png")
 
     # close the plot handle
@@ -1014,7 +1001,6 @@ def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi,
 
         fig = plt.gcf()
 
-        helper.save_figure(fig, dpi, "", str(i+1) + "_" + fname_img)
         helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
 
         # close the plot handle

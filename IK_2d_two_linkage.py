@@ -1,7 +1,10 @@
 #!/bin/python3
 
+import os
 import math
 import torch
+import shutil
+import pathlib
 import numpy as np
 
 import matplotlib
@@ -48,6 +51,12 @@ LENGTHS = N_DIM_THETA*[1.0/N_DIM_THETA]
 CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
+
+
+def save_script(directory):
+
+    # saves a copy of the current python script into the folder
+    shutil.copy(__file__, pathlib.Path(directory, os.path.basename(__file__)))
 
 
 def fk(theta):
@@ -170,9 +179,7 @@ def compute_energy(model, x_state, is_constrained):
     return energy, constraint_bound, terminal_position_distance, x_hat_fk_chain
 
 
-def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
-
-    alpha = 0.5
+def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
     dimY = np.linspace(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1], n_one_dim)
@@ -248,42 +255,13 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
         y=1.515
     )
 
-    if SAMPLE_CIRCLE:
-        circleInner1 = plt.Circle(
-            (0.0, 0.0), radius=RADIUS_INNER, color='orange', fill=False, lw=4.0, alpha=alpha)
-        circleOuter1 = plt.Circle(
-            (0.0, 0.0), radius=RADIUS_OUTER, color='orange', fill=False, lw=4.0, alpha=alpha)
-        circleInner2 = plt.Circle(
-            (0.0, 0.0), radius=RADIUS_INNER, color='orange', fill=False, lw=4.0, alpha=alpha)
-        circleOuter2 = plt.Circle(
-            (0.0, 0.0), radius=RADIUS_OUTER, color='orange', fill=False, lw=4.0, alpha=alpha)
-
-    if LIMITS_PLOTS != LIMITS:
-        rectangle1 = plt.Rectangle(xy=(LIMITS[0][0], LIMITS[1][0]), width=LIMITS[0][1]-LIMITS[0]
-                                   [0], height=LIMITS[1][1]-LIMITS[1][0], color='orange', fill=False, lw=4.0, alpha=alpha)
-        rectangle2 = plt.Rectangle(xy=(LIMITS[0][0], LIMITS[1][0]), width=LIMITS[0][1]-LIMITS[0]
-                                   [0], height=LIMITS[1][1]-LIMITS[1][0], color='orange', fill=False, lw=4.0, alpha=alpha)
-
-    if LIMITS_PLOTS != LIMITS or SAMPLE_CIRCLE:
-
-        if SAMPLE_CIRCLE:
-            axes[0].add_patch(circleInner1)
-            axes[0].add_patch(circleOuter1)
-            axes[1].add_patch(circleInner2)
-            axes[1].add_patch(circleOuter2)
-
-        if LIMITS_PLOTS != LIMITS:
-            axes[0].add_patch(rectangle1)
-            axes[1].add_patch(rectangle2)
-
-    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    helper.save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
     # close the plot handle
     plt.close()
 
 
-def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     X_state_train = X_state_train.detach().cpu()
 
@@ -338,50 +316,19 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     cb = fig.colorbar(c, ax=ax, extend='max')
 
-    if SAMPLE_CIRCLE:
-        circleInner = plt.Circle(
-            (0.0, 0.0), radius=RADIUS_INNER, color='orange', fill=False, lw=4.0, alpha=alpha)
-        circleOuter = plt.Circle(
-            (0.0, 0.0), radius=RADIUS_OUTER, color='orange', fill=False, lw=4.0, alpha=alpha)
-
-    if LIMITS_PLOTS != LIMITS:
-        rectangle = plt.Rectangle(xy=(LIMITS[0][0], LIMITS[1][0]), width=LIMITS[0][1]-LIMITS[0]
-                                  [0], height=LIMITS[1][1]-LIMITS[1][0], color='orange', fill=False, lw=4.0, alpha=alpha)
-
-    legend_entries = []
-
-    if LIMITS_PLOTS != LIMITS or SAMPLE_CIRCLE:
-
-        legend_entries = legend_entries + \
-            [matplotlib.patches.Patch(
-                color='orange', alpha=alpha, label='Sampling Area')]
-
-        if SAMPLE_CIRCLE:
-            ax.add_patch(circleInner)
-            ax.add_patch(circleOuter)
-
-        if LIMITS_PLOTS != LIMITS:
-            ax.add_patch(rectangle)
-
     plt.xlabel("x")
     plt.ylabel("y")
 
-    plt.legend(loc='upper right', handles=legend_entries)
-
-    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    helper.save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
     # close the plot handle
     plt.close('all')
 
 
-def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dpi, is_constrained, n_one_dim, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_heatmap_plot(rng, model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     X_state_train = X_state_train.detach().cpu()
 
-    test_terminal_energy_mean = metrics[0].detach().cpu()
-
-    alpha = 0.5
     alpha_train_samples = 0.25
 
     dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
@@ -443,51 +390,17 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, metrics, dp
             marker='o', color='k', ls='', alpha=alpha_train_samples)
 
     cb = fig.colorbar(c, ax=ax, extend='max')
-    cb.ax.plot([0, 1], [test_terminal_energy_mean]*2, 'k', alpha=alpha, lw=8.0)
-
-    if SAMPLE_CIRCLE:
-        circleInner = plt.Circle(
-            (0.0, 0.0), radius=RADIUS_INNER, color='orange', fill=False, lw=4.0, alpha=alpha)
-        circleOuter = plt.Circle(
-            (0.0, 0.0), radius=RADIUS_OUTER, color='orange', fill=False, lw=4.0, alpha=alpha)
-
-    if LIMITS_PLOTS != LIMITS:
-        rectangle = plt.Rectangle(xy=(LIMITS[0][0], LIMITS[1][0]), width=LIMITS[0][1]-LIMITS[0]
-                                  [0], height=LIMITS[1][1]-LIMITS[1][0], color='orange', fill=False, lw=4.0, alpha=alpha)
-
-    legend_entries = [
-        matplotlib.lines.Line2D([0], [0], lw=0.0, marker='o', color='k',
-                                alpha=alpha_train_samples, markersize=10.0, label='Train Samples'),
-        matplotlib.patches.Patch(
-            color='k', alpha=alpha, label='Test Mean ± Std')
-    ]
-
-    if LIMITS_PLOTS != LIMITS or SAMPLE_CIRCLE:
-
-        legend_entries = legend_entries + \
-            [matplotlib.patches.Patch(
-                color='orange', alpha=alpha, label='Sampling Area')]
-
-        if SAMPLE_CIRCLE:
-            ax.add_patch(circleInner)
-            ax.add_patch(circleOuter)
-
-        if LIMITS_PLOTS != LIMITS:
-            ax.add_patch(rectangle)
 
     plt.xlabel("x")
     plt.ylabel("y")
 
-    plt.legend(loc='upper right', handles=legend_entries)
-
-    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    helper.save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
     # close the plot handle
     plt.close('all')
 
 
-def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img, fname_img, fontdict, title_string):
 
     n_samples = X_samples.shape[0]
 
@@ -525,14 +438,13 @@ def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img
     plt.xscale('log')
     plt.grid(True)
 
-    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    helper.save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
     # close the plot handle
     plt.close('all')
 
 
-def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, index, fname_img, fontdict, title_string):
+def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
 
     n_samples = X_samples.shape[0]
 
@@ -563,8 +475,7 @@ def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constraine
     plt.xscale('log')
     plt.grid(True)
 
-    helper.save_figure(fig, dpi, dir_path_img, str(index) + "_" + fname_img)
-    helper.save_figure(fig, dpi, "", fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
     # close the plot handle
     plt.close('all')

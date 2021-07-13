@@ -1,6 +1,8 @@
 #!/bin/python3
 
+import os
 import torch
+import shutil
 import pathlib
 import numpy as np
 
@@ -8,11 +10,11 @@ DTYPE_NUMPY = np.float64
 DTYPE_TORCH = torch.float64
 
 SAVEFIG_DPI = 300
-SAVEFIG_DPI_FINAL = 600
+
+N_ONE_DIM = 1000
 
 TIME_MEASURE_UPDATE = 100
-TENSORBOARD_UPDATE = 500
-PLOT_UPATE = 10*TENSORBOARD_UPDATE
+TENSORBOARD_UPDATE = 100
 
 N_JACOBIAN_HIST_SAMPLES = 1000
 
@@ -68,6 +70,12 @@ def initialize_directories(directories):
         if not dir.exists():
 
             dir.mkdir()
+
+
+def save_script(directory):
+
+    # saves a copy of the current python script into the folder
+    shutil.copy(__file__, pathlib.Path(directory, os.path.basename(__file__)))
 
 
 def compute_sample_helper(rng, limits, n):
@@ -188,11 +196,19 @@ def compute_loss(compute_energy, model, x_state, is_constrained):
 
     loss = torch.mean(energy)
 
-    metric0 = torch.mean(terminal_position_distance)
-    metric1 = torch.std(terminal_position_distance)
-    metric2 = torch.max(terminal_position_distance)
+    terminal_position_distance_metrics = {
+        'mean': torch.mean(terminal_position_distance).item(),
+        'stddev': torch.std(terminal_position_distance).item(),
+        'min': torch.min(terminal_position_distance).item(),
+        'max': torch.max(terminal_position_distance).item(),
+        'median': torch.median(terminal_position_distance).item(),
+        '75percentile': torch.quantile(terminal_position_distance, q = 0.75).item(),
+        '90percentile': torch.quantile(terminal_position_distance, q = 0.90).item(),
+        '95percentile': torch.quantile(terminal_position_distance, q = 0.95).item(),
+        '99percentile': torch.quantile(terminal_position_distance, q = 0.99).item()
+    }
 
-    return loss, [metric0, metric1, metric2]
+    return loss, terminal_position_distance_metrics
 
 
 def compute_dloss_dW(model):
@@ -286,18 +302,60 @@ def compute_and_save_robot_plot(randrange, compute_energy, visualize_trajectory_
         )
 
 
-def save_figure(figure, dpi, dir_path_img, fname_img):
+def compute_and_save_metrics_txt(txt_dict, test_metrics, n_iterations, dir_path_txt, fname_txt):
 
-    figure.savefig(
-        fname=pathlib.Path(dir_path_img, fname_img),
-        bbox_inches="tight",
-        dpi=dpi
-        #pil_kwargs = {'optimize': True, 'quality': 75}
-    )
+    txt_merge = '\nTerminal Position Distance Metrics'
 
+    txt_merge += '\n\nTest Mean ' + str(test_metrics['mean'])
 
-def save_model(model, iterations, string_path, string_dict_only, string_full):
-    torch.save(model, pathlib.Path(string_path, string_full))
-    torch.save(model.state_dict(), pathlib.Path(string_path, string_dict_only))
-    print("{} Saved Current State for Evaluation.\n".format(iterations))
+    txt_merge += '\n\nTest Stddev ' + str(test_metrics['stddev'])
 
+    txt_merge += '\n\nTest Min ' + str(test_metrics['min'])
+
+    txt_merge += '\n\nTest Max ' + str(test_metrics['max'])
+
+    txt_merge += '\n\nTest Median ' + str(test_metrics['median'])
+
+    txt_merge += '\n\nTest 75percentile ' + str(test_metrics['75percentile'])
+
+    txt_merge += '\n\nTest 90percentile ' + str(test_metrics['90percentile'])
+
+    txt_merge += '\n\nTest 95percentile ' + str(test_metrics['95percentile'])
+
+    txt_merge += '\n\nTest 99percentile ' + str(test_metrics['99percentile'])
+
+    txt_merge += f"\n\nIterations (Total: {n_iterations})\n"
+    txt_merge += txt_dict['iteration']
+
+    txt_merge += '\n\nVal Mean\n'
+    txt_merge += txt_dict['mean']
+
+    txt_merge += '\n\nVal Stddev\n'
+    txt_merge += txt_dict['stddev']
+
+    txt_merge += '\n\nVal Min\n'
+    txt_merge += txt_dict['min']
+
+    txt_merge += '\n\nVal Max\n'
+    txt_merge += txt_dict['max']
+
+    txt_merge += '\n\nVal Median\n'
+    txt_merge += txt_dict['median']
+
+    txt_merge += '\n\nVal 75percentile\n'
+    txt_merge += txt_dict['75percentile']
+
+    txt_merge += '\n\nVal 90percentile\n'
+    txt_merge += txt_dict['90percentile']
+
+    txt_merge += '\n\nVal 95percentile\n'
+    txt_merge += txt_dict['95percentile']
+
+    txt_merge += '\n\nVal 99percentile\n'
+    txt_merge += txt_dict['99percentile']
+
+    with open(pathlib.Path(dir_path_txt, fname_txt), "w") as text_file :
+
+        text_file.write(txt_merge)
+
+    
