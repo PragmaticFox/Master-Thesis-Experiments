@@ -66,6 +66,7 @@ directories = [
 
 txt_dict = {
     'iteration': '',
+    'lr': '',
     'mean': '',
     'stddev': '',
     'min': '',
@@ -77,7 +78,7 @@ txt_dict = {
     '99percentile': ''
 }
 
-N_ITERATIONS = 100000
+N_ITERATIONS = 100
 
 N_SAMPLES_TRAIN = 10000
 N_SAMPLES_VAL = 10000
@@ -350,6 +351,7 @@ for j in range(N_ITERATIONS):
 
         metrics = terminal_position_distance_metrics_val
         txt_dict['iteration'] += '\n' + str(cur_index)
+        txt_dict['lr'] += '\n' + str(current_lr)
         txt_dict['mean'] += '\n' + str(metrics['mean'])
         txt_dict['stddev'] += '\n' + str(metrics['stddev'])
         txt_dict['min'] += '\n' + str(metrics['min'])

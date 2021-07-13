@@ -9,9 +9,9 @@ import numpy as np
 DTYPE_NUMPY = np.float64
 DTYPE_TORCH = torch.float64
 
-SAVEFIG_DPI = 3000
+SAVEFIG_DPI = 300
 
-N_ONE_DIM = 3
+N_ONE_DIM = 100
 
 HIST_BINS = 100
 
@@ -326,6 +326,9 @@ def compute_and_save_metrics_txt(txt_dict, test_metrics, n_iterations, dir_path_
 
     txt_merge += f"\n\nIterations (Total: {n_iterations})\n"
     txt_merge += txt_dict['iteration']
+
+    txt_merge += "\n\nLearning Rate\n"
+    txt_merge += txt_dict['lr']
 
     txt_merge += '\n\nVal Mean\n'
     txt_merge += txt_dict['mean']
