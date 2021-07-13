@@ -19,7 +19,7 @@ matplotlib.use("Agg")
 # local import
 import helper
 
-IS_UR5_ROBOT = False
+IS_UR5_ROBOT = True
 
 identifier_string = "IK_3d_threelinkage_"
 
@@ -73,8 +73,7 @@ N_SLICES = 5.0
 if IS_UR5_ROBOT :
 
     # See https://www.universal-robots.com/products/ur5-robot/
-    # Footprint is 149mm
-    RADIUS_INNER = 0.149
+    RADIUS_INNER = 0.0
     # Reach is 850mm
     RADIUS_OUTER = 0.850
 

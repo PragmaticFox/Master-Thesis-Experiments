@@ -9,9 +9,9 @@ import numpy as np
 DTYPE_NUMPY = np.float64
 DTYPE_TORCH = torch.float64
 
-SAVEFIG_DPI = 300
+SAVEFIG_DPI = 3000
 
-N_ONE_DIM = 1000
+N_ONE_DIM = 3
 
 HIST_BINS = 100
 
