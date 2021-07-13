@@ -19,7 +19,7 @@ matplotlib.use("Agg")
 # local import
 import helper
 
-IS_UR5_ROBOT = True
+IS_UR5_ROBOT = False
 
 identifier_string = "IK_3d_threelinkage_"
 
@@ -49,13 +49,9 @@ N_DIM_THETA = 3
 
 if IS_UR5_ROBOT:
 
-    N_DIM_THETA = 12
+    N_DIM_THETA = 6
 
 N_DIM_JOINTS = N_DIM_THETA
-
-if IS_UR5_ROBOT:
-
-    N_DIM_JOINTS = N_DIM_THETA // 2
 
 N_DIM_X = 3
 
@@ -76,18 +72,20 @@ N_SLICES = 5.0
 
 if IS_UR5_ROBOT :
 
-    RADIUS_INNER = 0.0
-    RADIUS_OUTER = 0.75
+    # See https://www.universal-robots.com/products/ur5-robot/
+    # Footprint is 149mm
+    RADIUS_INNER = 0.149
+    # Reach is 850mm
+    RADIUS_OUTER = 0.850
 
     LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
 LIMITS_PLOTS = LIMITS
-#LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
+
 
 if IS_UR5_ROBOT :
 
     LIMITS_PLOTS = LIMITS
-    #LIMITS_PLOTS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
 CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
@@ -104,22 +102,22 @@ def save_script(directory):
     shutil.copy(__file__, pathlib.Path(directory, os.path.basename(__file__)))
 
 
-def dh_matrix(n, theta, alpha, d, r):
+def dh_matrix(theta, a, d, alpha):
 
     device = theta.device
+    n = theta.shape[0]
 
-    transform = torch.reshape(torch.eye(4, 4), shape=(
-        1, 4, 4)).repeat(n, 1, 1).to(device)
+    transform = torch.reshape(torch.eye(4, 4), shape=(1, 4, 4)).repeat(n, 1, 1).to(device)
 
     transform[:, 0, 0] = torch.cos(theta)
     transform[:, 0, 1] = - torch.sin(theta) * torch.cos(alpha)
     transform[:, 0, 2] = torch.sin(theta) * torch.sin(alpha)
-    transform[:, 0, 3] = r * torch.cos(theta)
+    transform[:, 0, 3] = a * torch.cos(theta)
 
     transform[:, 1, 0] = torch.sin(theta)
     transform[:, 1, 1] = torch.cos(theta) * torch.cos(alpha)
     transform[:, 1, 2] = - torch.cos(theta) * torch.sin(alpha)
-    transform[:, 1, 3] = r * torch.sin(theta)
+    transform[:, 1, 3] = a * torch.sin(theta)
 
     transform[:, 2, 1] = torch.sin(alpha)
     transform[:, 2, 2] = torch.cos(alpha)
@@ -130,112 +128,81 @@ def dh_matrix(n, theta, alpha, d, r):
 
 def fk(theta):
 
+    # we use homogeneous coordinates
+
     device = theta.device
     n_batch_times_n_trajOpt = theta.shape[0]
-    n_dim_theta = theta.shape[1]
+
+    p = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
+    p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(1, 1, 4)).repeat(n_batch_times_n_trajOpt, N_DIM_JOINTS, 1).to(device)
 
     if IS_UR5_ROBOT:
 
-        transform = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
-            n_batch_times_n_trajOpt, n_dim_theta//2 + 1, 1, 1).to(device)
+        a_0 = 0.0
+        a_1 = -0.425
+        a_2 = -0.39225
+        a_3 = 0.0
+        a_4 = 0.0
+        a_5 = 0.0
 
-        transform[:, 1] = torch.matmul(transform[:, 0].clone(), dh_matrix(
-            n_batch_times_n_trajOpt, theta[:, 0], theta[:, 1], 0.089159, 0.0).clone())
-        transform[:, 2] = torch.matmul(transform[:, 1].clone(), dh_matrix(
-            n_batch_times_n_trajOpt, theta[:, 2], theta[:, 3], 0.0, -0.425).clone())
-        transform[:, 3] = torch.matmul(transform[:, 2].clone(), dh_matrix(
-            n_batch_times_n_trajOpt, theta[:, 4], theta[:, 5], 0.0, -0.39225).clone())
-        transform[:, 4] = torch.matmul(transform[:, 3].clone(), dh_matrix(
-            n_batch_times_n_trajOpt, theta[:, 6], theta[:, 7], 0.10915, 0.0).clone())
-        transform[:, 5] = torch.matmul(transform[:, 4].clone(), dh_matrix(
-            n_batch_times_n_trajOpt, theta[:, 8], theta[:, 9], 0.09465, 0.0).clone())
-        transform[:, 6] = torch.matmul(transform[:, 5].clone(), dh_matrix(
-            n_batch_times_n_trajOpt, theta[:, 10], theta[:, 11], 0.0823, 0.0).clone())
+        d_0 = 0.089159
+        d_1 = 0.0
+        d_2 = 0.0
+        d_3 = 0.10915
+        d_4 = 0.09465
+        d_5 = 0.0823
 
-        p = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
-        p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(
-            1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta//2, 1).to(device)
+        torch_ones = torch.ones(n_batch_times_n_trajOpt).to(device)
 
-        for i in range(n_dim_theta//2):
+        alpha_0 = math.pi/2.0 * torch_ones
+        alpha_1 = 0.0 * torch_ones
+        alpha_2 = 0.0 * torch_ones
+        alpha_3 = math.pi/2.0 * torch_ones
+        alpha_4 = -math.pi/2.0 * torch_ones
+        alpha_5 = 0.0 * torch_ones
+
+        dh_matrix_0 = dh_matrix(theta[:, 0], a_0, d_0, alpha_0).clone()
+        dh_matrix_1 = dh_matrix(theta[:, 1], a_1, d_1, alpha_1).clone()
+        dh_matrix_2 = dh_matrix(theta[:, 2], a_2, d_2, alpha_2).clone()
+        dh_matrix_3 = dh_matrix(theta[:, 3], a_3, d_3, alpha_3).clone()
+        dh_matrix_4 = dh_matrix(theta[:, 4], a_4, d_4, alpha_4).clone()
+        dh_matrix_5 = dh_matrix(theta[:, 5], a_5, d_5, alpha_5).clone()
+
+        transform = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
+
+        transform[:, 1] = torch.matmul(transform[:, 0].clone(), dh_matrix_0)
+        transform[:, 2] = torch.matmul(transform[:, 1].clone(), dh_matrix_1)
+        transform[:, 3] = torch.matmul(transform[:, 2].clone(), dh_matrix_2)
+        transform[:, 4] = torch.matmul(transform[:, 3].clone(), dh_matrix_3)
+        transform[:, 5] = torch.matmul(transform[:, 4].clone(), dh_matrix_4)
+        transform[:, 6] = torch.matmul(transform[:, 5].clone(), dh_matrix_5)
+
+        for i in range(N_DIM_JOINTS):
 
             p_final[:, i] = torch.matmul(torch.clone(transform[:, i+1]), p)
 
-        # return p_final[:, :, :-1], transform[:, 6, :3, :3]
         return p_final[:, :, :-1]
 
-    p = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
-    p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(
-        1, 1, 4)).repeat(n_batch_times_n_trajOpt, n_dim_theta+1, 1).to(device)
-    rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
-        n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
-    r_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
-        n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
-    t_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
-        n_batch_times_n_trajOpt, n_dim_theta+1, 1, 1).to(device)
+    rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
+    r_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
+    t_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
 
     for i in range(N_DIM_THETA):
-        '''
-        if (i % 3 == 2):
+
+        if i % 3 == 0 :
 
             # rotation around x-axis (yz-plane)
-            # homogeneous coordinates
 
-            #t_hom_i[:, i, 0, 3] = LENGTHS[i]
-            #t_hom_i[:, i, 1, 3] = LENGTHS[i]
-            t_hom_i[:, i, 2, 3] = 0.2
+            t_hom_i[:, i, 1, 3] = 1.0
 
             r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
             r_hom_i[:, i, 1, 2] = -torch.sin(theta[:, i])
             r_hom_i[:, i, 2, 1] = torch.sin(theta[:, i])
             r_hom_i[:, i, 2, 2] = torch.cos(theta[:, i])
 
-
-        if (i % 3 < 2):
-
-            # rotation around y-axis (xz-plane)
-            # homogeneous coordinates
-
-            t_hom_i[:, i, 0, 3] = LENGTHS[i]
-            #t_hom_i[:, i, 1, 3] = LENGTHS[i]
-            #t_hom_i[:, i, 2, 3] = LENGTHS[i]
-
-            r_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
-            r_hom_i[:, i, 0, 2] = torch.sin(theta[:, i])
-            r_hom_i[:, i, 2, 0] = -torch.sin(theta[:, i])
-            r_hom_i[:, i, 2, 2] = torch.cos(theta[:, i])
-
-        if (i % 3 == 0 and i % 3 == 1):
-
-            # rotation around z-axis (xy-plane)
-            # homogeneous coordinates
-
-            #t_hom_i[:, i, 0, 3] = 0.5
-            #t_hom_i[:, i, 1, 3] = 0.5
-            t_hom_i[:, i, 2, 3] =  0.5
-
-            r_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
-            r_hom_i[:, i, 0, 1] = -torch.sin(theta[:, i])
-            r_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
-            r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
-
-        '''
-
-        if i % 3 == 2:
-
-            # rotation around z-axis (xy-plane)
-            # homogeneous coordinates
-
-            t_hom_i[:, i, 1, 3] = 1.0
-
-            r_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
-            r_hom_i[:, i, 0, 1] = -torch.sin(theta[:, i])
-            r_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
-            r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
-
         if i % 3 == 1 :
 
             # rotation around z-axis (xy-plane)
-            # homogeneous coordinates
 
             t_hom_i[:, i, 0, 3] = 1.0
 
@@ -244,30 +211,22 @@ def fk(theta):
             r_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
             r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
 
+        if i % 3 == 2:
 
-        if i % 3 == 0 :
+            # rotation around z-axis (xy-plane)
 
-            # rotation around x-axis (yz-plane)
-            # homogeneous coordinates
+            t_hom_i[:, i, 0, 3] = 1.0
 
-            t_hom_i[:, i, 1, 3] = 1.0
-
+            r_hom_i[:, i, 0, 0] = torch.cos(theta[:, i])
+            r_hom_i[:, i, 0, 1] = -torch.sin(theta[:, i])
+            r_hom_i[:, i, 1, 0] = torch.sin(theta[:, i])
             r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
-            r_hom_i[:, i, 1, 2] = -torch.sin(theta[:, i])
-            r_hom_i[:, i, 2, 1] = torch.sin(theta[:, i])
-            r_hom_i[:, i, 2, 2] = torch.cos(theta[:, i])
-
-        # print(t_hom_i[0])
-        # print(r_hom_i[0])
 
         tmp = torch.matmul(torch.clone(rt_hom[:, i]), torch.clone(r_hom_i[:, i]))
         rt_hom[:, i+1] = torch.matmul(torch.clone(tmp),torch.clone(t_hom_i[:, i]))
+        p_final[:, i] = torch.matmul(rt_hom[:, i+1], p)
 
-        #tmp = torch.matmul(torch.clone(r_hom_i[:, i]), torch.clone(t_hom_i[:, i]))
-        #rt_hom[:, i+1] = torch.matmul(torch.clone(tmp), torch.clone(rt_hom[:, i]))
-        p_final[:, i+1] = torch.matmul(rt_hom[:, i+1], p)
-
-    return p_final[:, 1:, :-1]
+    return p_final[:, :, :-1]
 
 
 def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, fname_img):
