@@ -30,7 +30,7 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 2
+SAMPLING_MODE = 0
 IS_CONSTRAINED = False
 
 random.seed(42)
@@ -77,7 +77,7 @@ txt_dict = {
     '99percentile': ''
 }
 
-N_ITERATIONS = 1000
+N_ITERATIONS = 100
 
 N_SAMPLES_TRAIN = 10000
 N_SAMPLES_VAL = 10000
@@ -390,7 +390,6 @@ sampling_string = helper.convert_sampling_mode_to_string(
 
 string_tmp = f'\nIteration {cur_index}, {sampling_string}, {constrained_string}\n'
 
-'''
 tic = time.perf_counter()
 
 helper.compute_and_save_robot_plot(
@@ -422,7 +421,6 @@ experiment.compute_and_save_joint_angles_plot(
     string_tmp + experiment.string_title_joint_angles_plot
 )
 
-
 toc = time.perf_counter()
 print(
     f"{toc - tic:0.2f} [s] for compute_and_save_joint_angles_plot(...)")
@@ -449,21 +447,18 @@ print(
 
 tic = time.perf_counter()
 
-
-n_one_dim_jac = 200 if j == N_ITERATIONS - 1 else 20
 experiment.compute_and_save_jacobian_plot(
     random,
     model,
     device,
     X_state_train,
     plot_dpi,
-    n_one_dim_jac,
+    n_one_dim,
     dir_path_id_plots,
     experiment.identifier_string + helper.JACOBIAN_PLOT_NAME,
     helper.plots_fontdict,
     string_tmp + experiment.string_title_jacobian_plot
 )
-
 
 toc = time.perf_counter()
 print(
@@ -504,7 +499,7 @@ toc = time.perf_counter()
 
 print(
     f"{toc - tic:0.2f} [s] for compute_and_save_jacobian_histogram(...)")
-'''
+
 
 print("\nTraining Process Completed.\n")
 

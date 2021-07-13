@@ -263,7 +263,6 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     X_state_train = X_state_train.detach().cpu()
 
-    alpha = 0.5
     alpha_train_samples = 0.25
 
     dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
@@ -274,12 +273,24 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
     x_state = torch.tensor(np.stack(
         (dimX.flatten(), dimY.flatten()), axis=-1), requires_grad=True).to(device)
 
-    jac = torch.zeros(
-        size=(n_one_dim*n_one_dim, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+    model_sum = lambda x : torch.sum(model(x), axis = 0)
 
-    for i in range(n_one_dim*n_one_dim):
-        jac[i] = torch.reshape(torch.autograd.functional.jacobian(
-            model, x_state[i:i+1], create_graph=False, strict=False), shape=(N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+    jac = torch.zeros(size=(n_one_dim*n_one_dim, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+
+    if n_one_dim > 100 :
+
+        n_splits = 100
+
+        delta = n_one_dim*n_one_dim // n_splits
+
+        for split in range(n_splits) :
+
+            jac[split*delta:(split+1)*delta] = torch.autograd.functional.jacobian(model_sum, x_state[split*delta:(split+1)*delta], create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
+
+    else :
+
+        jac = torch.autograd.functional.jacobian(model_sum, x_state, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
+
 
     jac_norm = torch.reshape(jac, shape=(
         n_one_dim, n_one_dim, N_TRAJOPT*N_DIM_THETA*N_DIM_X))
@@ -402,16 +413,10 @@ def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img
 
     n_samples = X_samples.shape[0]
 
-    X_samples[:min(helper.N_JACOBIAN_HIST_SAMPLES, n_samples)]
+    model_sum = lambda x : torch.sum(model(x), axis = 0)
 
-    n_samples = helper.N_JACOBIAN_HIST_SAMPLES
-
-    jac = torch.zeros(size=(n_samples, N_TRAJOPT *
-                            N_DIM_THETA, N_DIM_X)).to(X_samples.device)
-
-    for i in range(n_samples):
-        jac[i] = torch.reshape(torch.autograd.functional.jacobian(model, X_samples[i:i+1], create_graph=False,
-                                                                  strict=False), shape=(N_TRAJOPT*N_DIM_THETA, N_DIM_X))
+    jac = torch.zeros(size=(n_samples, N_TRAJOPT * N_DIM_THETA, N_DIM_X)).to(X_samples.device)
+    jac = torch.autograd.functional.jacobian(model_sum, X_samples, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
 
     jac_norm = torch.norm(jac, p="fro", dim=-1)
     jac_norm = np.array(jac_norm.detach().cpu().tolist())
