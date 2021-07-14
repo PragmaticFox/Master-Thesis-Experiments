@@ -476,7 +476,21 @@ def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi,
     theta = torch.tensor([helper.sample_joint_angles(rng, CONSTRAINTS) for _ in range(
         n_samples_theta)], dtype=helper.DTYPE_TORCH).to(device)
 
-    x_fk_chain = fk(theta)
+    x_fk_chain = torch.zeros(size=(n_samples_theta, N_TRAJOPT*N_DIM_JOINTS, N_DIM_X_STATE))
+
+    if n_samples_theta > 1000:
+
+        n_splits = 1000
+
+        delta = n_samples_theta // n_splits
+
+        for split in range(n_splits):
+
+            x_fk_chain[split*delta:(split+1)*delta] = fk(theta[split*delta:(split+1)*delta])
+
+    else:
+
+        x_fk_chain = fk(theta)
 
     x_fk_chain = torch.reshape(input=x_fk_chain, shape=(
         n_samples_theta, N_TRAJOPT, N_DIM_JOINTS, N_DIM_X_STATE))
