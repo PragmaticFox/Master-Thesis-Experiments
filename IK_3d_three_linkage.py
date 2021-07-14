@@ -617,9 +617,9 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     # plot
 
-    cmap = pl.cm.RdBu
-    cmap = cmap(np.arange(cmap.N))
-    cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmap.N)
+    cmapRdBu = pl.cm.RdBu
+    cmap = cmapRdBu(np.arange(cmapRdBu.N))
+    cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmapRdBu.N)
     cmap = ListedColormap(cmap)
 
     plot_heatmap(
@@ -805,9 +805,9 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
 
     # plot
 
-    cmap = pl.cm.RdBu
-    cmap = cmap(np.arange(cmap.N))
-    cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmap.N)
+    cmapRdBu = pl.cm.RdBu
+    cmap = cmapRdBu(np.arange(cmapRdBu.N))
+    cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmapRdBu.N)
     cmap = ListedColormap(cmap)
 
     plot_heatmap(
