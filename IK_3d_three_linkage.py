@@ -20,6 +20,7 @@ matplotlib.use("Agg")
 import helper
 
 IS_UR5_ROBOT = True
+IS_UR5_FK_CHECK = False
 
 identifier_string = "IK_3d_threelinkage_"
 
@@ -74,7 +75,7 @@ if IS_UR5_ROBOT :
 
     # See https://www.universal-robots.com/products/ur5-robot/
     RADIUS_INNER = 0.0
-    RADIUS_OUTER = 0.75
+    RADIUS_OUTER = 0.85
 
     LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
@@ -136,6 +137,8 @@ def fk(theta):
 
     if IS_UR5_ROBOT:
 
+        # UR5 robot DH matrix parameters
+
         a_0 = 0.0
         a_1 = -0.425
         a_2 = -0.39225
@@ -150,14 +153,59 @@ def fk(theta):
         d_4 = 0.09465
         d_5 = 0.0823
 
-        torch_ones = torch.ones(n_batch_times_n_trajOpt).to(device)
+        alpha_0 = math.pi/2.0
+        alpha_1 = 0.0
+        alpha_2 = 0.0
+        alpha_3 = math.pi/2.0
+        alpha_4 = -math.pi/2.0
+        alpha_5 = 0.0
 
-        alpha_0 = math.pi/2.0 * torch_ones
-        alpha_1 = 0.0 * torch_ones
-        alpha_2 = 0.0 * torch_ones
-        alpha_3 = math.pi/2.0 * torch_ones
-        alpha_4 = -math.pi/2.0 * torch_ones
-        alpha_5 = 0.0 * torch_ones
+        torch_zeros = torch.zeros(n_batch_times_n_trajOpt).to(device)
+
+        alpha_0 = alpha_0 + torch_zeros
+        alpha_1 = alpha_1 + torch_zeros
+        alpha_2 = alpha_2 + torch_zeros
+        alpha_3 = alpha_3 + torch_zeros
+        alpha_4 = alpha_4 + torch_zeros
+        alpha_5 = alpha_5 + torch_zeros
+
+        if IS_UR5_FK_CHECK :
+
+            assert(theta.shape[0] >= 3, "Theta.shape[0] must be > = 3.")
+
+            theta[0, 0] = 0.0
+            theta[0, 1] = 0.0
+            theta[0, 2] = 0.0
+            theta[0, 3] = 0.0
+            theta[0, 4] = 0.0
+            theta[0, 5] = 0.0
+
+            theta[1, 0] = 1.658062789
+            theta[1, 1] = 5.235987756
+            theta[1, 2] = 2.844886681
+            theta[1, 3] = 4.01425728
+            theta[1, 4] = 2.00712864
+            theta[1, 5] = 0.523598776
+
+            theta[2, 0] = 0.0
+            theta[2, 1] = 1.623156204
+            theta[2, 2] = 2.862339973
+            theta[2, 3] = 5.585053606
+            theta[2, 4] = 4.36332313
+            theta[2, 5] = 2.862339973
+
+            # Reference values are made with the Excel tool from here
+            # https://www.universal-robots.com/articles/ur/application-installation/dh-parameters-for-calculations-of-kinematics-and-dynamics/
+
+            p_reference = torch.tensor(
+                [
+                    [-0.81725, -0.19145, -0.00549, 1.0],
+                    [0.09445, -0.22632, 0.02455, 1.0],
+                    [-0.00825, -0.08100, 0.07599, 1.0],
+
+                ],
+                dtype = torch.float64
+            ).to(device)
 
         dh_matrix_0 = dh_matrix(theta[:, 0], a_0, d_0, alpha_0).clone()
         dh_matrix_1 = dh_matrix(theta[:, 1], a_1, d_1, alpha_1).clone()
@@ -178,6 +226,14 @@ def fk(theta):
         for i in range(N_DIM_JOINTS):
 
             p_final[:, i] = torch.matmul(torch.clone(transform[:, i+1]), p)
+
+        if IS_UR5_FK_CHECK :
+
+            diff = p_reference - p_final[0:3, -1]
+            normed_diff = torch.norm(diff)
+            print(f"\nChecking UR5 FK\nError Vector Norm: {normed_diff}\n")
+
+            exit(0)
 
         return p_final[:, :, :-1]
 
@@ -578,7 +634,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
         c = ax.pcolormesh(dimX, dimY, jac_norm, cmap='RdBu', shading='gouraud',
                         norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD))
 
-        ax.plot(xs__, ys__, ms=2.0,
+        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D,
                 marker='o', color='k', ls='', alpha=alpha_train_samples)
 
         cb = fig.colorbar(c, ax=ax, extend='max')
@@ -761,7 +817,7 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, dpi, is_con
         c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
                         norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD))
 
-        ax.plot(xs__, ys__, ms=2.0,
+        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D,
                 marker='o', color='k', ls='', alpha=alpha_train_samples)
 
         cb = fig.colorbar(c, ax=ax, extend='max')
