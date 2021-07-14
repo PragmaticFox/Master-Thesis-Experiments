@@ -74,8 +74,7 @@ if IS_UR5_ROBOT :
 
     # See https://www.universal-robots.com/products/ur5-robot/
     RADIUS_INNER = 0.0
-    # Reach is 850mm
-    RADIUS_OUTER = 0.850
+    RADIUS_OUTER = 0.75
 
     LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
@@ -452,7 +451,6 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     # plot
 
-    #fig, ax = plt.subplots()
     ax = plt.axes(projection='3d')
 
     plt.subplots_adjust(left=0, bottom=0, right=1.25,
@@ -468,8 +466,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     cmap = pl.cm.RdBu
     my_cmap = cmap(np.arange(cmap.N))
-    my_cmap[:, -1] = np.logspace(-2, 0, cmap.N)
-    # print(my_cmap[:,-1])
+    my_cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmap.N)
     my_cmap = ListedColormap(my_cmap)
 
     c = ax.scatter(
@@ -482,8 +479,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
         depthshade=True,
         cmap=my_cmap,
         norm=matplotlib.colors.LogNorm(
-            vmin=jac_norm_min, vmax=jac_norm_max)
-        #alpha = 0.75
+            vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD)
     )
 
     ax.set_xlim(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1])
@@ -523,9 +519,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
         xs__ = xs_[indices_min]
         ys__ = ys_[indices_min]
-        zs__ = zs_[indices_min]
 
-        alpha = 0.5
         alpha_train_samples = 0.25
 
         dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
@@ -582,7 +576,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
         ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
         c = ax.pcolormesh(dimX, dimY, jac_norm, cmap='RdBu', shading='gouraud',
-                        norm=matplotlib.colors.LogNorm(vmin=jac_norm_min, vmax=jac_norm_max))
+                        norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD))
 
         ax.plot(xs__, ys__, ms=2.0,
                 marker='o', color='k', ls='', alpha=alpha_train_samples)
@@ -638,7 +632,6 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, dpi, is_con
 
     # plot
 
-    #fig, ax = plt.subplots()
     ax = plt.axes(projection='3d')
 
     plt.subplots_adjust(left=0, bottom=0, right=1.25,
@@ -654,8 +647,7 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, dpi, is_con
 
     cmap = pl.cm.RdBu
     my_cmap = cmap(np.arange(cmap.N))
-    my_cmap[:, -1] = np.logspace(-2, 0, cmap.N)
-    # print(my_cmap[:,-1])
+    my_cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmap.N)
     my_cmap = ListedColormap(my_cmap)
 
     c = ax.scatter(
@@ -668,8 +660,7 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, dpi, is_con
         depthshade=True,
         cmap=my_cmap,
         norm=matplotlib.colors.LogNorm(
-            vmin=terminal_energy_min, vmax=terminal_energy_max)
-        #alpha = 0.75
+            vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD)
     )
 
     ax.set_xlim(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1])
@@ -768,7 +759,7 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, dpi, is_con
 
         ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
         c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
-                        norm=matplotlib.colors.LogNorm(vmin=terminal_energy_min, vmax=terminal_energy_max))
+                        norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD))
 
         ax.plot(xs__, ys__, ms=2.0,
                 marker='o', color='k', ls='', alpha=alpha_train_samples)
