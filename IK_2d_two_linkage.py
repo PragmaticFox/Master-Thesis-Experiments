@@ -21,13 +21,15 @@ identifier_string = "IK_2d_"
 
 string_title_joint_angles_plot = f'\nJoint Angles in Degrees\n2D Two-Linkage Robot Inverse Kinematics\n'
 
-string_title_heatmap_plot = f'\nTerminal Energy Landscape in Meters\n2D Two-Linkage Robot Inverse Kinematics\n'
+string_title_terminal_energy_plot = f'\nTerminal Energy Landscape in Meters\n2D Two-Linkage Robot Inverse Kinematics\n'
 string_title_jacobian_plot = f'\nJacobian Frobenius Norm Landscape\n2D Two-Linkage Robot Inverse Kinematics\n'
 
-string_title_heatmap_histogram = f'\nTerminal Energy Histogram\n2D Two-Linkage Robot Inverse Kinematics\n'
+string_title_terminal_energy_histogram = f'\nTerminal Energy Histogram\n2D Two-Linkage Robot Inverse Kinematics\n'
 string_title_jacobian_histogram = f'\nJacobian Frobenius Norm Histogram\n2D Two-Linkage Robot Inverse Kinematics\n'
 
 N_DIM_THETA = 2
+N_DIM_JOINTS = N_DIM_THETA
+
 N_DIM_X = 2
 
 N_TRAJOPT = 1
@@ -179,6 +181,11 @@ def compute_energy(model, x_state, is_constrained):
 
 def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
+    xs__ = X_state_train[:, 0].detach().cpu()
+    ys__ = X_state_train[:, 1].detach().cpu()
+
+    alpha_train_samples = 0.25
+
     dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
     dimY = np.linspace(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1], n_one_dim)
 
@@ -217,46 +224,39 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
     rad_min = 0.0
     rad_max = 360.0
 
-    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
-
-    plt.subplots_adjust(left=0, bottom=0, right=1.25,
-                        top=1.25, wspace=1, hspace=0.25)
-
     c = 0
 
-    for i in range(2):
+    for j in range(N_DIM_THETA):
 
-        axes[i].set_aspect(aspect='equal', adjustable='box')
-        axes[i].set_title(
-            f'\nJoint {i+1}\n',
-            fontdict={'fontsize': 8, 'fontweight': 'normal',
-                      'horizontalalignment': 'center'},
+        # plot
+
+        fig, ax = plt.subplots()
+
+        plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                            top=1.25, wspace=1, hspace=1)
+
+        ax.set_aspect(aspect='equal', adjustable='box')
+
+        ax.set_title(
+            f'\nJoint {j+1}\n' + title_string,
+            fontdict=fontdict,
             pad=5
         )
-        axes[i].axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
-        c = axes[i].pcolormesh(dimX, dimY, theta_hat[:, :,  -1, i],
-                               cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
 
-        #c = axes[i].pcolormesh(dimX, dimY, theta_hat[:, :,  -1, i], cmap = 'twilight', shading = 'gouraud', vmin = rad_min, vmax = rad_max)
+        ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
+        c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
 
-        axes[i].set_xlabel("x")
-        axes[i].set_ylabel("y")
+        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
 
-    cb = fig.colorbar(c, ax=axes.ravel().tolist(), extend='max')
+        cb = fig.colorbar(c, ax=ax, extend='max')
 
-    plt.suptitle(
-        title_string,
-        fontsize=10,
-        fontweight='normal',
-        horizontalalignment='center',
-        x=0.825,
-        y=1.515
-    )
+        plt.xlabel("x")
+        plt.ylabel("y")
 
-    helper.save_figure(fig, dpi, dir_path_img, fname_img)
+        helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + str(j+1) + "_" + fname_img)
 
-    # close the plot handle
-    plt.close()
+        # close the plot handle
+        plt.close('all')
 
 
 def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
@@ -318,7 +318,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
     c = ax.pcolormesh(dimX, dimY, jac_norm, cmap='RdBu', shading='gouraud',
-                      norm=matplotlib.colors.LogNorm(vmin=jac_norm_min, vmax=jac_norm_max))
+                      norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD))
 
     ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=2.0,
             marker='o', color='k', ls='', alpha=alpha_train_samples)
@@ -334,7 +334,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
     plt.close('all')
 
 
-def compute_and_save_heatmap_plot(rng, model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
+def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     X_state_train = X_state_train.detach().cpu()
 
@@ -393,7 +393,7 @@ def compute_and_save_heatmap_plot(rng, model, device, X_state_train, dpi, is_con
 
     ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
     c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
-                      norm=matplotlib.colors.LogNorm(vmin=terminal_energy_min, vmax=terminal_energy_max))
+                      norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD))
 
     ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=2.0,
             marker='o', color='k', ls='', alpha=alpha_train_samples)
@@ -442,7 +442,7 @@ def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img
     plt.close('all')
 
 
-def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
+def compute_and_save_terminal_energy_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
 
     n_samples = X_samples.shape[0]
 
@@ -477,5 +477,53 @@ def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constraine
 
 def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi, dir_path_img, fname_img):
 
-    return
+    theta = torch.tensor([helper.sample_joint_angles(rng, CONSTRAINTS) for _ in range(
+        n_samples_theta)], dtype=helper.DTYPE_TORCH).to(device)
+
+    x_fk_chain = fk(theta)
+
+    x_fk_chain = torch.reshape(input=x_fk_chain, shape=(
+        n_samples_theta, N_TRAJOPT, N_DIM_JOINTS, N_DIM_X_STATE))
+    x_fk_chain = torch.transpose(input=x_fk_chain, dim0=1, dim1=2)
+    x_fk_chain = x_fk_chain.detach().cpu()
+
+    xs = x_fk_chain[:, -1, -1, 0]
+    ys = x_fk_chain[:, -1, -1, 1]
+
+    xs_min = xs.min()
+    xs_max = xs.max()
+
+    ys_min = ys.min()
+    ys_max = ys.max()
+
+    x_min = min(xs_min, LIMITS[0][0])
+    x_max = max(xs_max, LIMITS[0][1])
+
+    y_min = min(ys_min, LIMITS[1][0])
+    y_max = max(ys_max, LIMITS[1][1])
+
+    fig, ax = plt.subplots()
+
+    ax.plot(xs, ys, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
+
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+
+
+    ax.set_title(
+        f"\nx = [{xs_min}, {xs_max}]\ny = [{ys_min}, {ys_max}]\n",
+        # fontdict=fontdict,
+        pad=5
+    )
+
+    ax.set_aspect('auto', adjustable='box')
+
+    helper.save_figure(fig, dpi, dir_path_img,
+                       identifier_string + "joint_angles_region_plot.png")
+
+    # close the plot handle
+    plt.close('all')
 

@@ -30,20 +30,20 @@ if IS_UR5_ROBOT :
 
 string_title_joint_angles_plot = f'\nJoint Angles in Degrees\n3D Three-Linkage Robot Inverse Kinematics\n'
 
-string_title_heatmap_plot = f'\nTerminal Energy Landscape in Meters\n3D Three-Linkage Robot Inverse Kinematics\n'
+string_title_terminal_energy_plot = f'\nTerminal Energy Landscape in Meters\n3D Three-Linkage Robot Inverse Kinematics\n'
 string_title_jacobian_plot = f'\nJacobian Frobenius Norm Landscape\n3D Three-Linkage Robot Inverse Kinematics\n'
 
-string_title_heatmap_histogram = f'\nTerminal Energy Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
+string_title_terminal_energy_histogram = f'\nTerminal Energy Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
 string_title_jacobian_histogram = f'\nJacobian Frobenius Norm Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
 
 if IS_UR5_ROBOT :
 
     string_title_joint_angles_plot = f'\nJoint Angles in Degrees\n3D UR5 Robot Inverse Kinematics\n'
 
-    string_title_heatmap_plot = f'\nTerminal Energy Landscape in Meters\n3D UR5 Robot Inverse Kinematics\n'
+    string_title_terminal_energy_plot = f'\nTerminal Energy Landscape in Meters\n3D UR5 Robot Inverse Kinematics\n'
     string_title_jacobian_plot = f'\nJacobian Frobenius Norm Landscape\n3D UR5 Robot Inverse Kinematics\n'
 
-    string_title_heatmap_histogram = f'\nTerminal Energy Histogram\n3D UR5 Robot Inverse Kinematics\n'
+    string_title_terminal_energy_histogram = f'\nTerminal Energy Histogram\n3D UR5 Robot Inverse Kinematics\n'
     string_title_jacobian_histogram = f'\nJacobian Frobenius Norm Histogram\n3D UR5 Robot Inverse Kinematics\n'
 
 N_DIM_THETA = 3
@@ -397,8 +397,25 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
 
     for i in range(int(N_SLICES)) :
 
+        xs = X_state_train[:, 0].detach().cpu()
+        ys = X_state_train[:, 1].detach().cpu()
+        zs = X_state_train[:, 2].detach().cpu()
+
         z_min = LIMITS_PLOTS[2][0] + i*delta_z
         z_max = LIMITS_PLOTS[2][0] + (i+1)*delta_z
+
+        indices_max = zs <= z_max
+
+        xs_ = xs[indices_max]
+        ys_ = ys[indices_max]
+        zs_ = zs[indices_max]
+
+        indices_min = zs_ >= z_min
+
+        xs__ = xs_[indices_min]
+        ys__ = ys_[indices_min]
+
+        alpha_train_samples = 0.25
 
         dimX = np.linspace(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1], n_one_dim)
         dimY = np.linspace(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1], n_one_dim)
@@ -461,6 +478,8 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
 
             ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
             c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
+
+            ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
 
             cb = fig.colorbar(c, ax=ax, extend='max')
 
@@ -648,7 +667,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
         plt.close('all')
 
 
-def compute_and_save_heatmap_plot(rng, model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
+def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
     
     n_samples = n_one_dim*n_one_dim
 
@@ -866,7 +885,7 @@ def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img
     plt.close('all')
 
 
-def compute_and_save_heatmap_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
+def compute_and_save_terminal_energy_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
 
     n_samples = X_samples.shape[0]
 
@@ -953,7 +972,7 @@ def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi,
 
     plt.gca().set_aspect('auto', adjustable='box')
 
-    helper.save_figure(plt.gcf(), helper.SAVEFIG_DPI, dir_path_img,
+    helper.save_figure(plt.gcf(), dpi, dir_path_img,
                        identifier_string + "joint_angles_region_plot_3d.png")
 
     # close the plot handle

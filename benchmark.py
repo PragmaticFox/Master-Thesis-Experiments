@@ -30,7 +30,7 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 0
+SAMPLING_MODE = 1
 IS_CONSTRAINED = False
 
 random.seed(42)
@@ -424,7 +424,7 @@ print(
 
 tic = time.perf_counter()
 
-experiment.compute_and_save_heatmap_plot(
+experiment.compute_and_save_terminal_energy_plot(
     random,
     model,
     device,
@@ -435,12 +435,12 @@ experiment.compute_and_save_heatmap_plot(
     dir_path_id_plots,
     experiment.identifier_string + helper.HEATMAP_PLOT_NAME,
     helper.plots_fontdict,
-    string_tmp + experiment.string_title_heatmap_plot
+    string_tmp + experiment.string_title_terminal_energy_plot
 )
 
 toc = time.perf_counter()
 print(
-    f"{toc - tic:0.2f} [s] for compute_and_save_heatmap_plot(...)")
+    f"{toc - tic:0.2f} [s] for compute_and_save_terminal_energy_plot(...)")
 
 tic = time.perf_counter()
 
@@ -463,7 +463,7 @@ print(
 
 tic = time.perf_counter()
 
-experiment.compute_and_save_heatmap_histogram(
+experiment.compute_and_save_terminal_energy_histogram(
     random,
     model,
     X_samples,
@@ -472,12 +472,12 @@ experiment.compute_and_save_heatmap_histogram(
     dir_path_id_plots,
     experiment.identifier_string + helper.HEATMAP_HISTOGRAM_NAME,
     helper.plots_fontdict,
-    string_tmp + experiment.string_title_heatmap_histogram
+    string_tmp + experiment.string_title_terminal_energy_histogram
 )
 
 toc = time.perf_counter()
 print(
-    f"{toc - tic:0.2f} [s] for compute_and_save_heatmap_histogram(...)")
+    f"{toc - tic:0.2f} [s] for compute_and_save_terminal_energy_histogram(...)")
 
 tic = time.perf_counter()
 
