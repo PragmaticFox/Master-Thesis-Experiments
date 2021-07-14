@@ -182,7 +182,7 @@ def fk(theta):
 
         if IS_UR5_FK_CHECK :
 
-            assert(theta.shape[0] >= 3, "Theta.shape[0] must be > = 3.")
+            assert theta.shape[0] >= 3, "Theta.shape[0] must be > = 3."
 
             theta[0, 0] = 0.0
             theta[0, 1] = 0.0

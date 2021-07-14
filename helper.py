@@ -126,7 +126,7 @@ def compute_sample(rng, limits, is_sample_circle, radius_outer, radius_inner):
 
         if IS_UR5_REMOVE_CYLINDER :
 
-            assert(len(x) == 3, "len(x) must be 3, if IS_UR5_REMOVE_CYLINDER == True")
+            assert len(x) == 3, "len(x) must be 3, if IS_UR5_REMOVE_CYLINDER == True"
 
         r = np.linalg.norm(x, ord=2)
         r_cyl = np.linalg.norm(x[:-1], ord=2)
