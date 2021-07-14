@@ -21,6 +21,9 @@ DTYPE_TORCH = torch.float64
 
 # this will only ever be set True in IK_3d_three_linkage
 IS_UR5_REMOVE_CYLINDER = False
+# See https://www.universal-robots.com/products/ur5-robot/
+# UR5 footprint is 149mm
+UR5_CYLINDER_RADIUS = 0.149
 
 SAVEFIG_DPI = 300
 
@@ -131,7 +134,7 @@ def compute_sample(rng, limits, is_sample_circle, radius_outer, radius_inner):
         r = np.linalg.norm(x, ord=2)
         r_cyl = np.linalg.norm(x[:-1], ord=2)
 
-        while ( r >= radius_outer or r < radius_inner ) or ( IS_UR5_REMOVE_CYLINDER and r_cyl < 0.1 ):
+        while ( r >= radius_outer or r < radius_inner ) or ( IS_UR5_REMOVE_CYLINDER and r_cyl < UR5_CYLINDER_RADIUS):
 
             x = compute_sample_helper(rng, limits, n)
 

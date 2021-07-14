@@ -31,7 +31,7 @@ torch.backends.cudnn.benchmark = False
 
 IS_UR5_ROBOT = True
 IS_UR5_FK_CHECK = False
-helper.IS_UR5_REMOVE_CYLINDER = True
+helper.IS_UR5_REMOVE_CYLINDER = False
 
 identifier_string = "IK_3d_threelinkage_"
 
@@ -75,33 +75,23 @@ FK_ORIGIN = [0.0, 0.0, 0.0]
 
 SAMPLE_CIRCLE = True
 
+N_SLICES = 5.0
+
 RADIUS_INNER = 0.0
 RADIUS_OUTER = 1.0
 
-LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
-
-N_SLICES = 5.0
-
 if IS_UR5_ROBOT :
 
-    # See https://www.universal-robots.com/products/ur5-robot/
     RADIUS_INNER = 0.0
+    # See https://www.universal-robots.com/products/ur5-robot/
+    # UR5 reachability is 850mm
     RADIUS_OUTER = 0.85
 
-    LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
-
+LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 LIMITS_PLOTS = LIMITS
-
-
-if IS_UR5_ROBOT :
-
-    LIMITS_PLOTS = LIMITS
 
 CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
-if IS_UR5_ROBOT :
-
-    CONSTRAINTS = [[0.0, 2.0*math.pi]] * N_DIM_THETA
 
 ''' ---------------------------------------------- CLASSES & FUNCTIONS ---------------------------------------------- '''
 
