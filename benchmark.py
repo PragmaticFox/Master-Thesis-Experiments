@@ -15,8 +15,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 # local import
 import helper
-#import IK_2d_two_linkage as experiment
-import IK_3d_three_linkage as experiment
+import IK_2d_two_linkage as experiment
+#import IK_3d_three_linkage as experiment
 
 print(f"PyTorch Version: {torch.__version__}")
 print(f"NumPy Version: {np.version.version}")
@@ -35,7 +35,7 @@ IS_ONLY_PLOT_REGION = False
 SAMPLING_MODE = 0
 
 # Only relevant for 2D
-IS_CONSTRAINED = False
+IS_CONSTRAINED = True
 
 random.seed(42)
 np.random.seed(42)
@@ -82,7 +82,7 @@ txt_dict = {
     '99percentile': ''
 }
 
-N_ITERATIONS = 1000
+N_ITERATIONS = 10000
 
 N_SAMPLES_TRAIN = 1000
 N_SAMPLES_VAL = 10000

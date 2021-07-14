@@ -503,7 +503,7 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
     ax.set_aspect(aspect='auto', adjustable='box')
 
     ax.set_title(
-        case + "_" + title_string,
+        case + "\n" + title_string,
         fontdict=fontdict,
         pad=5
     )
@@ -731,8 +731,6 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
         jac_norm = np.array(jac_norm.detach().cpu().reshape(
             (n_one_dim, n_one_dim)).tolist())
-        jac_norm_min = jac_norm.min()
-        jac_norm_max = jac_norm.max()
 
         # plot
 
