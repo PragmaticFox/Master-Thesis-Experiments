@@ -19,6 +19,9 @@ matplotlib.use("Agg")
 # local import
 import helper
 
+# is needed for torch.use_deterministic_algorithms(True) below
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
 np.random.seed(21)
 torch.manual_seed(21)
 # only works with newer PyTorch versions

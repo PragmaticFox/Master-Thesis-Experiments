@@ -6,6 +6,9 @@ import shutil
 import pathlib
 import numpy as np
 
+# is needed for torch.use_deterministic_algorithms(True) below
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
 np.random.seed(11)
 torch.manual_seed(11)
 # only works with newer PyTorch versions
