@@ -17,6 +17,13 @@ matplotlib.use("Agg")
 # local import
 import helper
 
+np.random.seed(21)
+torch.manual_seed(21)
+# only works with newer PyTorch versions
+torch.use_deterministic_algorithms(True)
+torch.backends.cudnn.benchmark = False
+# torch.autograd.set_detect_anomaly(True)
+
 identifier_string = "IK_2d_"
 
 string_title_joint_angles_plot = f'\nJoint Angles in Degrees\n2D Two-Linkage Robot Inverse Kinematics\n'

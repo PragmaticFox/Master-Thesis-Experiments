@@ -6,12 +6,19 @@ import shutil
 import pathlib
 import numpy as np
 
+np.random.seed(11)
+torch.manual_seed(11)
+# only works with newer PyTorch versions
+torch.use_deterministic_algorithms(True)
+torch.backends.cudnn.benchmark = False
+# torch.autograd.set_detect_anomaly(True)
+
 DTYPE_NUMPY = np.float64
 DTYPE_TORCH = torch.float64
 
 SAVEFIG_DPI = 300
 
-N_ONE_DIM = 400
+N_ONE_DIM = 1000
 
 HIST_BINS = 100
 

@@ -19,7 +19,14 @@ matplotlib.use("Agg")
 # local import
 import helper
 
-IS_UR5_ROBOT = False
+np.random.seed(21)
+torch.manual_seed(21)
+# only works with newer PyTorch versions
+torch.use_deterministic_algorithms(True)
+torch.backends.cudnn.benchmark = False
+# torch.autograd.set_detect_anomaly(True)
+
+IS_UR5_ROBOT = True
 IS_UR5_FK_CHECK = False
 
 identifier_string = "IK_3d_threelinkage_"
@@ -69,7 +76,7 @@ RADIUS_OUTER = 1.0
 
 LIMITS = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
-N_SLICES = 100.0
+N_SLICES = 5.0
 
 if IS_UR5_ROBOT :
 
