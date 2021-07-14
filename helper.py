@@ -11,7 +11,7 @@ DTYPE_TORCH = torch.float64
 
 SAVEFIG_DPI = 300
 
-N_ONE_DIM = 1000
+N_ONE_DIM = 400
 
 HIST_BINS = 100
 
@@ -275,9 +275,9 @@ def convert_sampling_mode_to_string(sampling_mode):
 
 def convert_constrained_boolean_to_string(is_constrained):
 
-    constrained_string = "Not Constrained"
+    constrained_string = ""
     if is_constrained:
-        constrained_string = "Constrained"
+        constrained_string = ", Constrained"
 
     return constrained_string
 

@@ -30,7 +30,7 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 1
+SAMPLING_MODE = 2
 IS_CONSTRAINED = False
 
 random.seed(42)
@@ -78,9 +78,9 @@ txt_dict = {
     '99percentile': ''
 }
 
-N_ITERATIONS = 10000
+N_ITERATIONS = 100
 
-N_SAMPLES_TRAIN = 10000
+N_SAMPLES_TRAIN = 1000
 N_SAMPLES_VAL = 10000
 N_SAMPLES_TEST = 100000
 
@@ -385,7 +385,7 @@ constrained_string = helper.convert_constrained_boolean_to_string(
 sampling_string = helper.convert_sampling_mode_to_string(
     SAMPLING_MODE)
 
-string_tmp = f'\nIteration {cur_index}, {sampling_string}, {constrained_string}\n'
+string_tmp = f'\nIteration {cur_index}, {sampling_string}{constrained_string}\n'
 
 tic = time.perf_counter()
 

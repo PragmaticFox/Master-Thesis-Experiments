@@ -19,7 +19,7 @@ matplotlib.use("Agg")
 # local import
 import helper
 
-IS_UR5_ROBOT = True
+IS_UR5_ROBOT = False
 IS_UR5_FK_CHECK = False
 
 identifier_string = "IK_3d_threelinkage_"
@@ -517,8 +517,6 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     jac_norm = torch.norm(jac.reshape(n_samples, N_TRAJOPT*N_DIM_THETA*N_DIM_X), p="fro", dim=-1)
     jac_norm = np.array(jac_norm.detach().cpu().tolist())
-    jac_norm_min = jac_norm.min()
-    jac_norm_max = jac_norm.max()
 
     dimX = x_state[:, 0].detach().cpu()
     dimY = x_state[:, 1].detach().cpu()
@@ -567,7 +565,8 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     fig = plt.gcf()
 
-    cb = fig.colorbar(c, ax=ax, extend='max')
+    cb = fig.colorbar(plt.cm.ScalarMappable(norm = matplotlib.colors.LogNorm(
+            vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD), cmap = "RdBu"), ax = ax, extend = "max")
 
     helper.save_figure(fig, dpi, dir_path_img, fname_img)
     # close the plot handle
@@ -698,8 +697,6 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
             terminal_energy = terminal_position_distance
 
     terminal_energy = terminal_energy.detach().cpu()
-    terminal_energy_min = terminal_energy.min()
-    terminal_energy_max = terminal_energy.max()
 
     dimX = x_state[:, 0].detach().cpu()
     dimY = x_state[:, 1].detach().cpu()
@@ -748,7 +745,8 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
 
     fig = plt.gcf()
 
-    cb = fig.colorbar(c, ax=ax, extend='max')
+    cb = fig.colorbar(plt.cm.ScalarMappable(norm = matplotlib.colors.LogNorm(
+            vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD), cmap = "RdBu"), ax = ax, extend = "max")
 
     helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
@@ -918,6 +916,110 @@ def compute_and_save_terminal_energy_histogram(rng, model, X_samples, dpi, is_co
     plt.close('all')
 
 
+def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, case, i, xs, xs_min, xs_max, ys, ys_min, ys_max, zs, zs_min, zs_max):
+
+    ax = plt.axes()
+
+    indices_max = 0
+
+    if case == "x" :
+
+        indices_max = xs <= xs_min + (i+1)*delta
+
+    if case == "y" :
+
+        indices_max = ys <= ys_min + (i+1)*delta
+
+    if case == "z" :
+
+        indices_max = zs <= zs_min + (i+1)*delta
+
+    xs_ = xs[indices_max]
+    ys_ = ys[indices_max]
+    zs_ = zs[indices_max]
+
+    indices_min = 0
+
+    if case == "x" :
+
+        indices_min = xs_ >= xs_min + i*delta
+
+    if case == "y" :
+
+        indices_min = ys_ >= ys_min + i*delta
+
+    if case == "z" :
+
+        indices_min = zs_ >= zs_min + i*delta
+
+    xs__ = xs_[indices_min]
+    ys__ = ys_[indices_min]
+    zs__ = zs_[indices_min]
+
+    xs_min__ = xs__.min()
+    xs_max__ = xs__.max()
+
+    ys_min__ = ys__.min()
+    ys_max__ = ys__.max()
+
+    zs_min__ = zs__.min()
+    zs_max__ = zs__.max()
+
+    x_min__ = min(xs_min__, LIMITS[0][0])
+    x_max__ = max(xs_max__, LIMITS[0][1])
+
+    y_min__ = min(ys_min__, LIMITS[1][0])
+    y_max__ = max(ys_max__, LIMITS[1][1])
+
+    z_min__ = min(zs_min__, LIMITS[2][0])
+    z_max__ = max(zs_max__, LIMITS[2][1])
+
+    if case == "x" :
+
+        ax.plot(ys__, zs__, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
+
+        ax.set_xlim(y_min__, y_max__)
+        ax.set_ylim(z_min__, z_max__)
+
+        ax.set_xlabel("y")
+        ax.set_ylabel("z")
+
+    if case == "y" :
+
+        ax.plot(xs__, zs__, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
+
+        ax.set_xlim(x_min__, x_max__)
+        ax.set_ylim(z_min__, z_max__)
+
+        ax.set_xlabel("x")
+        ax.set_ylabel("z")
+
+    if case == "z" :
+
+        ax.plot(xs__, ys__, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
+
+        ax.set_xlim(x_min__, x_max__)
+        ax.set_ylim(y_min__, y_max__)
+
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+
+    ax.set_title(
+        f"\nx = [{xs_min__}, {xs_max__}]\ny = [{ys_min__}, {ys_max__}]\nz = [{zs_min__}, {zs_max__}]\n",
+        # fontdict=fontdict,
+        pad=5
+    )
+
+    ax.set_aspect('auto', adjustable='box')
+
+    fig = plt.gcf()
+
+    helper.save_figure(fig, dpi, dir_path_img, f"{case}-axis_slices_" + str(i+1) + "_" + fname_img)
+
+    # close the plot handle
+    plt.close('all')
+
+
 def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi, dir_path_img, fname_img):
 
     theta = torch.tensor([helper.sample_joint_angles(rng, CONSTRAINTS) for _ in range(
@@ -978,61 +1080,17 @@ def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi,
     # close the plot handle
     plt.close('all')
 
-    delta = (zs_max - zs_min) / N_SLICES
+    case_x = "x"
+    case_y = "y"
+    case_z = "z"
+
+    delta_x = (xs_max - xs_min) / N_SLICES
+    delta_y = (ys_max - ys_min) / N_SLICES
+    delta_z = (zs_max - zs_min) / N_SLICES
 
     for i in range(int(N_SLICES)):
+        
+        plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta_x, case_x, i, xs, xs_min, xs_max, ys, ys_min, ys_max, zs, zs_min, zs_max)
+        plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta_y, case_y, i, xs, xs_min, xs_max, ys, ys_min, ys_max, zs, zs_min, zs_max)
+        plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta_z, case_z, i, xs, xs_min, xs_max, ys, ys_min, ys_max, zs, zs_min, zs_max)
 
-        ax = plt.axes()
-
-        indices_max = zs <= zs_min + (i+1)*delta
-
-        xs_ = xs[indices_max]
-        ys_ = ys[indices_max]
-        zs_ = zs[indices_max]
-
-        indices_min = zs_ >= zs_min + i*delta
-
-        xs__ = xs_[indices_min]
-        ys__ = ys_[indices_min]
-        zs__ = zs_[indices_min]
-
-        xs_min__ = xs__.min()
-        xs_max__ = xs__.max()
-
-        ys_min__ = ys__.min()
-        ys_max__ = ys__.max()
-
-        zs_min__ = zs__.min()
-        zs_max__ = zs__.max()
-
-        ax.plot(xs__, ys__, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
-
-        x_min__ = min(xs_min__, LIMITS[0][0])
-        x_max__ = max(xs_max__, LIMITS[0][1])
-
-        y_min__ = min(ys_min__, LIMITS[1][0])
-        y_max__ = max(ys_max__, LIMITS[1][1])
-
-        z_min__ = min(zs_min__, LIMITS[2][0])
-        z_max__ = max(zs_max__, LIMITS[2][1])
-
-        ax.set_xlim(x_min__, x_max__)
-        ax.set_ylim(y_min__, y_max__)
-
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-
-        ax.set_title(
-            f"\nx = [{xs_min__}, {xs_max__}]\ny = [{ys_min__}, {ys_max__}]\nz = [{zs_min__}, {zs_max__}]\n",
-            # fontdict=fontdict,
-            pad=5
-        )
-
-        plt.gca().set_aspect('auto', adjustable='box')
-
-        fig = plt.gcf()
-
-        helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
-
-        # close the plot handle
-        plt.close('all')

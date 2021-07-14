@@ -253,7 +253,7 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
         plt.xlabel("x")
         plt.ylabel("y")
 
-        helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + str(j+1) + "_" + fname_img)
+        helper.save_figure(fig, dpi, dir_path_img, str(j+1) + "_" + fname_img)
 
         # close the plot handle
         plt.close('all')
@@ -298,8 +298,6 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     jac_norm = np.array(jac_norm.detach().cpu().reshape(
         (n_one_dim, n_one_dim)).tolist())
-    jac_norm_min = jac_norm.min()
-    jac_norm_max = jac_norm.max()
 
     # plot
 
@@ -320,7 +318,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
     c = ax.pcolormesh(dimX, dimY, jac_norm, cmap='RdBu', shading='gouraud',
                       norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD))
 
-    ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=2.0,
+    ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_2D,
             marker='o', color='k', ls='', alpha=alpha_train_samples)
 
     cb = fig.colorbar(c, ax=ax, extend='max')
@@ -373,8 +371,6 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
 
     terminal_energy = np.array(terminal_energy.detach(
     ).cpu().reshape((n_one_dim, n_one_dim)).tolist())
-    terminal_energy_min = terminal_energy.min()
-    terminal_energy_max = terminal_energy.max()
 
     # plot
 
@@ -395,7 +391,7 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
     c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
                       norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD))
 
-    ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=2.0,
+    ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_2D,
             marker='o', color='k', ls='', alpha=alpha_train_samples)
 
     cb = fig.colorbar(c, ax=ax, extend='max')
