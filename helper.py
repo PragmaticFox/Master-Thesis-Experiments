@@ -19,6 +19,9 @@ torch.backends.cudnn.benchmark = False
 DTYPE_NUMPY = np.float64
 DTYPE_TORCH = torch.float64
 
+# this will only ever be set True in IK_3d_three_linkage
+IS_UR5_REMOVE_CYLINDER = False
+
 SAVEFIG_DPI = 300
 
 N_ONE_DIM = 1000
@@ -121,13 +124,19 @@ def compute_sample(rng, limits, is_sample_circle, radius_outer, radius_inner):
             print(f"Make sure radius_outer > radius_inner!")
             exit(1)
 
-        r = np.linalg.norm(x, ord=2)
+        if IS_UR5_REMOVE_CYLINDER :
 
-        while r >= radius_outer or r < radius_inner:
+            assert(len(x) == 3, "len(x) must be 3, if IS_UR5_REMOVE_CYLINDER == True")
+
+        r = np.linalg.norm(x, ord=2)
+        r_cyl = np.linalg.norm(x[:-1], ord=2)
+
+        while ( r >= radius_outer or r < radius_inner ) or ( IS_UR5_REMOVE_CYLINDER and r_cyl < 0.1 ):
 
             x = compute_sample_helper(rng, limits, n)
 
             r = np.linalg.norm(x, ord=2)
+            r_cyl = np.linalg.norm(x[:-1], ord=2)
 
     return x
 
