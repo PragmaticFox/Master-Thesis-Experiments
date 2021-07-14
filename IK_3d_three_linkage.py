@@ -31,7 +31,7 @@ torch.backends.cudnn.benchmark = False
 
 IS_UR5_ROBOT = True
 IS_UR5_FK_CHECK = False
-helper.IS_UR5_REMOVE_CYLINDER = False
+helper.IS_UR5_REMOVE_CYLINDER = True
 
 identifier_string = "IK_3d_threelinkage_"
 
@@ -493,6 +493,98 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
             plt.close('all')
 
 
+def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_img, title_string, fontdict, case):
+
+    ax = plt.axes(projection='3d')
+
+    plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                        top=1.25, wspace=1, hspace=1)
+
+    ax.set_aspect(aspect='auto', adjustable='box')
+
+    ax.set_title(
+        case + "_" + title_string,
+        fontdict=fontdict,
+        pad=5
+    )
+
+    if case == "x":
+
+        c = ax.scatter(
+            xs=xs,
+            ys=ys,
+            zs=zs,
+            zdir='z',
+            s=20,
+            c=c,
+            depthshade=True,
+            cmap=cmap,
+            norm=matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax)
+        )
+
+        ax.set_xlim(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1])
+        ax.set_ylim(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1])
+        ax.set_zlim(LIMITS_PLOTS[2][0], LIMITS_PLOTS[2][1])
+
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+
+    if case == "y" :
+
+        c = ax.scatter(
+            xs=ys,
+            ys=zs,
+            zs=xs,
+            zdir='z',
+            s=20,
+            c=c,
+            depthshade=True,
+            cmap=cmap,
+            norm=matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax)
+        )
+
+        ax.set_xlim(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1])
+        ax.set_ylim(LIMITS_PLOTS[2][0], LIMITS_PLOTS[2][1])
+        ax.set_zlim(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1])
+
+        ax.set_xlabel("y")
+        ax.set_ylabel("z")
+        ax.set_zlabel("x")
+
+    if case == "z" :
+
+        c = ax.scatter(
+            xs=zs,
+            ys=xs,
+            zs=ys,
+            zdir='z',
+            s=20,
+            c=c,
+            depthshade=True,
+            cmap=cmap,
+            norm=matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax)
+        )
+
+        ax.set_xlim(LIMITS_PLOTS[2][0], LIMITS_PLOTS[2][1])
+        ax.set_ylim(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1])
+        ax.set_zlim(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1])
+
+        ax.set_xlabel("z")
+        ax.set_ylabel("x")
+        ax.set_zlabel("y")
+
+    fig = plt.gcf()
+
+    cb = fig.colorbar(plt.cm.ScalarMappable(norm = matplotlib.colors.LogNorm(
+            vmin = vmin, vmax = vmax), cmap = "RdBu"), ax = ax, extend = "max")
+
+    helper.save_figure(fig, dpi, dir_path_img, case + "_" + fname_img)
+
+    # close the plot handle
+    plt.close('all')
+
+
 def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     n_samples = n_one_dim*n_one_dim
@@ -525,53 +617,61 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     # plot
 
-    ax = plt.axes(projection='3d')
-
-    plt.subplots_adjust(left=0, bottom=0, right=1.25,
-                        top=1.25, wspace=1, hspace=1)
-
-    ax.set_aspect(aspect='auto', adjustable='box')
-
-    ax.set_title(
-        title_string,
-        fontdict=fontdict,
-        pad=5
-    )
-
     cmap = pl.cm.RdBu
-    my_cmap = cmap(np.arange(cmap.N))
-    my_cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmap.N)
-    my_cmap = ListedColormap(my_cmap)
+    cmap = cmap(np.arange(cmap.N))
+    cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmap.N)
+    cmap = ListedColormap(cmap)
 
-    c = ax.scatter(
-        xs=dimX,
-        ys=dimY,
-        zs=dimZ,
-        zdir='z',
-        s=20,
-        c=jac_norm,
-        depthshade=True,
-        cmap=my_cmap,
-        norm=matplotlib.colors.LogNorm(
-            vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD)
-    )
+    plot_heatmap(
+        plt = plt,
+        dpi = dpi,
+        xs = dimX,
+        ys = dimY,
+        zs = dimZ,
+        c = jac_norm,
+        cmap = cmap,
+        vmin = helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
+        vmax = helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
+        dir_path_img = dir_path_img,
+        fname_img = fname_img,
+        title_string = title_string,
+        fontdict = fontdict,
+        case = "x"
+        )
 
-    ax.set_xlim(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1])
-    ax.set_ylim(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1])
-    ax.set_zlim(LIMITS_PLOTS[2][0], LIMITS_PLOTS[2][1])
+    plot_heatmap(
+        plt = plt,
+        dpi = dpi,
+        xs = dimX,
+        ys = dimY,
+        zs = dimZ,
+        c = jac_norm,
+        cmap = cmap,
+        vmin = helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
+        vmax = helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
+        dir_path_img = dir_path_img,
+        fname_img = fname_img,
+        title_string = title_string,
+        fontdict = fontdict,
+        case = "y"
+        )
 
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-
-    fig = plt.gcf()
-
-    cb = fig.colorbar(plt.cm.ScalarMappable(norm = matplotlib.colors.LogNorm(
-            vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD), cmap = "RdBu"), ax = ax, extend = "max")
-
-    helper.save_figure(fig, dpi, dir_path_img, fname_img)
-    # close the plot handle
-    plt.close('all')
+    plot_heatmap(
+        plt = plt,
+        dpi = dpi,
+        xs = dimX,
+        ys = dimY,
+        zs = dimZ,
+        c = jac_norm,
+        cmap = cmap,
+        vmin = helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
+        vmax = helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
+        dir_path_img = dir_path_img,
+        fname_img = fname_img,
+        title_string = title_string,
+        fontdict = fontdict,
+        case = "z"
+        )
 
     delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
 
@@ -705,54 +805,61 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
 
     # plot
 
-    ax = plt.axes(projection='3d')
-
-    plt.subplots_adjust(left=0, bottom=0, right=1.25,
-                        top=1.25, wspace=1, hspace=1)
-
-    ax.set_aspect(aspect='auto', adjustable='box')
-
-    ax.set_title(
-        title_string,
-        fontdict=fontdict,
-        pad=5
-    )
-
     cmap = pl.cm.RdBu
-    my_cmap = cmap(np.arange(cmap.N))
-    my_cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmap.N)
-    my_cmap = ListedColormap(my_cmap)
+    cmap = cmap(np.arange(cmap.N))
+    cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmap.N)
+    cmap = ListedColormap(cmap)
 
-    c = ax.scatter(
-        xs=dimX,
-        ys=dimY,
-        zs=dimZ,
-        zdir='z',
-        s=20,
-        c=terminal_energy,
-        depthshade=True,
-        cmap=my_cmap,
-        norm=matplotlib.colors.LogNorm(
-            vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD)
-    )
+    plot_heatmap(
+        plt = plt,
+        dpi = dpi,
+        xs = dimX,
+        ys = dimY,
+        zs = dimZ,
+        c = terminal_energy,
+        cmap = cmap,
+        vmin = helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
+        vmax = helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
+        dir_path_img = dir_path_img,
+        fname_img = fname_img,
+        title_string = title_string,
+        fontdict = fontdict,
+        case = "x"
+        )
 
-    ax.set_xlim(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1])
-    ax.set_ylim(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1])
-    ax.set_zlim(LIMITS_PLOTS[2][0], LIMITS_PLOTS[2][1])
+    plot_heatmap(
+        plt = plt,
+        dpi = dpi,
+        xs = dimX,
+        ys = dimY,
+        zs = dimZ,
+        c = terminal_energy,
+        cmap = cmap,
+        vmin = helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
+        vmax = helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
+        dir_path_img = dir_path_img,
+        fname_img = fname_img,
+        title_string = title_string,
+        fontdict = fontdict,
+        case = "y"
+        )
 
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-
-    fig = plt.gcf()
-
-    cb = fig.colorbar(plt.cm.ScalarMappable(norm = matplotlib.colors.LogNorm(
-            vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD), cmap = "RdBu"), ax = ax, extend = "max")
-
-    helper.save_figure(fig, dpi, dir_path_img, fname_img)
-
-    # close the plot handle
-    plt.close('all')
+    plot_heatmap(
+        plt = plt,
+        dpi = dpi,
+        xs = dimX,
+        ys = dimY,
+        zs = dimZ,
+        c = terminal_energy,
+        cmap = cmap,
+        vmin = helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
+        vmax = helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
+        dir_path_img = dir_path_img,
+        fname_img = fname_img,
+        title_string = title_string,
+        fontdict = fontdict,
+        case = "z"
+        )
 
     delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
 
