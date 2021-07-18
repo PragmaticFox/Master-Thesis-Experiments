@@ -32,13 +32,13 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 2
+SAMPLING_MODE = 1
 
 # Only relevant for 2D
 IS_CONSTRAINED = False
 
 # Only relevant for sampling_mode == 2
-IS_MODE_2_ABLATION = True
+IS_MODE_2_ABLATION = False
 
 random.seed(42)
 np.random.seed(42)
@@ -102,7 +102,7 @@ LR_INITIAL = 1e-2
 LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99930 # for 10k
 
 # parameters for mode 1
-MODE_1_MODULO_FACTOR = 3
+MODE_1_MODULO_FACTOR = 1
 
 # parameters for mode 2
 DIVISOR = 2.0
