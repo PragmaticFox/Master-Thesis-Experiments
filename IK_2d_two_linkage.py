@@ -283,8 +283,6 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
     x_state = torch.tensor(np.stack(
         (dimX.flatten(), dimY.flatten()), axis=-1), requires_grad=True).to(device)
 
-    model_sum = lambda x : torch.sum(model(x), axis = 0)
-
     jac = torch.zeros(size=(n_one_dim*n_one_dim, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
 
     if n_one_dim > 100 :
@@ -295,11 +293,11 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
         for split in range(n_splits) :
 
-            jac[split*delta:(split+1)*delta] = torch.autograd.functional.jacobian(model_sum, x_state[split*delta:(split+1)*delta], create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
+            jac[split*delta:(split+1)*delta] = helper.compute_jacobian(model, x_state[split*delta:(split+1)*delta])
 
     else :
 
-        jac = torch.autograd.functional.jacobian(model_sum, x_state, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
+        jac = helper.compute_jacobian(model, x_state)
 
 
     jac_norm = torch.reshape(jac, shape=(
@@ -419,10 +417,7 @@ def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img
 
     n_samples = X_samples.shape[0]
 
-    model_sum = lambda x : torch.sum(model(x), axis = 0)
-
-    jac = torch.zeros(size=(n_samples, N_TRAJOPT * N_DIM_THETA, N_DIM_X)).to(X_samples.device)
-    jac = torch.autograd.functional.jacobian(model_sum, X_samples, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
+    jac = helper.compute_jacobian(model, X_samples)
 
     jac_norm = torch.norm(jac, p="fro", dim=-1)
     jac_norm = np.array(jac_norm.detach().cpu().tolist())

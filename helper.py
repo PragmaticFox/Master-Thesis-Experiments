@@ -404,3 +404,19 @@ def plot_histogram(plt, ax, arr):
     plt.xscale('log')
     plt.grid(True)
 
+
+def compute_jacobian(model, X_samples):
+
+    # https://discuss.pytorch.org/t/jacobian-functional-api-batch-respecting-jacobian/84571/7
+    model_sum = lambda x : torch.sum(model(x), axis = 0)
+    jac = torch.autograd.functional.jacobian(model_sum, X_samples, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
+
+    # sanity check whether the above does what we want (it does)
+    '''
+    jac_check = torch.autograd.functional.jacobian(model, X_samples, create_graph = False, strict = False, vectorize = True)
+    jac_check = torch.diagonal(jac_check, dim1 = 0, dim2 = 2).permute(2, 0, 1)
+    print(torch.norm(jac - jac_check, p = 2))
+    '''
+
+    return jac
+
