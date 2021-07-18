@@ -32,10 +32,13 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 0
+SAMPLING_MODE = 2
 
 # Only relevant for 2D
-IS_CONSTRAINED = True
+IS_CONSTRAINED = False
+
+# Only relevant for sampling_mode == 2
+IS_MODE_2_ABLATION = True
 
 random.seed(42)
 np.random.seed(42)
@@ -84,7 +87,7 @@ txt_dict = {
 
 N_ITERATIONS = 10000
 
-N_SAMPLES_TRAIN = 1000
+N_SAMPLES_TRAIN = 10000
 N_SAMPLES_VAL = 10000
 N_SAMPLES_TEST = 100000
 
@@ -239,6 +242,8 @@ X_state_val = torch.tensor([helper.compute_sample(random, experiment.LIMITS, exp
 X_state_test = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
     N_SAMPLES_TEST)], dtype=helper.DTYPE_TORCH).to(device)
 
+X_state_train_all_sorted = torch.zeros_like(X_state_train_all).to(device)
+
 experiment.compute_and_save_samples_plot(X_state_train_all.detach().cpu(), X_state_val.detach(
 ).cpu(), X_state_test.detach().cpu(), dir_path_id_plots, "samples_plot.jpg")
 
@@ -281,25 +286,25 @@ for j in range(N_ITERATIONS):
                 (X_state_train_all - X_state_train[0]), p=2, dim=-1)
             distances_indices_sorted = torch.argsort(
                 distances, descending=False)
-            X_state_train_all = X_state_train_all[distances_indices_sorted]
+            X_state_train_all_sorted = X_state_train_all[distances_indices_sorted].clone()
             distance_index = 1
 
         else:
 
             if distance_index < N_SAMPLES_TRAIN and j % DIVISOR == 0:
 
-                #rel_index = distances_indices_sorted[distance_index]
-
-                # ablation experiment, just take the next index, not the nearest sample from the first sample
-                #rel_index = distance_index
-
                 # maximally 10% of the iterations needed until full batch
                 offset = int(max(N_SAMPLES_TRAIN // (TENTH / DIVISOR), 1))
                 if distance_index + offset > N_SAMPLES_TRAIN :
                     offset = N_SAMPLES_TRAIN - distance_index
 
-                X_state_train = torch.cat(
-                    (X_state_train, X_state_train_all[distance_index:distance_index+offset]), dim=0)
+                X_new = X_state_train_all_sorted[distance_index:distance_index+offset]
+
+                if IS_MODE_2_ABLATION :
+                    
+                    X_new = X_state_train_all[distance_index:distance_index+offset]
+
+                X_state_train = torch.cat((X_state_train, X_new), dim=0)
 
                 distance_index += offset
 
