@@ -101,6 +101,9 @@ LR_INITIAL = 1e-2
 
 LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99930 # for 10k
 
+# parameters for mode 1
+MODE_1_MODULO_FACTOR = 3
+
 # parameters for mode 2
 DIVISOR = 2.0
 TENTH = 0.1 * N_ITERATIONS
@@ -272,7 +275,12 @@ for j in range(N_ITERATIONS):
 
     elif SAMPLING_MODE == 1:
 
-        X_state_train = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
+        # j == 0 is just a sanity check such that
+        # we have a train set for the first iteration
+
+        if j == 0 or j % MODE_1_MODULO_FACTOR == 0:
+
+            X_state_train = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
             N_SAMPLES_TRAIN)], dtype=helper.DTYPE_TORCH).to(device)
 
     elif SAMPLING_MODE == 2:
