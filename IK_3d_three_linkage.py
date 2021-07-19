@@ -29,7 +29,7 @@ torch.manual_seed(21)
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
 
-IS_UR5_ROBOT = True
+IS_UR5_ROBOT = False
 IS_UR5_FK_CHECK = False
 helper.IS_UR5_REMOVE_CYLINDER = True
 

@@ -420,14 +420,34 @@ def plot_histogram(plt, ax, arr):
 def compute_jacobian(model, X_samples):
 
     # https://discuss.pytorch.org/t/jacobian-functional-api-batch-respecting-jacobian/84571/7
+    # Imagine you have n_batch samples, hence your input "matrix" will be n_batch x n_dim
+    # functional.jacobian will compute the gradient of each output (n_batch x n_theta) w.r.t. each input (n_batch x n_dim).
+    # By simply summing up the output over the batch dimension, now, 
+    # functionl.jacobian will only compute the gradient of n_theta w.r.t. each input.
+    # Since every term in the sum of one particular theta is only dependent on a single input per dimension (and not n_batch many),
+    # all other sum terms will cancel out, leaving us with exactly what we want; the jacobian for each batch individually of total size n_batch x n_theta x n_dim
+    # while still making use of the GPU to compute the matrix, instead of (very slowly) looping through n_batche and computing it naively.
     model_sum = lambda x : torch.sum(model(x), axis = 0)
     jac = torch.autograd.functional.jacobian(model_sum, X_samples, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
 
-    # sanity check whether the above does what we want (it does)
     '''
+    # sanity check whether the above does what we want (it does)
     jac_check = torch.autograd.functional.jacobian(model, X_samples, create_graph = False, strict = False, vectorize = True)
     jac_check = torch.diagonal(jac_check, dim1 = 0, dim2 = 2).permute(2, 0, 1)
     print(torch.norm(jac - jac_check, p = 2))
+    '''
+
+    '''
+    # very very very slow
+    # (this is just pseudocode to show the slow variant, may need to adjust to make it runnable)
+    jac_slow = torch.empty()
+    for i in range(X_samples.shape[0]) :
+        tmp = torch.autograd.functional.jacobian(model, X_samples[i:i+1], create_graph = False, strict = False, vectorize = True)
+        if jac.empty() :
+            jac_slow = tmp
+        else :
+            jac_slow = torch.cat((jac_slow, tmp), dim = 0)
+    print(torch.norm(jac - jac_slow, p = 2))
     '''
 
     return jac
