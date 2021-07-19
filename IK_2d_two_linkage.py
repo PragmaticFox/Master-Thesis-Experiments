@@ -478,8 +478,7 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
 
     ax.set_aspect('equal', adjustable='box')
 
-    helper.save_figure(fig, dpi, dir_path_img,
-                       identifier_string + "joint_angles_region_plot.png")
+    helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
     # close the plot handle
     plt.close('all')
