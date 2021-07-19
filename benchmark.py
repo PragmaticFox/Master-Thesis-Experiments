@@ -32,7 +32,7 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 1
+SAMPLING_MODE = 0
 
 # Only relevant for 2D
 IS_CONSTRAINED = False
@@ -518,3 +518,4 @@ print("\nAll Done!\n")
 
 sys.stdout = sys_stdout_original
 file_handle_logger.close()
+

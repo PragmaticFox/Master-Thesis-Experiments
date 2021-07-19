@@ -319,13 +319,19 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
     c = ax.pcolormesh(dimX, dimY, jac_norm, cmap='RdBu', shading='gouraud',
                       norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD))
 
-    ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_2D,
-            marker='o', color='k', ls='', alpha=alpha_train_samples)
+    plt.axis('off')
 
+    helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img)
+
+    plt.axis('on')
+    
     cb = fig.colorbar(c, ax=ax, extend='max')
 
     plt.xlabel("x")
     plt.ylabel("y")
+
+    ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_2D,
+            marker='o', color='k', ls='', alpha=alpha_train_samples)
 
     helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
@@ -333,7 +339,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
     plt.close('all')
 
 
-def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
+def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     X_state_train = X_state_train.detach().cpu()
 
@@ -387,14 +393,20 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
     ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
     c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
                       norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD))
+    
+    plt.axis('off')
 
-    ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_2D,
-            marker='o', color='k', ls='', alpha=alpha_train_samples)
+    helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img)
 
+    plt.axis('on')
+    
     cb = fig.colorbar(c, ax=ax, extend='max')
 
     plt.xlabel("x")
     plt.ylabel("y")
+
+    ax.plot(X_state_train[:, 0], X_state_train[:, 1], ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_2D,
+            marker='o', color='k', ls='', alpha=alpha_train_samples)
 
     helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
@@ -402,9 +414,9 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
     plt.close('all')
 
 
-def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi, dir_path_img, fname_img):
+def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_path_img, fname_img):
 
-    theta = torch.tensor([helper.sample_joint_angles(rng, CONSTRAINTS) for _ in range(
+    theta = torch.tensor([helper.sample_joint_angles(CONSTRAINTS) for _ in range(
         n_samples_theta)], dtype=helper.DTYPE_TORCH).to(device)
 
     x_fk_chain = torch.zeros(size=(n_samples_theta, N_TRAJOPT*N_DIM_JOINTS, N_DIM_X_STATE))
