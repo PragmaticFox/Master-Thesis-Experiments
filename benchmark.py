@@ -41,11 +41,11 @@ IS_ONLY_PLOT_REGION = False
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
 SAMPLING_MODE = 0
 
+N_SAMPLES_TRAIN = 1000
+
 # those two only trigger if the requirements are met
 IS_MODE_2_ABLATION = False
 IS_TWOLINKAGE_CONSTRAINED = False
-
-N_SAMPLES_TRAIN = 1000
 
 N_ITERATIONS = 100000
 
