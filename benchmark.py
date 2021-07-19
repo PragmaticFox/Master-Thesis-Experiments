@@ -43,7 +43,6 @@ IS_MODE_2_ABLATION = False
 random.seed(42)
 np.random.seed(42)
 torch.manual_seed(42)
-# only works with newer PyTorch versions
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
 # torch.autograd.set_detect_anomaly(True)
@@ -217,7 +216,6 @@ sys_stdout_original = sys.stdout
 sys.stdout = helper.Logger(sys_stdout_original, file_handle_logger)
 
 experiment.compute_and_save_joint_angles_region_plot(
-    random,
     device,
     N_SAMPLES_THETA,
     helper.SAVEFIG_DPI,
@@ -238,11 +236,11 @@ tb_writer = SummaryWriter(
     filename_suffix = "_" + experiment.identifier_string
 )
 
-X_state_train_all = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
+X_state_train_all = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
     N_SAMPLES_TRAIN)], dtype=helper.DTYPE_TORCH).to(device)
-X_state_val = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
+X_state_val = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
     N_SAMPLES_VAL)], dtype=helper.DTYPE_TORCH).to(device)
-X_state_test = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
+X_state_test = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
     N_SAMPLES_TEST)], dtype=helper.DTYPE_TORCH).to(device)
 
 X_state_train_all_sorted = torch.zeros_like(X_state_train_all).to(device)
@@ -280,7 +278,7 @@ for j in range(N_ITERATIONS):
 
         if j == 0 or j % MODE_1_MODULO_FACTOR == 0:
 
-            X_state_train = torch.tensor([helper.compute_sample(random, experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
+            X_state_train = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
             N_SAMPLES_TRAIN)], dtype=helper.DTYPE_TORCH).to(device)
 
     elif SAMPLING_MODE == 2:
@@ -407,7 +405,6 @@ string_tmp = f'\nIteration {cur_index}, {sampling_string}{constrained_string}\n'
 tic = time.perf_counter()
 
 helper.compute_and_save_robot_plot(
-    random.randrange,
     experiment.compute_energy,
     experiment.visualize_trajectory_and_save_image,
     model,
@@ -423,7 +420,6 @@ print(f"{toc - tic:0.2f} [s] for compute_and_save_robot_plot(...)")
 tic = time.perf_counter()
 
 experiment.compute_and_save_joint_angles_plot(
-    random,
     model,
     device,
     X_state_train,
@@ -442,7 +438,6 @@ print(
 tic = time.perf_counter()
 
 experiment.compute_and_save_terminal_energy_plot(
-    random,
     model,
     device,
     X_state_train,
@@ -462,7 +457,6 @@ print(
 tic = time.perf_counter()
 
 experiment.compute_and_save_jacobian_plot(
-    random,
     model,
     device,
     X_state_train,
@@ -480,8 +474,7 @@ print(
 
 tic = time.perf_counter()
 
-experiment.compute_and_save_terminal_energy_histogram(
-    random,
+helper.compute_and_save_terminal_energy_histogram(
     model,
     X_samples,
     plot_dpi,
@@ -498,8 +491,7 @@ print(
 
 tic = time.perf_counter()
 
-experiment.compute_and_save_jacobian_histogram(
-    random,
+helper.compute_and_save_jacobian_histogram(
     model,
     X_samples,
     plot_dpi,

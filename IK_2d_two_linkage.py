@@ -4,6 +4,7 @@ import os
 import math
 import torch
 import shutil
+import random
 import pathlib
 import numpy as np
 
@@ -20,12 +21,11 @@ import helper
 # is needed for torch.use_deterministic_algorithms(True) below
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
+random.seed(21)
 np.random.seed(21)
 torch.manual_seed(21)
-# only works with newer PyTorch versions
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
-# torch.autograd.set_detect_anomaly(True)
 
 identifier_string = "IK_2d_"
 
@@ -189,7 +189,7 @@ def compute_energy(model, x_state, is_constrained):
     return energy, constraint_bound, terminal_position_distance, x_hat_fk_chain
 
 
-def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
+def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     xs__ = X_state_train[:, 0].detach().cpu()
     ys__ = X_state_train[:, 1].detach().cpu()
@@ -247,11 +247,8 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
 
         ax.set_aspect(aspect='equal', adjustable='box')
 
-        ax.set_title(
-            f'\nJoint {j+1}\n' + title_string,
-            fontdict=fontdict,
-            pad=5
-        )
+        title_string = f'\nJoint {j+1}\n' + title_string
+        helper.set_axis_title(ax, title_string, fontdict)
 
         ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
         c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
@@ -269,7 +266,7 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
         plt.close('all')
 
 
-def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
+def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     X_state_train = X_state_train.detach().cpu()
 
@@ -316,11 +313,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
     ax.set_aspect(aspect='equal', adjustable='box')
 
-    ax.set_title(
-        title_string,
-        fontdict=fontdict,
-        pad=5
-    )
+    helper.set_axis_title(ax, title_string, fontdict)
 
     ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
     c = ax.pcolormesh(dimX, dimY, jac_norm, cmap='RdBu', shading='gouraud',
@@ -389,11 +382,7 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
 
     ax.set_aspect(aspect='equal', adjustable='box')
 
-    ax.set_title(
-        title_string,
-        fontdict=fontdict,
-        pad=5
-    )
+    helper.set_axis_title(ax, title_string, fontdict)
 
     ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
     c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
@@ -406,69 +395,6 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
 
     plt.xlabel("x")
     plt.ylabel("y")
-
-    helper.save_figure(fig, dpi, dir_path_img, fname_img)
-
-    # close the plot handle
-    plt.close('all')
-
-
-def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img, fname_img, fontdict, title_string):
-
-    n_samples = X_samples.shape[0]
-
-    jac = helper.compute_jacobian(model, X_samples)
-
-    jac_norm = torch.norm(jac, p="fro", dim=-1)
-    jac_norm = np.array(jac_norm.detach().cpu().tolist())
-
-    fig, ax = plt.subplots()
-
-    plt.subplots_adjust(left=0, bottom=0, right=1.25,
-                        top=1.25, wspace=1, hspace=1)
-
-    ax.set_title(
-        title_string,
-        fontdict=fontdict,
-        pad=5
-    )
-
-    arr = jac_norm.flatten()
-
-    helper.plot_histogram(plt, ax, arr)
-
-    helper.save_figure(fig, dpi, dir_path_img, fname_img)
-
-    # close the plot handle
-    plt.close('all')
-
-
-def compute_and_save_terminal_energy_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
-
-    n_samples = X_samples.shape[0]
-
-    terminal_energy = torch.zeros((n_samples)).to(X_samples.device)
-
-    energy, constraint, terminal_position_distance, _ = compute_energy(
-        model, X_samples, is_constrained)
-
-    terminal_energy = np.array(
-        terminal_position_distance.detach().cpu().tolist())
-
-    fig, ax = plt.subplots()
-
-    plt.subplots_adjust(left=0, bottom=0, right=1.25,
-                        top=1.25, wspace=1, hspace=1)
-
-    ax.set_title(
-        title_string,
-        fontdict=fontdict,
-        pad=5
-    )
-
-    arr = terminal_energy.flatten()
-
-    helper.plot_histogram(plt, ax, arr)
 
     helper.save_figure(fig, dpi, dir_path_img, fname_img)
 
@@ -527,12 +453,10 @@ def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi,
     ax.set_xlabel("x")
     ax.set_ylabel("y")
 
+    title_string = f"\nx = [{xs_min}, {xs_max}]\ny = [{ys_min}, {ys_max}]\n"
+    fontdict = {}
 
-    ax.set_title(
-        f"\nx = [{xs_min}, {xs_max}]\ny = [{ys_min}, {ys_max}]\n",
-        # fontdict=fontdict,
-        pad=5
-    )
+    helper.set_axis_title(ax, title_string, fontdict)
 
     ax.set_aspect('auto', adjustable='box')
 

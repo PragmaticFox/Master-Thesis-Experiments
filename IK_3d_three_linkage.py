@@ -4,6 +4,7 @@ import os
 import math
 import torch
 import shutil
+import random
 import pathlib
 import numpy as np
 
@@ -22,12 +23,11 @@ import helper
 # is needed for torch.use_deterministic_algorithms(True) below
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
+random.seed(21)
 np.random.seed(21)
 torch.manual_seed(21)
-# only works with newer PyTorch versions
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
-# torch.autograd.set_detect_anomaly(True)
 
 IS_UR5_ROBOT = True
 IS_UR5_FK_CHECK = False
@@ -392,7 +392,7 @@ def compute_energy(model, x_state, is_constrained):
     return energy, constraint_bound, terminal_position_distance, x_hat_fk_chain
 
 
-def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
+def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
 
@@ -423,7 +423,7 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
 
         dimX, dimY = np.meshgrid(dimX, dimY)
 
-        dimZ = np.array([z_min + rng.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
+        dimZ = np.array([z_min + random.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
 
         x_state = torch.tensor(
             np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
@@ -471,11 +471,8 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
 
             ax.set_aspect(aspect='equal', adjustable='box')
 
-            ax.set_title(
-                f'\nJoint {j+1}\n' + f"\nz = [{z_min}, {z_max}]\n" + title_string,
-                fontdict=fontdict,
-                pad=5
-            )
+            title_string = f'\nJoint {j+1}\n' + f"\nz = [{z_min}, {z_max}]\n" + title_string
+            helper.set_axis_title(ax, title_string, fontdict)
 
             ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
             c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
@@ -487,7 +484,8 @@ def compute_and_save_joint_angles_plot(rng, model, device, X_state_train, dpi, n
             plt.xlabel("x")
             plt.ylabel("y")
 
-            helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + str(j+1) + "_" + fname_img)
+            limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
+            helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + str(j+1) + "_" + limits_str + "_" + fname_img)
 
             # close the plot handle
             plt.close('all')
@@ -502,11 +500,8 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
 
     ax.set_aspect(aspect='auto', adjustable='box')
 
-    ax.set_title(
-        case + "\n" + title_string,
-        fontdict=fontdict,
-        pad=5
-    )
+    title_string = case + "\n" + title_string
+    helper.set_axis_title(ax, title_string, fontdict)
 
     if case == "x":
 
@@ -585,11 +580,11 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
     plt.close('all')
 
 
-def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
+def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
     n_samples = n_one_dim*n_one_dim
 
-    x_state = torch.tensor([helper.compute_sample(rng, LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER) for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
+    x_state = torch.tensor([helper.compute_sample(LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER) for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
 
     jac = torch.zeros(size=(n_samples, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
 
@@ -701,7 +696,7 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
         dimX, dimY = np.meshgrid(dimX, dimY)
 
-        dimZ = np.array([z_min + rng.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
+        dimZ = np.array([z_min + random.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
 
         x_state = torch.tensor(
             np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
@@ -740,11 +735,8 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
 
         ax.set_aspect(aspect='equal', adjustable='box')
 
-        ax.set_title(
-            f"\nz = [{z_min}, {z_max}]\n" + title_string,
-            fontdict=fontdict,
-            pad=5
-        )
+        title_string = f"\nz = [{z_min}, {z_max}]\n" + title_string
+        helper.set_axis_title(ax, title_string, fontdict)
 
         ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
         c = ax.pcolormesh(dimX, dimY, jac_norm, cmap='RdBu', shading='gouraud',
@@ -758,17 +750,18 @@ def compute_and_save_jacobian_plot(rng, model, device, X_state_train, dpi, n_one
         plt.xlabel("x")
         plt.ylabel("y")
 
-        helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
+        limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
+        helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + limits_str + "_" + fname_img)
 
         # close the plot handle
         plt.close('all')
 
 
-def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
+def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
     
     n_samples = n_one_dim*n_one_dim
 
-    x_state = torch.tensor([helper.compute_sample(rng, LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER)
+    x_state = torch.tensor([helper.compute_sample(LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER)
                            for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
 
     terminal_energy = torch.zeros((n_samples)).to(device)
@@ -887,7 +880,7 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
 
         dimX, dimY = np.meshgrid(dimX, dimY)
 
-        dimZ = np.array([z_min + rng.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
+        dimZ = np.array([z_min + random.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
 
         x_state = torch.tensor(
             np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
@@ -917,8 +910,6 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
 
         terminal_energy = np.array(terminal_energy.detach(
         ).cpu().reshape((n_one_dim, n_one_dim)).tolist())
-        terminal_energy_min = terminal_energy.min()
-        terminal_energy_max = terminal_energy.max()
 
         # plot
 
@@ -929,11 +920,8 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
 
         ax.set_aspect(aspect='equal', adjustable='box')
 
-        ax.set_title(
-            f"\nz = [{z_min}, {z_max}]\n" + title_string,
-            fontdict=fontdict,
-            pad=5
-        )
+        title_string = f"\nz = [{z_min}, {z_max}]\n" + title_string
+        helper.set_axis_title(ax, title_string, fontdict)
 
         ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
         c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
@@ -947,75 +935,11 @@ def compute_and_save_terminal_energy_plot(rng, model, device, X_state_train, dpi
         plt.xlabel("x")
         plt.ylabel("y")
 
-        helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + fname_img)
+        limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
+        helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + limits_str + "_" + fname_img)
 
         # close the plot handle
         plt.close('all')
-
-
-def compute_and_save_jacobian_histogram(rng, model, X_samples, dpi, dir_path_img, fname_img, fontdict, title_string):
-
-    n_samples = X_samples.shape[0]
-
-    jac = helper.compute_jacobian(model, X_samples)
-
-    jac = jac.reshape(n_samples, N_TRAJOPT * N_DIM_THETA * N_DIM_X)
-
-    jac_norm = torch.norm(jac, p="fro", dim=-1)
-    jac_norm = np.array(jac_norm.detach().cpu().tolist())
-
-    fig, ax = plt.subplots()
-
-    plt.subplots_adjust(left=0, bottom=0, right=1.25,
-                        top=1.25, wspace=1, hspace=1)
-
-    ax.set_title(
-        title_string,
-        fontdict=fontdict,
-        pad=5
-    )
-
-    arr = jac_norm.flatten()
-
-    helper.plot_histogram(plt, ax, arr)
-
-    helper.save_figure(fig, dpi, dir_path_img, fname_img)
-
-    # close the plot handle
-    plt.close('all')
-
-
-def compute_and_save_terminal_energy_histogram(rng, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
-
-    n_samples = X_samples.shape[0]
-
-    terminal_energy = torch.zeros((n_samples)).to(X_samples.device)
-
-    energy, constraint, terminal_position_distance, _ = compute_energy(
-        model, X_samples, is_constrained)
-
-    terminal_energy = np.array(
-        terminal_position_distance.detach().cpu().tolist())
-
-    fig, ax = plt.subplots()
-
-    plt.subplots_adjust(left=0, bottom=0, right=1.25,
-                        top=1.25, wspace=1, hspace=1)
-
-    ax.set_title(
-        title_string,
-        fontdict=fontdict,
-        pad=5
-    )
-
-    arr = terminal_energy.flatten()
-
-    helper.plot_histogram(plt, ax, arr)
-
-    helper.save_figure(fig, dpi, dir_path_img, fname_img)
-
-    # close the plot handle
-    plt.close('all')
 
 
 def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, case, i, xs, xs_min, xs_max, ys, ys_min, ys_max, zs, zs_min, zs_max):
@@ -1076,6 +1000,8 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
     z_min__ = min(zs_min__, LIMITS[2][0])
     z_max__ = max(zs_max__, LIMITS[2][1])
 
+    limits_str = ""
+
     if case == "x" :
 
         ax.plot(ys__, zs__, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
@@ -1085,6 +1011,8 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
 
         ax.set_xlabel("y")
         ax.set_ylabel("z")
+
+        limits_str = f"xmin_{xs_min__:.3f}_xmax_{xs_max__:.3f}"
 
     if case == "y" :
 
@@ -1096,6 +1024,8 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
         ax.set_xlabel("x")
         ax.set_ylabel("z")
 
+        limits_str = f"ymin_{ys_min__:.3f}_ymax_{ys_max__:.3f}"
+
     if case == "z" :
 
         ax.plot(xs__, ys__, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
@@ -1106,25 +1036,26 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
         ax.set_xlabel("x")
         ax.set_ylabel("y")
 
-    ax.set_title(
-        f"\nx = [{xs_min__}, {xs_max__}]\ny = [{ys_min__}, {ys_max__}]\nz = [{zs_min__}, {zs_max__}]\n",
-        # fontdict=fontdict,
-        pad=5
-    )
+        limits_str = f"zmin_{zs_min__:.3f}_zmax_{zs_max__:.3f}"
+
+    title_string = f"\nx = [{xs_min__}, {xs_max__}]\ny = [{ys_min__}, {ys_max__}]\nz = [{zs_min__}, {zs_max__}]\n"
+    fontdict = {}
+
+    helper.set_axis_title(ax, title_string, fontdict)
 
     ax.set_aspect('auto', adjustable='box')
 
     fig = plt.gcf()
 
-    helper.save_figure(fig, dpi, dir_path_img, f"{case}-axis_slices_" + str(i+1) + "_" + fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, f"{case}_" + str(i+1) + "_" + limits_str + "_" + fname_img)
 
     # close the plot handle
     plt.close('all')
 
 
-def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi, dir_path_img, fname_img):
+def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_path_img, fname_img):
 
-    theta = torch.tensor([helper.sample_joint_angles(rng, CONSTRAINTS) for _ in range(
+    theta = torch.tensor([helper.sample_joint_angles(CONSTRAINTS) for _ in range(
         n_samples_theta)], dtype=helper.DTYPE_TORCH).to(device)
 
     x_fk_chain = torch.zeros(size=(n_samples_theta, N_TRAJOPT*N_DIM_JOINTS, N_DIM_X_STATE))
@@ -1160,43 +1091,6 @@ def compute_and_save_joint_angles_region_plot(rng, device, n_samples_theta, dpi,
 
     zs_min = zs.min()
     zs_max = zs.max()
-
-    x_min = min(xs_min, LIMITS[0][0])
-    x_max = max(xs_max, LIMITS[0][1])
-
-    y_min = min(ys_min, LIMITS[1][0])
-    y_max = max(ys_max, LIMITS[1][1])
-
-    z_min = min(zs_min, LIMITS[2][0])
-    z_max = max(zs_max, LIMITS[2][1])
-
-    '''
-    ax = plt.axes(projection='3d')
-
-    ax.plot(xs, ys, zs, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
-
-    ax.set_xlim(x_min, x_max)
-    ax.set_ylim(y_min, y_max)
-    ax.set_zlim(z_min, z_max)
-
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-
-    ax.set_title(
-        f"\nx = [{xs_min}, {xs_max}]\ny = [{ys_min}, {ys_max}]\nz = [{zs_min}, {zs_max}]\n",
-        # fontdict=fontdict,
-        pad=5
-    )
-
-    plt.gca().set_aspect('auto', adjustable='box')
-
-    helper.save_figure(plt.gcf(), dpi, dir_path_img,
-                       identifier_string + "joint_angles_region_plot_3d.png")
-
-    # close the plot handle
-    plt.close('all')
-    '''
 
     case_x = "x"
     case_y = "y"

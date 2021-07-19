@@ -3,21 +3,33 @@
 import os
 import torch
 import shutil
+import random
 import pathlib
 import numpy as np
+
+import matplotlib
+import matplotlib.pylab as pl
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+
+# fixes a possible "Fail to allocate bitmap" issue
+# https://github.com/matplotlib/mplfinance/issues/386#issuecomment-869950969
+matplotlib.use("Agg")
 
 # is needed for torch.use_deterministic_algorithms(True) below
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
+random.seed(11)
 np.random.seed(11)
 torch.manual_seed(11)
-# only works with newer PyTorch versions
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
-# torch.autograd.set_detect_anomaly(True)
 
 DTYPE_NUMPY = np.float64
 DTYPE_TORCH = torch.float64
+
+# better leave False if you want clean plots
+IS_SET_AXIS_TITLE = False
 
 # this will only ever be set True in IK_3d_three_linkage
 IS_UR5_REMOVE_CYLINDER = False
@@ -105,20 +117,20 @@ def save_script(directory):
     shutil.copy(__file__, pathlib.Path(directory, os.path.basename(__file__)))
 
 
-def compute_sample_helper(rng, limits, n):
+def compute_sample_helper(limits, n):
 
     x = []
     for i in range(n):
-        x += [limits[i][0] + rng.uniform(0, 1)*(limits[i][1] - limits[i][0])]
+        x += [limits[i][0] + random.uniform(0, 1)*(limits[i][1] - limits[i][0])]
 
     return x
 
 
-def compute_sample(rng, limits, is_sample_circle, radius_outer, radius_inner):
+def compute_sample(limits, is_sample_circle, radius_outer, radius_inner):
 
     n = len(limits)
 
-    x = compute_sample_helper(rng, limits, n)
+    x = compute_sample_helper(limits, n)
 
     if is_sample_circle:
 
@@ -136,7 +148,7 @@ def compute_sample(rng, limits, is_sample_circle, radius_outer, radius_inner):
 
         while ( r >= radius_outer or r < radius_inner ) or ( IS_UR5_REMOVE_CYLINDER and r_cyl < UR5_CYLINDER_RADIUS):
 
-            x = compute_sample_helper(rng, limits, n)
+            x = compute_sample_helper(limits, n)
 
             r = np.linalg.norm(x, ord=2)
             r_cyl = np.linalg.norm(x[:-1], ord=2)
@@ -144,14 +156,14 @@ def compute_sample(rng, limits, is_sample_circle, radius_outer, radius_inner):
     return x
 
 
-def sample_joint_angles(rng, constraints):
+def sample_joint_angles(constraints):
 
     n = len(constraints)
     x = []
 
     for i in range(n):
         x += [constraints[i][0] +
-              rng.uniform(0, 1)*(constraints[i][1] - constraints[i][0])]
+              random.uniform(0, 1)*(constraints[i][1] - constraints[i][0])]
 
     return x
 
@@ -304,7 +316,7 @@ def convert_constrained_boolean_to_string(is_constrained):
     return constrained_string
 
 
-def compute_and_save_robot_plot(randrange, compute_energy, visualize_trajectory_and_save_image, model, x_state, is_constrained, fname, dir_path):
+def compute_and_save_robot_plot(compute_energy, visualize_trajectory_and_save_image, model, x_state, is_constrained, fname, dir_path):
 
     n_batch = x_state.shape[0]
 
@@ -324,7 +336,7 @@ def compute_and_save_robot_plot(randrange, compute_energy, visualize_trajectory_
 
     for i in range(nb):
 
-        index_batch_random = randrange(0, n_batch, 1)
+        index_batch_random = random.randrange(0, n_batch, 1)
 
         visualize_trajectory_and_save_image(
             x_state[index_batch_random].detach().cpu(),
@@ -419,4 +431,64 @@ def compute_jacobian(model, X_samples):
     '''
 
     return jac
+
+
+def set_axis_title(ax, title_string, fontdict, pad = 5, is_set_axis_title = IS_SET_AXIS_TITLE):
+
+    if is_set_axis_title :
+
+        ax.set_title(
+            title_string,
+            fontdict=fontdict,
+            pad=pad
+        )
+
+
+def create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, dpi, dir_path_img, fname_img):
+
+    fig, ax = plt.subplots()
+
+    plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                        top=1.25, wspace=1, hspace=1)
+
+    set_axis_title(ax, title_string, fontdict)
+
+    plot_histogram(plt, ax, arr)
+
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+
+    save_figure(fig, dpi, dir_path_img, fname_img)
+
+    # close the plot handle
+    plt.close('all')
+
+
+def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, fname_img, fontdict, title_string):
+
+    jac = compute_jacobian(model, X_samples)
+
+    jac_norm = torch.norm(jac, p="fro", dim=-1)
+    jac_norm = np.array(jac_norm.detach().cpu().tolist())
+
+    arr = jac_norm.flatten()
+
+    xlabel = "Jacobian Frobenius Norm"
+    ylabel = "Samples per Bin"
+
+    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, dpi, dir_path_img, fname_img)
+
+
+def compute_and_save_terminal_energy_histogram(compute_energy, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
+
+    energy, constraint, terminal_position_distance, _ = compute_energy(model, X_samples, is_constrained)
+
+    terminal_energy = np.array(terminal_position_distance.detach().cpu().tolist())
+
+    arr = terminal_energy.flatten()
+
+    xlabel = "Terminal Energy [m]"
+    ylabel = "Samples per Bin"
+
+    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, dpi, dir_path_img, fname_img)
 
