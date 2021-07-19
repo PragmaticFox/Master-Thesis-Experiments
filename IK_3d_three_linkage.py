@@ -17,9 +17,6 @@ from matplotlib.colors import ListedColormap
 # https://github.com/matplotlib/mplfinance/issues/386#issuecomment-869950969
 matplotlib.use("Agg")
 
-# local import
-import helper
-
 # is needed for torch.use_deterministic_algorithms(True) below
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
@@ -29,15 +26,18 @@ torch.manual_seed(21)
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
 
+# local import
+import helper
+
 IS_UR5_ROBOT = False
 IS_UR5_FK_CHECK = False
 helper.IS_UR5_REMOVE_CYLINDER = True
 
-identifier_string = "IK_3d_threelinkage_"
+identifier_string = "IK_3d_threelinkage"
 
 if IS_UR5_ROBOT :
 
-    identifier_string = "IK_3d_UR5_"
+    identifier_string = "IK_3d_UR5"
 
 string_title_joint_angles_plot = f'\nJoint Angles in Degrees\n3D Three-Linkage Robot Inverse Kinematics\n'
 

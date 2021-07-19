@@ -8,9 +8,7 @@ import pathlib
 import numpy as np
 
 import matplotlib
-import matplotlib.pylab as pl
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
 
 # fixes a possible "Fail to allocate bitmap" issue
 # https://github.com/matplotlib/mplfinance/issues/386#issuecomment-869950969
@@ -410,13 +408,28 @@ def compute_and_save_metrics_txt(txt_dict, test_metrics, n_iterations, dir_path_
 
 def plot_histogram(plt, ax, arr):
 
+    # partially inspired by
+    # https://towardsdatascience.com/take-your-histograms-to-the-next-level-using-matplotlib-5f093ad7b9d3
+
     hist, bins = np.histogram(arr, bins = HIST_BINS)
     logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
-    ax.hist(x = arr, bins = logbins, density = False, log = True, cumulative = False)
+
+    n, bins, _ = ax.hist(
+        x = arr,
+        bins = logbins,
+        density = False,
+        log = True,
+        cumulative = False,
+        lw = 1,
+        ec = "cornflowerblue",
+        fc = "royalblue",
+        alpha = 0.5
+    )
 
     plt.xscale('log')
-    plt.grid(True)
+    plt.grid(False)
 
+    plt.gca().axes.get_yaxis().set_visible(False)
 
 def compute_jacobian(model, X_samples):
 
@@ -474,10 +487,10 @@ def create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, dpi, dir_
 
     set_axis_title(ax, title_string, fontdict)
 
-    plot_histogram(plt, ax, arr)
-
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+
+    plot_histogram(plt, ax, arr)
 
     save_figure(fig, dpi, dir_path_img, fname_img)
 

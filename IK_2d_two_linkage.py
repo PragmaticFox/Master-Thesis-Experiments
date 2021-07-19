@@ -15,9 +15,6 @@ import matplotlib.pyplot as plt
 # https://github.com/matplotlib/mplfinance/issues/386#issuecomment-869950969
 matplotlib.use("Agg")
 
-# local import
-import helper
-
 # is needed for torch.use_deterministic_algorithms(True) below
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
@@ -27,7 +24,10 @@ torch.manual_seed(21)
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
 
-identifier_string = "IK_2d_"
+# local import
+import helper
+
+identifier_string = "IK_2d"
 
 string_title_joint_angles_plot = f'\nJoint Angles in Degrees\n2D Two-Linkage Robot Inverse Kinematics\n'
 

@@ -13,7 +13,17 @@ import numpy as np
 
 from torch.utils.tensorboard import SummaryWriter
 
-# local import
+# is needed for torch.use_deterministic_algorithms(True) below
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
+random.seed(42)
+np.random.seed(42)
+torch.manual_seed(42)
+torch.use_deterministic_algorithms(True)
+torch.backends.cudnn.benchmark = False
+# torch.autograd.set_detect_anomaly(True)
+
+# local imports
 import helper
 import IK_2d_two_linkage as experiment
 #import IK_3d_three_linkage as experiment
@@ -21,9 +31,6 @@ import IK_2d_two_linkage as experiment
 print(f"PyTorch Version: {torch.__version__}")
 print(f"NumPy Version: {np.version.version}")
 print(f"Matplotlib Version: {experiment.matplotlib.__version__}")
-
-# is needed for torch.use_deterministic_algorithms(True) below
-os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 torch.set_default_dtype(helper.DTYPE_TORCH)
 
@@ -34,18 +41,16 @@ IS_ONLY_PLOT_REGION = False
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
 SAMPLING_MODE = 0
 
-# Only relevant for 2D
-IS_CONSTRAINED = False
-
-# Only relevant for sampling_mode == 2
+# those two only trigger if the requirements are met
 IS_MODE_2_ABLATION = False
+IS_TWOLINKAGE_CONSTRAINED = True
 
-random.seed(42)
-np.random.seed(42)
-torch.manual_seed(42)
-torch.use_deterministic_algorithms(True)
-torch.backends.cudnn.benchmark = False
-# torch.autograd.set_detect_anomaly(True)
+N_SAMPLES_TRAIN = 100
+N_ITERATIONS = 10
+
+# not needed for anything else
+if IS_MODE_2_ABLATION and SAMPLING_MODE != 2 : IS_MODE_2_ABLATION = False
+if IS_TWOLINKAGE_CONSTRAINED and experiment.identifier_string != "IK_2d" : IS_TWOLINKAGE_CONSTRAINED = False
 
 directory_path = pathlib.Path(pathlib.Path(
     __file__).parent.resolve(), "experiments")
@@ -57,7 +62,24 @@ char_replace = [' ', '-', ':']
 for c in char_replace:
     dtstring = dtstring.replace(c, '_')
 
-dir_path_id = pathlib.Path(dir_path_id_partial, experiment.identifier_string + "_" + dtstring)
+mode_str = str(SAMPLING_MODE)
+
+if IS_TWOLINKAGE_CONSTRAINED :
+
+    mode_str += "c"
+
+if IS_MODE_2_ABLATION :
+
+    mode_str += "a"
+
+iter_str = ""
+
+if N_ITERATIONS == 10000 : iter_str = "10k"
+if N_ITERATIONS == 100000 : iter_str = "100k"
+
+exp_type_str = f"Samples_{N_SAMPLES_TRAIN}_Mode_{mode_str}_Iterations_{iter_str}"
+
+dir_path_id = pathlib.Path(dir_path_id_partial, experiment.identifier_string + "_" + exp_type_str + "_" + dtstring)
 dir_path_id_model = pathlib.Path(dir_path_id, "model")
 dir_path_id_plots = pathlib.Path(dir_path_id, "plots")
 
@@ -84,9 +106,6 @@ txt_dict = {
     '99percentile': ''
 }
 
-N_ITERATIONS = 10000
-
-N_SAMPLES_TRAIN = 10000
 N_SAMPLES_VAL = 10000
 N_SAMPLES_TEST = 100000
 
@@ -220,7 +239,7 @@ experiment.compute_and_save_joint_angles_region_plot(
     N_SAMPLES_THETA,
     helper.SAVEFIG_DPI,
     dir_path_id_plots,
-    experiment.identifier_string + "joint_angles_region_plot")
+    experiment.identifier_string + "_joint_angles_region_plot")
 
 if IS_ONLY_PLOT_REGION:
 
@@ -315,7 +334,7 @@ for j in range(N_ITERATIONS):
                 distance_index += offset
 
     [loss_train, terminal_position_distance_metrics_train] = helper.compute_loss(
-        experiment.compute_energy, model, X_state_train, IS_CONSTRAINED)
+        experiment.compute_energy, model, X_state_train, IS_TWOLINKAGE_CONSTRAINED)
 
     optimizer.zero_grad()
     loss_train.backward()
@@ -341,7 +360,7 @@ for j in range(N_ITERATIONS):
             dloss_train_dW = helper.compute_dloss_dW(model)
 
             [loss_val, terminal_position_distance_metrics_val] = helper.compute_loss(
-                experiment.compute_energy, model, X_state_val, IS_CONSTRAINED)
+                experiment.compute_energy, model, X_state_val, IS_TWOLINKAGE_CONSTRAINED)
 
             tb_writer.add_scalar('Learning Rate', current_lr, cur_index)
             tb_writer.add_scalar(
@@ -380,7 +399,7 @@ terminal_position_distance_metrics_test = {}
 with torch.no_grad():
 
     [loss_test, terminal_position_distance_metrics_test] = helper.compute_loss(
-        experiment.compute_energy, model, X_state_test, IS_CONSTRAINED)
+        experiment.compute_energy, model, X_state_test, IS_TWOLINKAGE_CONSTRAINED)
 
     tb_writer.add_scalar(
         'Test Loss', loss_test.detach().cpu(), cur_index)
@@ -396,7 +415,7 @@ n_one_dim = helper.N_ONE_DIM
 plot_dpi = helper.SAVEFIG_DPI
 
 constrained_string = helper.convert_constrained_boolean_to_string(
-    IS_CONSTRAINED)
+    IS_TWOLINKAGE_CONSTRAINED)
 sampling_string = helper.convert_sampling_mode_to_string(
     SAMPLING_MODE)
 
@@ -409,7 +428,7 @@ helper.compute_and_save_robot_plot(
     experiment.visualize_trajectory_and_save_image,
     model,
     X_samples,
-    IS_CONSTRAINED,
+    IS_TWOLINKAGE_CONSTRAINED,
     "robot_plot",
     dir_path_id_plots
 )
@@ -426,7 +445,7 @@ experiment.compute_and_save_joint_angles_plot(
     plot_dpi,
     n_one_dim,
     dir_path_id_plots,
-    experiment.identifier_string + helper.JOINT_PLOT_NAME,
+    experiment.identifier_string + "_" + helper.JOINT_PLOT_NAME,
     helper.plots_fontdict,
     string_tmp + experiment.string_title_joint_angles_plot
 )
@@ -442,10 +461,10 @@ experiment.compute_and_save_terminal_energy_plot(
     device,
     X_state_train,
     plot_dpi,
-    IS_CONSTRAINED,
+    IS_TWOLINKAGE_CONSTRAINED,
     n_one_dim,
     dir_path_id_plots,
-    experiment.identifier_string + helper.HEATMAP_PLOT_NAME,
+    experiment.identifier_string + "_" + helper.HEATMAP_PLOT_NAME,
     helper.plots_fontdict,
     string_tmp + experiment.string_title_terminal_energy_plot
 )
@@ -463,7 +482,7 @@ experiment.compute_and_save_jacobian_plot(
     plot_dpi,
     n_one_dim,
     dir_path_id_plots,
-    experiment.identifier_string + helper.JACOBIAN_PLOT_NAME,
+    experiment.identifier_string + "_" + helper.JACOBIAN_PLOT_NAME,
     helper.plots_fontdict,
     string_tmp + experiment.string_title_jacobian_plot
 )
@@ -479,9 +498,9 @@ helper.compute_and_save_terminal_energy_histogram(
     model,
     X_samples,
     plot_dpi,
-    IS_CONSTRAINED,
+    IS_TWOLINKAGE_CONSTRAINED,
     dir_path_id_plots,
-    experiment.identifier_string + helper.HEATMAP_HISTOGRAM_NAME,
+    experiment.identifier_string + "_" + helper.HEATMAP_HISTOGRAM_NAME,
     helper.plots_fontdict,
     string_tmp + experiment.string_title_terminal_energy_histogram
 )
@@ -497,7 +516,7 @@ helper.compute_and_save_jacobian_histogram(
     X_samples,
     plot_dpi,
     dir_path_id_plots,
-    experiment.identifier_string + helper.JACOBIAN_HISTOGRAM_NAME,
+    experiment.identifier_string + "_" + helper.JACOBIAN_HISTOGRAM_NAME,
     helper.plots_fontdict,
     string_tmp + experiment.string_title_jacobian_histogram
 )
