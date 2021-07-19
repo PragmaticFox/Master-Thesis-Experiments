@@ -242,9 +242,6 @@ def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_
 
         fig, ax = plt.subplots()
 
-        plt.subplots_adjust(left=0, bottom=0, right=1.25,
-                            top=1.25, wspace=1, hspace=1)
-
         ax.set_aspect(aspect='equal', adjustable='box')
 
         title_string = f'\nJoint {j+1}\n' + title_string
@@ -253,12 +250,21 @@ def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_
         ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
         c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
 
-        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
+        plt.axis('off')
 
+        helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(j+1) + "_" + fname_img)
+
+        plt.axis('on')
+
+        plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                            top=1.25, wspace=1, hspace=1)
+        
         cb = fig.colorbar(c, ax=ax, extend='max')
 
         plt.xlabel("x")
         plt.ylabel("y")
+
+        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
 
         helper.save_figure(fig, dpi, dir_path_img, str(j+1) + "_" + fname_img)
 
@@ -308,9 +314,6 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
     fig, ax = plt.subplots()
 
-    plt.subplots_adjust(left=0, bottom=0, right=1.25,
-                        top=1.25, wspace=1, hspace=1)
-
     ax.set_aspect(aspect='equal', adjustable='box')
 
     helper.set_axis_title(ax, title_string, fontdict)
@@ -324,6 +327,9 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
     helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img)
 
     plt.axis('on')
+
+    plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                        top=1.25, wspace=1, hspace=1)
     
     cb = fig.colorbar(c, ax=ax, extend='max')
 
@@ -383,9 +389,6 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
 
     fig, ax = plt.subplots()
 
-    plt.subplots_adjust(left=0, bottom=0, right=1.25,
-                        top=1.25, wspace=1, hspace=1)
-
     ax.set_aspect(aspect='equal', adjustable='box')
 
     helper.set_axis_title(ax, title_string, fontdict)
@@ -399,6 +402,9 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
     helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img)
 
     plt.axis('on')
+
+    plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                        top=1.25, wspace=1, hspace=1)
     
     cb = fig.colorbar(c, ax=ax, extend='max')
 
@@ -470,7 +476,7 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
 
     helper.set_axis_title(ax, title_string, fontdict)
 
-    ax.set_aspect('auto', adjustable='box')
+    ax.set_aspect('equal', adjustable='box')
 
     helper.save_figure(fig, dpi, dir_path_img,
                        identifier_string + "joint_angles_region_plot.png")
