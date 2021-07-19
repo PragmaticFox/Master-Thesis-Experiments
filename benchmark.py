@@ -16,9 +16,9 @@ from torch.utils.tensorboard import SummaryWriter
 # is needed for torch.use_deterministic_algorithms(True) below
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
-random.seed(42)
-np.random.seed(42)
-torch.manual_seed(42)
+random.seed(4532)
+np.random.seed(4542)
+torch.manual_seed(242)
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
 # torch.autograd.set_detect_anomaly(True)
@@ -43,9 +43,10 @@ SAMPLING_MODE = 0
 
 # those two only trigger if the requirements are met
 IS_MODE_2_ABLATION = False
-IS_TWOLINKAGE_CONSTRAINED = True
+IS_TWOLINKAGE_CONSTRAINED = False
 
-N_SAMPLES_TRAIN = 10
+N_SAMPLES_TRAIN = 1000
+
 N_ITERATIONS = 10000
 
 # not needed for anything else
