@@ -252,7 +252,7 @@ def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_
 
         plt.axis('off')
 
-        helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(j+1) + "_" + fname_img)
+        helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(j+1) + "_" + fname_img, pad_inches = 0.0)
 
         plt.axis('on')
 
@@ -324,7 +324,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
     plt.axis('off')
 
-    helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img, pad_inches = 0.0)
 
     plt.axis('on')
 
@@ -399,7 +399,7 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
     
     plt.axis('off')
 
-    helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img, pad_inches = 0.0)
 
     plt.axis('on')
 

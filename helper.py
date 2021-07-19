@@ -280,12 +280,13 @@ def compute_dloss_dW(model):
     return dloss_dW
 
 
-def save_figure(figure, dpi, dir_path_img, fname_img):
+def save_figure(figure, dpi, dir_path_img, fname_img, pad_inches = 0.1):
 
     figure.savefig(
         fname=pathlib.Path(dir_path_img, fname_img),
         bbox_inches="tight",
-        dpi=dpi
+        dpi=dpi,
+        pad_inches = pad_inches
         #pil_kwargs = {'optimize': True, 'quality': 75}
     )
 
