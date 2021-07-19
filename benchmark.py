@@ -475,6 +475,7 @@ print(
 tic = time.perf_counter()
 
 helper.compute_and_save_terminal_energy_histogram(
+    experiment.compute_energy,
     model,
     X_samples,
     plot_dpi,
