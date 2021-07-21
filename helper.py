@@ -406,7 +406,7 @@ def compute_and_save_metrics_txt(txt_dict, test_metrics, n_iterations, dir_path_
         text_file.write(txt_merge)
 
 
-def plot_histogram(plt, ax, arr):
+def plot_histogram(plt, ax, arr, lower_thresh, upper_thresh):
 
     # partially inspired by
     # https://towardsdatascience.com/take-your-histograms-to-the-next-level-using-matplotlib-5f093ad7b9d3
@@ -423,13 +423,15 @@ def plot_histogram(plt, ax, arr):
         lw = 1,
         ec = "cornflowerblue",
         fc = "royalblue",
-        alpha = 0.5
+        alpha = 0.5,
+        range = [lower_thresh, upper_thresh]
     )
 
     plt.xscale('log')
     plt.grid(False)
 
     plt.gca().axes.get_yaxis().set_visible(False)
+
 
 def compute_jacobian(model, X_samples):
 
@@ -478,7 +480,7 @@ def set_axis_title(ax, title_string, fontdict, pad = 5, is_set_axis_title = IS_S
         )
 
 
-def create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, dpi, dir_path_img, fname_img):
+def create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, lower_thresh, upper_thresh, dpi, dir_path_img, fname_img):
 
     fig, ax = plt.subplots()
 
@@ -490,7 +492,7 @@ def create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, dpi, dir_
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
 
-    plot_histogram(plt, ax, arr)
+    plot_histogram(plt, ax, arr, lower_thresh, upper_thresh)
 
     save_figure(fig, dpi, dir_path_img, fname_img)
 
@@ -510,7 +512,7 @@ def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, fna
     xlabel = "Jacobian Frobenius Norm"
     ylabel = "Samples per Bin"
 
-    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, dpi, dir_path_img, fname_img)
+    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, COLORBAR_JACOBIAN_LOWER_THRESHOLD, COLORBAR_JACOBIAN_UPPER_THRESHOLD, dpi, dir_path_img, fname_img)
 
 
 def compute_and_save_terminal_energy_histogram(compute_energy, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
@@ -524,5 +526,5 @@ def compute_and_save_terminal_energy_histogram(compute_energy, model, X_samples,
     xlabel = "Terminal Energy [m]"
     ylabel = "Samples per Bin"
 
-    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, dpi, dir_path_img, fname_img)
+    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, COLORBAR_ENERGY_LOWER_THRESHOLD, COLORBAR_ENERGY_UPPER_THRESHOLD, dpi, dir_path_img, fname_img)
 
