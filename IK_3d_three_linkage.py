@@ -446,11 +446,11 @@ def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_
 
         with torch.no_grad():
 
-            if n_one_dim > helper.SIZE_SPLIT:
+            if n_one_dim*n_one_dim > helper.SIZE_SPLIT:
 
                 n_splits = n_one_dim*n_one_dim // helper.SIZE_SPLIT
 
-                delta = n_one_dim*n_one_dim // n_splits
+                delta = helper.SIZE_SPLIT
 
                 for split in range(n_splits):
                     theta_hat_tmp = model(x_state[split*delta:(split+1)*delta])
@@ -618,11 +618,11 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
     jac = torch.zeros(size=(n_samples, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
 
-    if n_one_dim > helper.SIZE_SPLIT:
+    if n_one_dim*n_one_dim > helper.SIZE_SPLIT:
 
         n_splits = n_one_dim*n_one_dim // helper.SIZE_SPLIT
 
-        delta = n_samples // n_splits
+        delta = helper.SIZE_SPLIT
 
         for split in range(n_splits):
 
@@ -739,11 +739,11 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
         jac = torch.zeros(size=(n_one_dim*n_one_dim, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
 
-        if n_one_dim > helper.SIZE_SPLIT:
+        if n_one_dim*n_one_dim > helper.SIZE_SPLIT:
 
             n_splits = n_one_dim*n_one_dim // helper.SIZE_SPLIT
 
-            delta = n_one_dim*n_one_dim // n_splits
+            delta = helper.SIZE_SPLIT
 
             for split in range(n_splits):
 
@@ -815,11 +815,11 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
 
     with torch.no_grad():
 
-        if n_one_dim > helper.SIZE_SPLIT:
+        if n_one_dim*n_one_dim > helper.SIZE_SPLIT:
 
             n_splits = n_one_dim*n_one_dim // helper.SIZE_SPLIT
 
-            delta = n_one_dim*n_one_dim // n_splits
+            delta = helper.SIZE_SPLIT
 
             for split in range(n_splits):
                 energy_tmp, constraint_tmp, terminal_position_distance_tmp, _ = compute_energy(
@@ -940,11 +940,11 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
 
         with torch.no_grad():
 
-            if n_one_dim > helper.SIZE_SPLIT:
+            if n_one_dim*n_one_dim > helper.SIZE_SPLIT:
 
                 n_splits = n_one_dim*n_one_dim // helper.SIZE_SPLIT
 
-                delta = n_one_dim*n_one_dim // n_splits
+                delta = helper.SIZE_SPLIT
 
                 for split in range(n_splits):
                     energy_tmp, constraint_tmp, terminal_position_distance_tmp, _ = compute_energy(
@@ -1126,7 +1126,7 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
 
         n_splits = n_samples_theta // helper.SIZE_SPLIT
 
-        delta = n_samples_theta // n_splits
+        delta = helper.SIZE_SPLIT
 
         for split in range(n_splits):
 
