@@ -1043,11 +1043,11 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
 
     helper.set_axis_title(ax, title_string, fontdict)
 
-    ax.set_aspect('auto', adjustable='box')
+    ax.set_aspect('equal', adjustable='box')
 
     fig = plt.gcf()
 
-    helper.save_figure(fig, dpi, dir_path_img, f"{case}_" + str(i+1) + "_" + limits_str + "_" + fname_img)
+    helper.save_figure(fig, dpi, dir_path_img, f"{case}_" + str(i+1) + "_" + limits_str + "_" + fname_img + ".png")
 
     # close the plot handle
     plt.close('all')

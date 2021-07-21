@@ -25,8 +25,8 @@ torch.backends.cudnn.benchmark = False
 
 # local imports
 import helper
-import IK_2d_two_linkage as experiment
-#import IK_3d_three_linkage as experiment
+#import IK_2d_two_linkage as experiment
+import IK_3d_three_linkage as experiment
 
 print(f"PyTorch Version: {torch.__version__}")
 print(f"NumPy Version: {np.version.version}")
