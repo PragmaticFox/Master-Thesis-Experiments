@@ -1,5 +1,7 @@
 #!/bin/python3
 
+import IK_3d_three_linkage as experiment
+import helper
 import os
 import sys
 import time
@@ -24,9 +26,7 @@ torch.backends.cudnn.benchmark = False
 # torch.autograd.set_detect_anomaly(True)
 
 # local imports
-import helper
 #import IK_2d_two_linkage as experiment
-import IK_3d_three_linkage as experiment
 
 print(f"PyTorch Version: {torch.__version__}")
 print(f"NumPy Version: {np.version.version}")
@@ -50,8 +50,10 @@ IS_TWOLINKAGE_CONSTRAINED = False
 N_ITERATIONS = 10000
 
 # not needed for anything else
-if IS_MODE_2_ABLATION and SAMPLING_MODE != 2 : IS_MODE_2_ABLATION = False
-if IS_TWOLINKAGE_CONSTRAINED and experiment.identifier_string != "IK_2d" : IS_TWOLINKAGE_CONSTRAINED = False
+if IS_MODE_2_ABLATION and SAMPLING_MODE != 2:
+    IS_MODE_2_ABLATION = False
+if IS_TWOLINKAGE_CONSTRAINED and experiment.identifier_string != "IK_2d":
+    IS_TWOLINKAGE_CONSTRAINED = False
 
 directory_path = pathlib.Path(pathlib.Path(
     __file__).parent.resolve(), "experiments")
@@ -65,18 +67,20 @@ for c in char_replace:
 
 mode_str = str(SAMPLING_MODE)
 
-if IS_TWOLINKAGE_CONSTRAINED :
+if IS_TWOLINKAGE_CONSTRAINED:
 
     mode_str += "c"
 
-if IS_MODE_2_ABLATION :
+if IS_MODE_2_ABLATION:
 
     mode_str += "a"
 
 iter_str = ""
 
-if N_ITERATIONS == 10000 : iter_str = "10k"
-if N_ITERATIONS == 100000 : iter_str = "100k"
+if N_ITERATIONS == 10000:
+    iter_str = "10k"
+if N_ITERATIONS == 100000:
+    iter_str = "100k"
 
 exp_type_str = f"Samples_{N_SAMPLES_TRAIN}_Mode_{mode_str}_Iterations_{iter_str}"
 
@@ -118,11 +122,11 @@ NN_DIM_IN_TO_OUT = 256
 
 LR_INITIAL = 1e-2
 
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99930 # for 10k
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.99930  # for 10k
 
-if N_ITERATIONS == 100000 :
+if N_ITERATIONS == 100000:
 
-    LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for 100k
+    LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925  # for 100k
 
 
 # parameters for mode 1
@@ -257,8 +261,8 @@ scheduler = torch.optim.lr_scheduler.MultiplicativeLR(
     optimizer, lr_lambda=lambda epoch: LR_SCHEDULER_MULTIPLICATIVE_REDUCTION)
 
 tb_writer = SummaryWriter(
-    log_dir = dir_path_id,
-    filename_suffix = "_" + experiment.identifier_string
+    log_dir=dir_path_id,
+    filename_suffix="_" + experiment.identifier_string
 )
 
 X_state_train_all = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
@@ -304,7 +308,7 @@ for j in range(N_ITERATIONS):
         if j == 0 or j % MODE_1_MODULO_FACTOR == 0:
 
             X_state_train = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
-            N_SAMPLES_TRAIN)], dtype=helper.DTYPE_TORCH).to(device)
+                N_SAMPLES_TRAIN)], dtype=helper.DTYPE_TORCH).to(device)
 
     elif SAMPLING_MODE == 2:
 
@@ -326,13 +330,13 @@ for j in range(N_ITERATIONS):
 
                 # maximally 10% of the iterations needed until full batch
                 offset = int(max(N_SAMPLES_TRAIN // (TENTH / DIVISOR), 1))
-                if distance_index + offset > N_SAMPLES_TRAIN :
+                if distance_index + offset > N_SAMPLES_TRAIN:
                     offset = N_SAMPLES_TRAIN - distance_index
 
                 X_new = X_state_train_all_sorted[distance_index:distance_index+offset]
 
-                if IS_MODE_2_ABLATION :
-                    
+                if IS_MODE_2_ABLATION:
+
                     X_new = X_state_train_all[distance_index:distance_index+offset]
 
                 X_state_train = torch.cat((X_state_train, X_new), dim=0)
@@ -538,10 +542,10 @@ print("\nTraining Process Completed.\n")
 helper.save_model(model, cur_index, dir_path_id_model,
                   helper.nn_model_state_dict_only_str, helper.nn_model_full_str)
 
-helper.compute_and_save_metrics_txt(txt_dict, metrics, N_ITERATIONS, dir_path_id, "terminal_position_distance_metrics.txt")
+helper.compute_and_save_metrics_txt(txt_dict, metrics, N_ITERATIONS, dir_path_id,
+                                    "terminal_position_distance_metrics.txt")
 
 print("\nAll Done!\n")
 
 sys.stdout = sys_stdout_original
 file_handle_logger.close()
-

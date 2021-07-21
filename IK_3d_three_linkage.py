@@ -1,5 +1,6 @@
 #!/bin/python3
 
+import helper
 import os
 import math
 import torch
@@ -27,18 +28,17 @@ torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
 
 # local import
-import helper
 
 IS_UR5_ROBOT = False
 IS_UR5_FK_CHECK = False
 helper.IS_UR5_REMOVE_CYLINDER = False
 
-if not IS_UR5_ROBOT :
+if not IS_UR5_ROBOT:
     helper.IS_UR5_REMOVE_CYLINDER = False
 
 identifier_string = "IK_3d_threelinkage"
 
-if IS_UR5_ROBOT :
+if IS_UR5_ROBOT:
 
     identifier_string = "IK_3d_UR5"
 
@@ -50,7 +50,7 @@ string_title_jacobian_plot = f'\nJacobian Frobenius Norm Landscape\n3D Three-Lin
 string_title_terminal_energy_histogram = f'\nTerminal Energy Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
 string_title_jacobian_histogram = f'\nJacobian Frobenius Norm Histogram\n3D Three-Linkage Robot Inverse Kinematics\n'
 
-if IS_UR5_ROBOT :
+if IS_UR5_ROBOT:
 
     string_title_joint_angles_plot = f'\nJoint Angles in Degrees\n3D UR5 Robot Inverse Kinematics\n'
 
@@ -83,7 +83,7 @@ N_SLICES = 6.0
 RADIUS_INNER = 0.0
 RADIUS_OUTER = 1.0
 
-if IS_UR5_ROBOT :
+if IS_UR5_ROBOT:
 
     RADIUS_INNER = 0.0
     # See https://www.universal-robots.com/products/ur5-robot/
@@ -137,7 +137,8 @@ def fk(theta):
     n_batch_times_n_trajOpt = theta.shape[0]
 
     p = torch.tensor([0.0, 0.0, 0.0, 1.0]).to(device)
-    p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(1, 1, 4)).repeat(n_batch_times_n_trajOpt, N_DIM_JOINTS, 1).to(device)
+    p_final = torch.reshape(torch.tensor([0.0, 0.0, 0.0, 1.0]), shape=(
+        1, 1, 4)).repeat(n_batch_times_n_trajOpt, N_DIM_JOINTS, 1).to(device)
 
     if IS_UR5_ROBOT:
 
@@ -173,7 +174,7 @@ def fk(theta):
         alpha_4 = alpha_4 + torch_zeros
         alpha_5 = alpha_5 + torch_zeros
 
-        if IS_UR5_FK_CHECK :
+        if IS_UR5_FK_CHECK:
 
             assert theta.shape[0] >= 3, "Theta.shape[0] must be > = 3."
 
@@ -208,7 +209,7 @@ def fk(theta):
                     [-0.00825, -0.08100, 0.07599, 1.0],
 
                 ],
-                dtype = torch.float64
+                dtype=torch.float64
             ).to(device)
 
         dh_matrix_0 = dh_matrix(theta[:, 0], a_0, d_0, alpha_0).clone()
@@ -218,7 +219,8 @@ def fk(theta):
         dh_matrix_4 = dh_matrix(theta[:, 4], a_4, d_4, alpha_4).clone()
         dh_matrix_5 = dh_matrix(theta[:, 5], a_5, d_5, alpha_5).clone()
 
-        transform = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
+        transform = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
+            n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
 
         transform[:, 1] = torch.matmul(transform[:, 0].clone(), dh_matrix_0)
         transform[:, 2] = torch.matmul(transform[:, 1].clone(), dh_matrix_1)
@@ -231,7 +233,7 @@ def fk(theta):
 
             p_final[:, i] = torch.matmul(torch.clone(transform[:, i+1]), p)
 
-        if IS_UR5_FK_CHECK :
+        if IS_UR5_FK_CHECK:
 
             diff = p_reference - p_final[0:3, -1]
             normed_diff = torch.norm(diff)
@@ -241,13 +243,16 @@ def fk(theta):
 
         return p_final[:, :, :-1]
 
-    rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
-    r_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
-    t_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
+    rt_hom = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
+        n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
+    r_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
+        n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
+    t_hom_i = torch.reshape(torch.eye(4, 4), shape=(1, 1, 4, 4)).repeat(
+        n_batch_times_n_trajOpt, N_DIM_JOINTS+1, 1, 1).to(device)
 
     for i in range(N_DIM_THETA):
 
-        if i % 3 == 0 :
+        if i % 3 == 0:
 
             # rotation around x-axis (yz-plane)
 
@@ -258,7 +263,7 @@ def fk(theta):
             r_hom_i[:, i, 2, 1] = torch.sin(theta[:, i])
             r_hom_i[:, i, 2, 2] = torch.cos(theta[:, i])
 
-        if i % 3 == 1 :
+        if i % 3 == 1:
 
             # rotation around z-axis (xy-plane)
 
@@ -281,7 +286,7 @@ def fk(theta):
             r_hom_i[:, i, 1, 1] = torch.cos(theta[:, i])
 
         tmp = torch.matmul(torch.clone(rt_hom[:, i]), torch.clone(r_hom_i[:, i]))
-        rt_hom[:, i+1] = torch.matmul(torch.clone(tmp),torch.clone(t_hom_i[:, i]))
+        rt_hom[:, i+1] = torch.matmul(torch.clone(tmp), torch.clone(t_hom_i[:, i]))
         p_final[:, i] = torch.matmul(rt_hom[:, i+1], p)
 
     return p_final[:, :, :-1]
@@ -399,7 +404,7 @@ def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_
 
     delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
 
-    for i in range(int(N_SLICES)) :
+    for i in range(int(N_SLICES)):
 
         xs = X_state_train[:, 0].detach().cpu()
         ys = X_state_train[:, 1].detach().cpu()
@@ -426,7 +431,7 @@ def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_
 
         dimX, dimY = np.meshgrid(dimX, dimY)
 
-        dimZ = np.array([z_min + random.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
+        dimZ = np.array([z_min + random.uniform(0, 1) * (z_max - z_min) for _ in range(len(dimX.flatten()))])
 
         x_state = torch.tensor(
             np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
@@ -478,25 +483,28 @@ def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_
             helper.set_axis_title(ax, title_string, fontdict)
 
             ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
-            c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
+            c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu',
+                              shading='gouraud', vmin=rad_min, vmax=rad_max)
 
             limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
 
             plt.axis('off')
 
-            helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(i+1) + "_" + str(j+1) + "_" + limits_str + "_" + fname_img, pad_inches = 0.0)
+            helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(i+1) + "_" +
+                               str(j+1) + "_" + limits_str + "_" + fname_img, pad_inches=0.0)
 
             plt.axis('on')
 
             plt.subplots_adjust(left=0, bottom=0, right=1.25,
                                 top=1.25, wspace=1, hspace=1)
-            
+
             cb = fig.colorbar(c, ax=ax, extend='max')
 
             plt.xlabel("x")
             plt.ylabel("y")
 
-            ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
+            ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D,
+                    marker='o', color='k', ls='', alpha=alpha_train_samples)
 
             helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + str(j+1) + "_" + limits_str + "_" + fname_img)
 
@@ -527,7 +535,7 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
             c=c,
             depthshade=True,
             cmap=cmap,
-            norm=matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax)
+            norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax)
         )
 
         ax.set_xlim(LIMITS_PLOTS[0][0], LIMITS_PLOTS[0][1])
@@ -538,7 +546,7 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
         ax.set_ylabel("y")
         ax.set_zlabel("z")
 
-    if case == "y" :
+    if case == "y":
 
         c = ax.scatter(
             xs=ys,
@@ -549,7 +557,7 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
             c=c,
             depthshade=True,
             cmap=cmap,
-            norm=matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax)
+            norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax)
         )
 
         ax.set_xlim(LIMITS_PLOTS[1][0], LIMITS_PLOTS[1][1])
@@ -560,7 +568,7 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
         ax.set_ylabel("z")
         ax.set_zlabel("x")
 
-    if case == "z" :
+    if case == "z":
 
         c = ax.scatter(
             xs=zs,
@@ -571,7 +579,7 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
             c=c,
             depthshade=True,
             cmap=cmap,
-            norm=matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax)
+            norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax)
         )
 
         ax.set_xlim(LIMITS_PLOTS[2][0], LIMITS_PLOTS[2][1])
@@ -584,8 +592,8 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
 
     fig = plt.gcf()
 
-    cb = fig.colorbar(plt.cm.ScalarMappable(norm = matplotlib.colors.LogNorm(
-            vmin = vmin, vmax = vmax), cmap = "RdBu"), ax = ax, extend = "max")
+    cb = fig.colorbar(plt.cm.ScalarMappable(norm=matplotlib.colors.LogNorm(
+        vmin=vmin, vmax=vmax), cmap="RdBu"), ax=ax, extend="max")
 
     helper.save_figure(fig, dpi, dir_path_img, case + "_" + fname_img)
 
@@ -597,21 +605,22 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
     n_samples = n_one_dim*n_one_dim
 
-    x_state = torch.tensor([helper.compute_sample(LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER) for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
+    x_state = torch.tensor([helper.compute_sample(LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER)
+                           for _ in range(n_samples)], dtype=helper.DTYPE_TORCH).to(device)
 
     jac = torch.zeros(size=(n_samples, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
 
-    if n_one_dim > 100 :
+    if n_one_dim > 100:
 
         n_splits = 100
 
         delta = n_samples // n_splits
 
-        for split in range(n_splits) :
+        for split in range(n_splits):
 
             jac[split*delta:(split+1)*delta] = helper.compute_jacobian(model, x_state[split*delta:(split+1)*delta])
 
-    else :
+    else:
 
         jac = helper.compute_jacobian(model, x_state)
 
@@ -630,59 +639,59 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
     cmap = ListedColormap(cmap)
 
     plot_heatmap(
-        plt = plt,
-        dpi = dpi,
-        xs = dimX,
-        ys = dimY,
-        zs = dimZ,
-        c = jac_norm,
-        cmap = cmap,
-        vmin = helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
-        vmax = helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
-        dir_path_img = dir_path_img,
-        fname_img = fname_img,
-        title_string = title_string,
-        fontdict = fontdict,
-        case = "x"
-        )
+        plt=plt,
+        dpi=dpi,
+        xs=dimX,
+        ys=dimY,
+        zs=dimZ,
+        c=jac_norm,
+        cmap=cmap,
+        vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
+        vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
+        dir_path_img=dir_path_img,
+        fname_img=fname_img,
+        title_string=title_string,
+        fontdict=fontdict,
+        case="x"
+    )
 
     plot_heatmap(
-        plt = plt,
-        dpi = dpi,
-        xs = dimX,
-        ys = dimY,
-        zs = dimZ,
-        c = jac_norm,
-        cmap = cmap,
-        vmin = helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
-        vmax = helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
-        dir_path_img = dir_path_img,
-        fname_img = fname_img,
-        title_string = title_string,
-        fontdict = fontdict,
-        case = "y"
-        )
+        plt=plt,
+        dpi=dpi,
+        xs=dimX,
+        ys=dimY,
+        zs=dimZ,
+        c=jac_norm,
+        cmap=cmap,
+        vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
+        vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
+        dir_path_img=dir_path_img,
+        fname_img=fname_img,
+        title_string=title_string,
+        fontdict=fontdict,
+        case="y"
+    )
 
     plot_heatmap(
-        plt = plt,
-        dpi = dpi,
-        xs = dimX,
-        ys = dimY,
-        zs = dimZ,
-        c = jac_norm,
-        cmap = cmap,
-        vmin = helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
-        vmax = helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
-        dir_path_img = dir_path_img,
-        fname_img = fname_img,
-        title_string = title_string,
-        fontdict = fontdict,
-        case = "z"
-        )
+        plt=plt,
+        dpi=dpi,
+        xs=dimX,
+        ys=dimY,
+        zs=dimZ,
+        c=jac_norm,
+        cmap=cmap,
+        vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
+        vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
+        dir_path_img=dir_path_img,
+        fname_img=fname_img,
+        title_string=title_string,
+        fontdict=fontdict,
+        case="z"
+    )
 
     delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
 
-    for i in range(int(N_SLICES)) :
+    for i in range(int(N_SLICES)):
 
         xs = X_state_train[:, 0].detach().cpu()
         ys = X_state_train[:, 1].detach().cpu()
@@ -709,28 +718,30 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
         dimX, dimY = np.meshgrid(dimX, dimY)
 
-        dimZ = np.array([z_min + random.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
+        dimZ = np.array([z_min + random.uniform(0, 1) * (z_max - z_min) for _ in range(len(dimX.flatten()))])
 
         x_state = torch.tensor(
             np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
 
-        model_sum = lambda x : torch.sum(model(x), axis = 0)
+        def model_sum(x): return torch.sum(model(x), axis=0)
 
         jac = torch.zeros(size=(n_one_dim*n_one_dim, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
 
-        if n_one_dim > 100 :
+        if n_one_dim > 100:
 
             n_splits = 100
 
             delta = n_one_dim*n_one_dim // n_splits
 
-            for split in range(n_splits) :
+            for split in range(n_splits):
 
-                jac[split*delta:(split+1)*delta] = torch.autograd.functional.jacobian(model_sum, x_state[split*delta:(split+1)*delta], create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
+                jac[split*delta:(split+1)*delta] = torch.autograd.functional.jacobian(model_sum, x_state[split *
+                                                                                                         delta:(split+1)*delta], create_graph=False, strict=False, vectorize=True).permute(1, 0, 2)
 
-        else :
+        else:
 
-            jac = torch.autograd.functional.jacobian(model_sum, x_state, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
+            jac = torch.autograd.functional.jacobian(
+                model_sum, x_state, create_graph=False, strict=False, vectorize=True).permute(1, 0, 2)
 
         jac_norm = torch.reshape(jac, shape=(
             n_one_dim, n_one_dim, N_TRAJOPT*N_DIM_THETA*N_DIM_X))
@@ -753,25 +764,27 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
         ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
         c = ax.pcolormesh(dimX, dimY, jac_norm, cmap='RdBu', shading='gouraud',
-                        norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD))
+                          norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD))
 
         limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
 
         plt.axis('off')
 
-        helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(i+1) + "_" + limits_str + "_" + fname_img, pad_inches = 0.0)
+        helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(i+1) +
+                           "_" + limits_str + "_" + fname_img, pad_inches=0.0)
 
         plt.axis('on')
 
         plt.subplots_adjust(left=0, bottom=0, right=1.25,
                             top=1.25, wspace=1, hspace=1)
-        
+
         cb = fig.colorbar(c, ax=ax, extend='max')
 
         plt.xlabel("x")
         plt.ylabel("y")
 
-        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
+        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D,
+                marker='o', color='k', ls='', alpha=alpha_train_samples)
 
         helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + limits_str + "_" + fname_img)
 
@@ -780,7 +793,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
 
 def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_constrained, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
-    
+
     n_samples = n_one_dim*n_one_dim
 
     x_state = torch.tensor([helper.compute_sample(LIMITS, SAMPLE_CIRCLE, RADIUS_OUTER, RADIUS_INNER)
@@ -823,55 +836,55 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
     cmap = ListedColormap(cmap)
 
     plot_heatmap(
-        plt = plt,
-        dpi = dpi,
-        xs = dimX,
-        ys = dimY,
-        zs = dimZ,
-        c = terminal_energy,
-        cmap = cmap,
-        vmin = helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
-        vmax = helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
-        dir_path_img = dir_path_img,
-        fname_img = fname_img,
-        title_string = title_string,
-        fontdict = fontdict,
-        case = "x"
-        )
+        plt=plt,
+        dpi=dpi,
+        xs=dimX,
+        ys=dimY,
+        zs=dimZ,
+        c=terminal_energy,
+        cmap=cmap,
+        vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
+        vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
+        dir_path_img=dir_path_img,
+        fname_img=fname_img,
+        title_string=title_string,
+        fontdict=fontdict,
+        case="x"
+    )
 
     plot_heatmap(
-        plt = plt,
-        dpi = dpi,
-        xs = dimX,
-        ys = dimY,
-        zs = dimZ,
-        c = terminal_energy,
-        cmap = cmap,
-        vmin = helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
-        vmax = helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
-        dir_path_img = dir_path_img,
-        fname_img = fname_img,
-        title_string = title_string,
-        fontdict = fontdict,
-        case = "y"
-        )
+        plt=plt,
+        dpi=dpi,
+        xs=dimX,
+        ys=dimY,
+        zs=dimZ,
+        c=terminal_energy,
+        cmap=cmap,
+        vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
+        vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
+        dir_path_img=dir_path_img,
+        fname_img=fname_img,
+        title_string=title_string,
+        fontdict=fontdict,
+        case="y"
+    )
 
     plot_heatmap(
-        plt = plt,
-        dpi = dpi,
-        xs = dimX,
-        ys = dimY,
-        zs = dimZ,
-        c = terminal_energy,
-        cmap = cmap,
-        vmin = helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
-        vmax = helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
-        dir_path_img = dir_path_img,
-        fname_img = fname_img,
-        title_string = title_string,
-        fontdict = fontdict,
-        case = "z"
-        )
+        plt=plt,
+        dpi=dpi,
+        xs=dimX,
+        ys=dimY,
+        zs=dimZ,
+        c=terminal_energy,
+        cmap=cmap,
+        vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
+        vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
+        dir_path_img=dir_path_img,
+        fname_img=fname_img,
+        title_string=title_string,
+        fontdict=fontdict,
+        case="z"
+    )
 
     delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
 
@@ -902,7 +915,7 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
 
         dimX, dimY = np.meshgrid(dimX, dimY)
 
-        dimZ = np.array([z_min + random.uniform(0, 1) * ( z_max - z_min ) for _ in range(len(dimX.flatten()))])
+        dimZ = np.array([z_min + random.uniform(0, 1) * (z_max - z_min) for _ in range(len(dimX.flatten()))])
 
         x_state = torch.tensor(
             np.stack((dimX.flatten(), dimY.flatten(), dimZ.flatten()), axis=-1)).to(device)
@@ -947,25 +960,27 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
 
         ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
         c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
-                        norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD))
- 
+                          norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD))
+
         limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
 
         plt.axis('off')
 
-        helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(i+1) + "_" + limits_str + "_" + fname_img, pad_inches = 0.0)
+        helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(i+1) +
+                           "_" + limits_str + "_" + fname_img, pad_inches=0.0)
 
         plt.axis('on')
 
         plt.subplots_adjust(left=0, bottom=0, right=1.25,
                             top=1.25, wspace=1, hspace=1)
-        
+
         cb = fig.colorbar(c, ax=ax, extend='max')
 
         plt.xlabel("x")
         plt.ylabel("y")
 
-        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
+        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D,
+                marker='o', color='k', ls='', alpha=alpha_train_samples)
 
         helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + limits_str + "_" + fname_img)
 
@@ -979,15 +994,15 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
 
     indices_max = 0
 
-    if case == "x" :
+    if case == "x":
 
         indices_max = xs <= xs_min + (i+1)*delta
 
-    if case == "y" :
+    if case == "y":
 
         indices_max = ys <= ys_min + (i+1)*delta
 
-    if case == "z" :
+    if case == "z":
 
         indices_max = zs <= zs_min + (i+1)*delta
 
@@ -997,15 +1012,15 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
 
     indices_min = 0
 
-    if case == "x" :
+    if case == "x":
 
         indices_min = xs_ >= xs_min + i*delta
 
-    if case == "y" :
+    if case == "y":
 
         indices_min = ys_ >= ys_min + i*delta
 
-    if case == "z" :
+    if case == "z":
 
         indices_min = zs_ >= zs_min + i*delta
 
@@ -1033,7 +1048,7 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
 
     limits_str = ""
 
-    if case == "x" :
+    if case == "x":
 
         ax.plot(ys__, zs__, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
 
@@ -1045,7 +1060,7 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
 
         limits_str = f"xmin_{xs_min__:.3f}_xmax_{xs_max__:.3f}"
 
-    if case == "y" :
+    if case == "y":
 
         ax.plot(xs__, zs__, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
 
@@ -1057,7 +1072,7 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
 
         limits_str = f"ymin_{ys_min__:.3f}_ymax_{ys_max__:.3f}"
 
-    if case == "z" :
+    if case == "z":
 
         ax.plot(xs__, ys__, ms=1.0, marker='o', color='b', ls='', alpha=0.5)
 
@@ -1132,8 +1147,10 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
     delta_z = (zs_max - zs_min) / N_SLICES
 
     for i in range(int(N_SLICES)):
-        
-        plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta_x, case_x, i, xs, xs_min, xs_max, ys, ys_min, ys_max, zs, zs_min, zs_max)
-        plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta_y, case_y, i, xs, xs_min, xs_max, ys, ys_min, ys_max, zs, zs_min, zs_max)
-        plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta_z, case_z, i, xs, xs_min, xs_max, ys, ys_min, ys_max, zs, zs_min, zs_max)
 
+        plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta_x,
+                                        case_x, i, xs, xs_min, xs_max, ys, ys_min, ys_max, zs, zs_min, zs_max)
+        plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta_y,
+                                        case_y, i, xs, xs_min, xs_max, ys, ys_min, ys_max, zs, zs_min, zs_max)
+        plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta_z,
+                                        case_z, i, xs, xs_min, xs_max, ys, ys_min, ys_max, zs, zs_min, zs_max)

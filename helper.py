@@ -137,14 +137,14 @@ def compute_sample(limits, is_sample_circle, radius_outer, radius_inner):
             print(f"Make sure radius_outer > radius_inner!")
             exit(1)
 
-        if IS_UR5_REMOVE_CYLINDER :
+        if IS_UR5_REMOVE_CYLINDER:
 
             assert len(x) == 3, "len(x) must be 3, if IS_UR5_REMOVE_CYLINDER == True"
 
         r = np.linalg.norm(x, ord=2)
         r_cyl = np.linalg.norm(x[:-1], ord=2)
 
-        while ( r >= radius_outer or r < radius_inner ) or ( IS_UR5_REMOVE_CYLINDER and r_cyl < UR5_CYLINDER_RADIUS):
+        while (r >= radius_outer or r < radius_inner) or (IS_UR5_REMOVE_CYLINDER and r_cyl < UR5_CYLINDER_RADIUS):
 
             x = compute_sample_helper(limits, n)
 
@@ -173,7 +173,7 @@ def soft_lower_bound_constraint(limit, epsilon, stiffness, x):
     xx = torch.clone(x)
 
     condition = xx >= epsilon
-    if len(condition) > 0 :
+    if len(condition) > 0:
         x[condition] = torch.zeros_like(x[condition])
 
     a1 = stiffness
@@ -203,7 +203,7 @@ def soft_upper_bound_constraint(limit, epsilon, stiffness, x):
     xx = torch.clone(x)
 
     condition = xx <= -epsilon
-    if len(condition) > 0 :
+    if len(condition) > 0:
         x[condition] = torch.zeros_like(x[condition])
 
     a1 = stiffness
@@ -245,10 +245,10 @@ def compute_loss(compute_energy, model, x_state, is_constrained):
         'min': torch.min(terminal_position_distance).item(),
         'max': torch.max(terminal_position_distance).item(),
         'median': torch.median(terminal_position_distance).item(),
-        '75percentile': torch.quantile(terminal_position_distance, q = 0.75).item(),
-        '90percentile': torch.quantile(terminal_position_distance, q = 0.90).item(),
-        '95percentile': torch.quantile(terminal_position_distance, q = 0.95).item(),
-        '99percentile': torch.quantile(terminal_position_distance, q = 0.99).item()
+        '75percentile': torch.quantile(terminal_position_distance, q=0.75).item(),
+        '90percentile': torch.quantile(terminal_position_distance, q=0.90).item(),
+        '95percentile': torch.quantile(terminal_position_distance, q=0.95).item(),
+        '99percentile': torch.quantile(terminal_position_distance, q=0.99).item()
     }
 
     return loss, terminal_position_distance_metrics
@@ -278,13 +278,13 @@ def compute_dloss_dW(model):
     return dloss_dW
 
 
-def save_figure(figure, dpi, dir_path_img, fname_img, pad_inches = 0.1):
+def save_figure(figure, dpi, dir_path_img, fname_img, pad_inches=0.1):
 
     figure.savefig(
         fname=pathlib.Path(dir_path_img, fname_img),
         bbox_inches="tight",
         dpi=dpi,
-        pad_inches = pad_inches
+        pad_inches=pad_inches
         #pil_kwargs = {'optimize': True, 'quality': 75}
     )
 
@@ -401,7 +401,7 @@ def compute_and_save_metrics_txt(txt_dict, test_metrics, n_iterations, dir_path_
     txt_merge += '\n\nVal 99percentile\n'
     txt_merge += txt_dict['99percentile']
 
-    with open(pathlib.Path(dir_path_txt, fname_txt), "w") as text_file :
+    with open(pathlib.Path(dir_path_txt, fname_txt), "w") as text_file:
 
         text_file.write(txt_merge)
 
@@ -411,20 +411,20 @@ def plot_histogram(plt, ax, arr, lower_thresh, upper_thresh):
     # partially inspired by
     # https://towardsdatascience.com/take-your-histograms-to-the-next-level-using-matplotlib-5f093ad7b9d3
 
-    hist, bins = np.histogram(arr, bins = HIST_BINS)
+    hist, bins = np.histogram(arr, bins=HIST_BINS)
     logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
 
     n, bins, _ = ax.hist(
-        x = arr,
-        bins = logbins,
-        density = False,
-        log = True,
-        cumulative = False,
-        lw = 1,
-        ec = "cornflowerblue",
-        fc = "royalblue",
-        alpha = 0.5,
-        range = [lower_thresh, upper_thresh]
+        x=arr,
+        bins=logbins,
+        density=False,
+        log=True,
+        cumulative=False,
+        lw=1,
+        ec="cornflowerblue",
+        fc="royalblue",
+        alpha=0.5,
+        range=[lower_thresh, upper_thresh]
     )
 
     plt.xscale('log')
@@ -438,13 +438,14 @@ def compute_jacobian(model, X_samples):
     # https://discuss.pytorch.org/t/jacobian-functional-api-batch-respecting-jacobian/84571/7
     # Imagine you have n_batch samples, hence your input "matrix" will be n_batch x n_dim
     # functional.jacobian will compute the gradient of each output (n_batch x n_theta) w.r.t. each input (n_batch x n_dim).
-    # By simply summing up the output over the batch dimension, now, 
+    # By simply summing up the output over the batch dimension, now,
     # functionl.jacobian will only compute the gradient of n_theta w.r.t. each input.
     # Since every term in the sum of one particular theta is only dependent on a single input per dimension (and not n_batch many),
     # all other sum terms will cancel out, leaving us with exactly what we want; the jacobian for each batch individually of total size n_batch x n_theta x n_dim
     # while still making use of the GPU to compute the matrix, instead of (very slowly) looping through n_batche and computing it naively.
-    model_sum = lambda x : torch.sum(model(x), axis = 0)
-    jac = torch.autograd.functional.jacobian(model_sum, X_samples, create_graph = False, strict = False, vectorize = True).permute(1, 0, 2)
+    def model_sum(x): return torch.sum(model(x), axis=0)
+    jac = torch.autograd.functional.jacobian(
+        model_sum, X_samples, create_graph=False, strict=False, vectorize=True).permute(1, 0, 2)
 
     '''
     # sanity check whether the above does what we want (it does)
@@ -469,9 +470,9 @@ def compute_jacobian(model, X_samples):
     return jac
 
 
-def set_axis_title(ax, title_string, fontdict, pad = 5, is_set_axis_title = IS_SET_AXIS_TITLE):
+def set_axis_title(ax, title_string, fontdict, pad=5, is_set_axis_title=IS_SET_AXIS_TITLE):
 
-    if is_set_axis_title :
+    if is_set_axis_title:
 
         ax.set_title(
             title_string,
@@ -512,7 +513,8 @@ def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, fna
     xlabel = "Jacobian Frobenius Norm"
     ylabel = "Samples per Bin"
 
-    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, COLORBAR_JACOBIAN_LOWER_THRESHOLD, COLORBAR_JACOBIAN_UPPER_THRESHOLD, dpi, dir_path_img, fname_img)
+    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, COLORBAR_JACOBIAN_LOWER_THRESHOLD,
+                          COLORBAR_JACOBIAN_UPPER_THRESHOLD, dpi, dir_path_img, fname_img)
 
 
 def compute_and_save_terminal_energy_histogram(compute_energy, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
@@ -526,5 +528,5 @@ def compute_and_save_terminal_energy_histogram(compute_energy, model, X_samples,
     xlabel = "Terminal Energy [m]"
     ylabel = "Samples per Bin"
 
-    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, COLORBAR_ENERGY_LOWER_THRESHOLD, COLORBAR_ENERGY_UPPER_THRESHOLD, dpi, dir_path_img, fname_img)
-
+    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, COLORBAR_ENERGY_LOWER_THRESHOLD,
+                          COLORBAR_ENERGY_UPPER_THRESHOLD, dpi, dir_path_img, fname_img)

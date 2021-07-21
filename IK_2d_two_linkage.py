@@ -1,5 +1,6 @@
 #!/bin/python3
 
+import helper
 import os
 import math
 import torch
@@ -25,7 +26,6 @@ torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
 
 # local import
-import helper
 
 identifier_string = "IK_2d"
 
@@ -248,23 +248,25 @@ def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_
         helper.set_axis_title(ax, title_string, fontdict)
 
         ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
-        c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
+        c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu',
+                          shading='gouraud', vmin=rad_min, vmax=rad_max)
 
         plt.axis('off')
 
-        helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(j+1) + "_" + fname_img, pad_inches = 0.0)
+        helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(j+1) + "_" + fname_img, pad_inches=0.0)
 
         plt.axis('on')
 
         plt.subplots_adjust(left=0, bottom=0, right=1.25,
                             top=1.25, wspace=1, hspace=1)
-        
+
         cb = fig.colorbar(c, ax=ax, extend='max')
 
         plt.xlabel("x")
         plt.ylabel("y")
 
-        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
+        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D,
+                marker='o', color='k', ls='', alpha=alpha_train_samples)
 
         helper.save_figure(fig, dpi, dir_path_img, str(j+1) + "_" + fname_img)
 
@@ -288,20 +290,19 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
     jac = torch.zeros(size=(n_one_dim*n_one_dim, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
 
-    if n_one_dim > 100 :
+    if n_one_dim > 100:
 
         n_splits = 100
 
         delta = n_one_dim*n_one_dim // n_splits
 
-        for split in range(n_splits) :
+        for split in range(n_splits):
 
             jac[split*delta:(split+1)*delta] = helper.compute_jacobian(model, x_state[split*delta:(split+1)*delta])
 
-    else :
+    else:
 
         jac = helper.compute_jacobian(model, x_state)
-
 
     jac_norm = torch.reshape(jac, shape=(
         n_one_dim, n_one_dim, N_TRAJOPT*N_DIM_THETA*N_DIM_X))
@@ -324,13 +325,13 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
     plt.axis('off')
 
-    helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img, pad_inches = 0.0)
+    helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img, pad_inches=0.0)
 
     plt.axis('on')
 
     plt.subplots_adjust(left=0, bottom=0, right=1.25,
                         top=1.25, wspace=1, hspace=1)
-    
+
     cb = fig.colorbar(c, ax=ax, extend='max')
 
     plt.xlabel("x")
@@ -396,16 +397,16 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
     ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
     c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
                       norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD))
-    
+
     plt.axis('off')
 
-    helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img, pad_inches = 0.0)
+    helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + fname_img, pad_inches=0.0)
 
     plt.axis('on')
 
     plt.subplots_adjust(left=0, bottom=0, right=1.25,
                         top=1.25, wspace=1, hspace=1)
-    
+
     cb = fig.colorbar(c, ax=ax, extend='max')
 
     plt.xlabel("x")
@@ -482,4 +483,3 @@ def compute_and_save_joint_angles_region_plot(device, n_samples_theta, dpi, dir_
 
     # close the plot handle
     plt.close('all')
-
