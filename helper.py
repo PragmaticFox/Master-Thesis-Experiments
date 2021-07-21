@@ -37,9 +37,11 @@ UR5_CYLINDER_RADIUS = 0.149
 
 SAVEFIG_DPI = 300
 
-N_ONE_DIM = 1000
+N_ONE_DIM = 5000
 
 HIST_BINS = 100
+
+N_SPLIT = 100000
 
 TRAIN_SAMPLE_POINTS_PLOT_SIZE_2D = 2.0
 TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D = 3.0
@@ -530,3 +532,4 @@ def compute_and_save_terminal_energy_histogram(compute_energy, model, X_samples,
 
     create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, COLORBAR_ENERGY_LOWER_THRESHOLD,
                           COLORBAR_ENERGY_UPPER_THRESHOLD, dpi, dir_path_img, fname_img)
+
