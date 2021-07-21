@@ -480,14 +480,24 @@ def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_
             ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
             c = ax.pcolormesh(dimX, dimY, theta_hat[:, :, -1, j], cmap='RdYlBu', shading='gouraud', vmin=rad_min, vmax=rad_max)
 
-            ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
+            limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
 
+            plt.axis('off')
+
+            helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(i+1) + "_" + str(j+1) + "_" + limits_str + "_" + fname_img, pad_inches = 0.0)
+
+            plt.axis('on')
+
+            plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                                top=1.25, wspace=1, hspace=1)
+            
             cb = fig.colorbar(c, ax=ax, extend='max')
 
             plt.xlabel("x")
             plt.ylabel("y")
 
-            limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
+            ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
+
             helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + str(j+1) + "_" + limits_str + "_" + fname_img)
 
             # close the plot handle
@@ -745,15 +755,24 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
         c = ax.pcolormesh(dimX, dimY, jac_norm, cmap='RdBu', shading='gouraud',
                         norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD, vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD))
 
-        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D,
-                marker='o', color='k', ls='', alpha=alpha_train_samples)
+        limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
 
+        plt.axis('off')
+
+        helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(i+1) + "_" + limits_str + "_" + fname_img, pad_inches = 0.0)
+
+        plt.axis('on')
+
+        plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                            top=1.25, wspace=1, hspace=1)
+        
         cb = fig.colorbar(c, ax=ax, extend='max')
 
         plt.xlabel("x")
         plt.ylabel("y")
 
-        limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
+        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
+
         helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + limits_str + "_" + fname_img)
 
         # close the plot handle
@@ -929,16 +948,25 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
         ax.axis([dimX.min(), dimX.max(), dimY.min(), dimY.max()])
         c = ax.pcolormesh(dimX, dimY, terminal_energy, cmap='RdBu', shading='gouraud',
                         norm=matplotlib.colors.LogNorm(vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD, vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD))
+ 
+        limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
 
-        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D,
-                marker='o', color='k', ls='', alpha=alpha_train_samples)
+        plt.axis('off')
 
+        helper.save_figure(fig, dpi, dir_path_img, "vis_only_" + str(i+1) + "_" + limits_str + "_" + fname_img, pad_inches = 0.0)
+
+        plt.axis('on')
+
+        plt.subplots_adjust(left=0, bottom=0, right=1.25,
+                            top=1.25, wspace=1, hspace=1)
+        
         cb = fig.colorbar(c, ax=ax, extend='max')
 
         plt.xlabel("x")
         plt.ylabel("y")
 
-        limits_str = f"zmin_{z_min:.3f}_zmax_{z_max:.3f}"
+        ax.plot(xs__, ys__, ms=helper.TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D, marker='o', color='k', ls='', alpha=alpha_train_samples)
+
         helper.save_figure(fig, dpi, dir_path_img, str(i+1) + "_" + limits_str + "_" + fname_img)
 
         # close the plot handle
