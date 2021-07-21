@@ -1,6 +1,5 @@
 #!/bin/python3
 
-import IK_3d_three_linkage as experiment
 import helper
 import os
 import sys
@@ -27,6 +26,7 @@ torch.backends.cudnn.benchmark = False
 
 # local imports
 #import IK_2d_two_linkage as experiment
+import IK_3d_three_linkage as experiment
 
 print(f"PyTorch Version: {torch.__version__}")
 print(f"NumPy Version: {np.version.version}")
@@ -41,7 +41,7 @@ IS_ONLY_PLOT_REGION = False
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
 SAMPLING_MODE = 0
 
-N_SAMPLES_TRAIN = 1000
+N_SAMPLES_TRAIN = 10
 
 # those two only trigger if the requirements are met
 IS_MODE_2_ABLATION = False
