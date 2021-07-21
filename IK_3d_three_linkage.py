@@ -31,7 +31,10 @@ import helper
 
 IS_UR5_ROBOT = False
 IS_UR5_FK_CHECK = False
-helper.IS_UR5_REMOVE_CYLINDER = True
+helper.IS_UR5_REMOVE_CYLINDER = False
+
+if not IS_UR5_ROBOT :
+    helper.IS_UR5_REMOVE_CYLINDER = False
 
 identifier_string = "IK_3d_threelinkage"
 
@@ -75,7 +78,7 @@ FK_ORIGIN = [0.0, 0.0, 0.0]
 
 SAMPLE_CIRCLE = True
 
-N_SLICES = 5.0
+N_SLICES = 6.0
 
 RADIUS_INNER = 0.0
 RADIUS_OUTER = 1.0
