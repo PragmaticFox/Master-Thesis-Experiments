@@ -33,6 +33,8 @@ IS_UR5_ROBOT = False
 IS_UR5_FK_CHECK = False
 helper.IS_UR5_REMOVE_CYLINDER = False
 
+IS_ONLY_3D_PLOTS = True
+
 if not IS_UR5_ROBOT:
     helper.IS_UR5_REMOVE_CYLINDER = False
 
@@ -402,6 +404,10 @@ def compute_energy(model, x_state, is_constrained):
 
 def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_dim, dir_path_img, fname_img, fontdict, title_string):
 
+    if IS_ONLY_3D_PLOTS :
+
+        return 
+
     delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
 
     for i in range(int(N_SLICES)):
@@ -512,7 +518,7 @@ def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_
             plt.close('all')
 
 
-def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_img, title_string, fontdict, case):
+def plot_heatmap(plt, dpi, xs, ys, zs, color, cmap, vmin, vmax, dir_path_img, fname_img, title_string, fontdict, case):
 
     ax = plt.axes(projection='3d')
 
@@ -524,15 +530,17 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
     title_string = case + "\n" + title_string
     helper.set_axis_title(ax, title_string, fontdict)
 
+    s = 1
+
     if case == "x":
 
-        c = ax.scatter(
+        ax.scatter(
             xs=xs,
             ys=ys,
             zs=zs,
             zdir='z',
-            s=20,
-            c=c,
+            s=s,
+            c=color,
             depthshade=True,
             cmap=cmap,
             norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax)
@@ -548,13 +556,13 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
 
     if case == "y":
 
-        c = ax.scatter(
+        ax.scatter(
             xs=ys,
             ys=zs,
             zs=xs,
             zdir='z',
-            s=20,
-            c=c,
+            s=s,
+            c=color,
             depthshade=True,
             cmap=cmap,
             norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax)
@@ -570,13 +578,13 @@ def plot_heatmap(plt, dpi, xs, ys, zs, c, cmap, vmin, vmax, dir_path_img, fname_
 
     if case == "z":
 
-        c = ax.scatter(
+        ax.scatter(
             xs=zs,
             ys=xs,
             zs=ys,
             zdir='z',
-            s=20,
-            c=c,
+            s=s,
+            c=color,
             depthshade=True,
             cmap=cmap,
             norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax)
@@ -644,7 +652,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
         xs=dimX,
         ys=dimY,
         zs=dimZ,
-        c=jac_norm,
+        color=jac_norm,
         cmap=cmap,
         vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
         vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
@@ -661,7 +669,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
         xs=dimX,
         ys=dimY,
         zs=dimZ,
-        c=jac_norm,
+        color=jac_norm,
         cmap=cmap,
         vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
         vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
@@ -678,7 +686,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
         xs=dimX,
         ys=dimY,
         zs=dimZ,
-        c=jac_norm,
+        color=jac_norm,
         cmap=cmap,
         vmin=helper.COLORBAR_JACOBIAN_LOWER_THRESHOLD,
         vmax=helper.COLORBAR_JACOBIAN_UPPER_THRESHOLD,
@@ -688,6 +696,10 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
         fontdict=fontdict,
         case="z"
     )
+
+    if IS_ONLY_3D_PLOTS :
+
+        return 
 
     delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
 
@@ -841,7 +853,7 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
         xs=dimX,
         ys=dimY,
         zs=dimZ,
-        c=terminal_energy,
+        color=terminal_energy,
         cmap=cmap,
         vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
         vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
@@ -858,7 +870,7 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
         xs=dimX,
         ys=dimY,
         zs=dimZ,
-        c=terminal_energy,
+        color=terminal_energy,
         cmap=cmap,
         vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
         vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
@@ -875,7 +887,7 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
         xs=dimX,
         ys=dimY,
         zs=dimZ,
-        c=terminal_energy,
+        color=terminal_energy,
         cmap=cmap,
         vmin=helper.COLORBAR_ENERGY_LOWER_THRESHOLD,
         vmax=helper.COLORBAR_ENERGY_UPPER_THRESHOLD,
@@ -885,6 +897,10 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
         fontdict=fontdict,
         case="z"
     )
+
+    if IS_ONLY_3D_PLOTS :
+
+        return
 
     delta_z = (LIMITS_PLOTS[2][1] - LIMITS_PLOTS[2][0]) / N_SLICES
 

@@ -430,7 +430,7 @@ sampling_string = helper.convert_sampling_mode_to_string(
     SAMPLING_MODE)
 
 string_tmp = f'\nIteration {cur_index}, {sampling_string}{constrained_string}\n'
-
+'''
 tic = time.perf_counter()
 
 helper.compute_and_save_robot_plot(
@@ -463,7 +463,7 @@ experiment.compute_and_save_joint_angles_plot(
 toc = time.perf_counter()
 print(
     f"{toc - tic:0.2f} [s] for compute_and_save_joint_angles_plot(...)")
-
+'''
 tic = time.perf_counter()
 
 experiment.compute_and_save_terminal_energy_plot(
