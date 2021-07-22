@@ -208,7 +208,7 @@ def compute_and_save_joint_angles_plot(model, device, X_state_train, dpi, n_one_
 
     with torch.no_grad():
 
-        if n_one_dim > helper.SIZE_SPLIT:
+        if n_one_dim*n_one_dim > helper.SIZE_SPLIT:
 
             n_splits = n_one_dim*n_one_dim // helper.SIZE_SPLIT
 
@@ -290,7 +290,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
 
     jac = torch.zeros(size=(n_one_dim*n_one_dim, N_TRAJOPT*N_DIM_THETA, N_DIM_X))
 
-    if n_one_dim > helper.SIZE_SPLIT:
+    if n_one_dim*n_one_dim > helper.SIZE_SPLIT:
 
         n_splits = n_one_dim*n_one_dim // helper.SIZE_SPLIT
 
@@ -301,6 +301,8 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
             jac[split*delta:(split+1)*delta] = helper.compute_jacobian(model, x_state[split*delta:(split+1)*delta])
 
     else:
+
+        print(x_state.shape)
 
         jac = helper.compute_jacobian(model, x_state)
 
@@ -364,7 +366,7 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
 
     with torch.no_grad():
 
-        if n_one_dim > helper.SIZE_SPLIT:
+        if n_one_dim*n_one_dim > helper.SIZE_SPLIT:
 
             n_splits = n_one_dim*n_one_dim // helper.SIZE_SPLIT
 
