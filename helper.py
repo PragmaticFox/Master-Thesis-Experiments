@@ -10,16 +10,18 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
+START_SEED = 0
+
 SEED_DICT = {
-    "bench_random_seed": 0,
-    "bench_numpy_random_seed": 1,
-    "bench_torch_random_seed": 2,
-    "ik_random_seed": 3,
-    "ik_numpy_random_seed": 4,
-    "ik_torch_random_seed": 5,
-    "helper_random_seed": 6,
-    "helper_numpy_random_seed": 7,
-    "helper_torch_random_seed": 8
+    "bench_random_seed": START_SEED+0,
+    "bench_numpy_random_seed": START_SEED+1,
+    "bench_torch_random_seed": START_SEED+2,
+    "ik_random_seed": START_SEED+3,
+    "ik_numpy_random_seed": START_SEED+4,
+    "ik_torch_random_seed": START_SEED+5,
+    "helper_random_seed": START_SEED+6,
+    "helper_numpy_random_seed": START_SEED+7,
+    "helper_torch_random_seed": START_SEED+8
 }
 
 # fixes a possible "Fail to allocate bitmap" issue
