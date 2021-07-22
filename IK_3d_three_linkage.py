@@ -29,9 +29,9 @@ torch.backends.cudnn.benchmark = False
 
 # local import
 
-IS_UR5_ROBOT = False
+IS_UR5_ROBOT = True
 IS_UR5_FK_CHECK = False
-helper.IS_UR5_REMOVE_CYLINDER = False
+helper.IS_UR5_REMOVE_CYLINDER = True
 
 IS_ONLY_3D_PLOTS = True
 
