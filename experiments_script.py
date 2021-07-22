@@ -10,42 +10,48 @@ glob_loc_list = [
         "exp_IS_TWOLINKAGE_CONSTRAINED": False,
         "exp_IS_MODE_2_ABLATION": False,
         "exp_N_SAMPLES_TRAIN": 1000,
-        "exp_N_ITERATIONS": 10000
+        "exp_N_ITERATIONS": 10000,
+        "__file__": benchmark_path
     },
     {
         "exp_SAMPLING_MODE": 0,
         "exp_IS_TWOLINKAGE_CONSTRAINED": True,
         "exp_IS_MODE_2_ABLATION": False,
         "exp_N_SAMPLES_TRAIN": 1000,
-        "exp_N_ITERATIONS": 10000
+        "exp_N_ITERATIONS": 10000,
+        "__file__": benchmark_path
     },
     {
         "exp_SAMPLING_MODE": 1,
         "exp_IS_TWOLINKAGE_CONSTRAINED": False,
         "exp_IS_MODE_2_ABLATION": False,
         "exp_N_SAMPLES_TRAIN": 1000,
-        "exp_N_ITERATIONS": 10000
+        "exp_N_ITERATIONS": 10000,
+        "__file__": benchmark_path
     },
     {
         "exp_SAMPLING_MODE": 1,
         "exp_IS_TWOLINKAGE_CONSTRAINED": True,
         "exp_IS_MODE_2_ABLATION": False,
         "exp_N_SAMPLES_TRAIN": 1000,
-        "exp_N_ITERATIONS": 10000
+        "exp_N_ITERATIONS": 10000,
+        "__file__": benchmark_path
     },
     {
         "exp_SAMPLING_MODE": 2,
         "exp_IS_TWOLINKAGE_CONSTRAINED": False,
         "exp_IS_MODE_2_ABLATION": False,
         "exp_N_SAMPLES_TRAIN": 1000,
-        "exp_N_ITERATIONS": 10000
+        "exp_N_ITERATIONS": 10000,
+        "__file__": benchmark_path
     },
     {
         "exp_SAMPLING_MODE": 2,
         "exp_IS_TWOLINKAGE_CONSTRAINED": True,
         "exp_IS_MODE_2_ABLATION": False,
         "exp_N_SAMPLES_TRAIN": 1000,
-        "exp_N_ITERATIONS": 10000
+        "exp_N_ITERATIONS": 10000,
+        "__file__": benchmark_path
     },
 ]
 
