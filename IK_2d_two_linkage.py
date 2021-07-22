@@ -1,6 +1,9 @@
 #!/bin/python3
 
+# local imports
 import helper
+
+# other imports
 import os
 import math
 import torch
@@ -24,8 +27,6 @@ np.random.seed(helper.SEED_DICT["ik_numpy_random_seed"])
 torch.manual_seed(helper.SEED_DICT["ik_torch_random_seed"])
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
-
-# local import
 
 identifier_string = "IK_2d"
 

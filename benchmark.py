@@ -1,6 +1,11 @@
 #!/bin/python3
 
+# local imports
 import helper
+import IK_2d_two_linkage as experiment
+#import IK_3d_three_linkage as experiment
+
+# other imports
 import os
 import sys
 import time
@@ -23,10 +28,6 @@ torch.manual_seed(helper.SEED_DICT["bench_torch_random_seed"])
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
 # torch.autograd.set_detect_anomaly(True)
-
-# local imports
-import IK_2d_two_linkage as experiment
-#import IK_3d_three_linkage as experiment
 
 print(f"PyTorch Version: {torch.__version__}")
 print(f"NumPy Version: {np.version.version}")
