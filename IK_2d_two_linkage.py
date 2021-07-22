@@ -19,9 +19,9 @@ matplotlib.use("Agg")
 # is needed for torch.use_deterministic_algorithms(True) below
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
-random.seed(2521)
-np.random.seed(2781)
-torch.manual_seed(261)
+random.seed(helper.SEED_DICT["ik_random_seed"])
+np.random.seed(helper.SEED_DICT["ik_numpy_random_seed"])
+torch.manual_seed(helper.SEED_DICT["ik_torch_random_seed"])
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
 

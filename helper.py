@@ -10,6 +10,18 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
+SEED_DICT = {
+    "bench_random_seed": 0,
+    "bench_numpy_random_seed": 1,
+    "bench_torch_random_seed": 2,
+    "ik_random_seed": 3,
+    "ik_numpy_random_seed": 4,
+    "ik_torch_random_seed": 5,
+    "helper_random_seed": 6,
+    "helper_numpy_random_seed": 7,
+    "helper_torch_random_seed": 8
+}
+
 # fixes a possible "Fail to allocate bitmap" issue
 # https://github.com/matplotlib/mplfinance/issues/386#issuecomment-869950969
 matplotlib.use("Agg")
@@ -17,9 +29,9 @@ matplotlib.use("Agg")
 # is needed for torch.use_deterministic_algorithms(True) below
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
-random.seed(151)
-np.random.seed(1611)
-torch.manual_seed(171)
+random.seed(SEED_DICT["helper_random_seed"])
+np.random.seed(SEED_DICT["helper_numpy_random_seed"])
+torch.manual_seed(SEED_DICT["helper_torch_random_seed"])
 torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.benchmark = False
 
