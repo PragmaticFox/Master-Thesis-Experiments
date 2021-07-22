@@ -176,30 +176,47 @@ class Model(torch.nn.Module):
         self.fc_end = torch.nn.Linear(NN_DIM_IN_TO_OUT, NN_DIM_OUT)
         self.fc_end_alt = torch.nn.Linear(NN_DIM_IN_TO_OUT, NN_DIM_OUT // 2)
 
-        #self.act = torch.cos
-        #self.act = torch.sin
-        #self.act = self.mish
-        #self.act = torch.nn.Identity()
-        #self.act = torch.nn.Sigmoid()
-        #self.act = torch.nn.Tanh()
-        #self.act = torch.nn.ReLU()
-        #self.act = torch.nn.GELU()
-        #self.act = torch.nn.Softplus()
-        #self.act = torch.nn.LogSigmoid()
-        #self.act = torch.nn.ELU()
-        #self.act = torch.nn.SELU()
-        #self.act = torch.nn.LeakyReLU()
-        #self.act = torch.nn.PReLU()
-        #self.act = torch.nn.SiLU()
-        #self.act = torch.nn.RReLU()
         self.act = torch.nn.Tanhshrink()
-        #self.act = torch.nn.Hardshrink()
-        #self.act = torch.nn.Hardtanh()
-        #self.act = torch.nn.Hardswish()
-        #self.act = torch.nn.ReLU6()
-        #self.act = torch.nn.CELU()
-        #self.act = torch.nn.Softshrink()
-        #self.act = torch.nn.Softsign()
+
+        if "exp_activation_function" in globals() :
+
+            exp_activation_function = globals()["exp_activation_function"]
+
+            print("Activation Function Used: ")
+            print(exp_activation_function)
+            print()
+
+            if exp_activation_function == "cos" :
+
+                self.act = torch.cos
+
+            if exp_activation_function == "sin" :
+
+                self.act = torch.sin
+
+            if exp_activation_function == "mish" :
+
+                self.act = self.mish
+
+            if exp_activation_function == "sigmoid" :
+
+                self.act = torch.nn.Sigmoid()
+
+            if exp_activation_function == "tanh" :
+
+                self.act = torch.nn.Tanh()
+
+            if exp_activation_function == "tanhshrink" :
+
+                self.act = torch.nn.Tanhshrink()
+
+            if exp_activation_function == "relu" :
+
+                self.act = torch.nn.ReLU()
+
+            if exp_activation_function == "leakyrelu" :
+
+                self.act = torch.nn.LeakyReLU()
 
     def forward(self, x_in):
 
