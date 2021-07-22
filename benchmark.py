@@ -45,9 +45,9 @@ N_SAMPLES_TRAIN = 1000
 
 # those two only trigger if the requirements are met
 IS_MODE_2_ABLATION = False
-IS_TWOLINKAGE_CONSTRAINED = True
+IS_TWOLINKAGE_CONSTRAINED = False
 
-N_ITERATIONS = 100000
+N_ITERATIONS = 10000
 
 # not needed for anything else
 if IS_MODE_2_ABLATION and SAMPLING_MODE != 2:
