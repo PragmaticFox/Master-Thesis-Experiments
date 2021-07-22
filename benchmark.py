@@ -176,7 +176,7 @@ class Model(torch.nn.Module):
         self.fc_end = torch.nn.Linear(NN_DIM_IN_TO_OUT, NN_DIM_OUT)
         self.fc_end_alt = torch.nn.Linear(NN_DIM_IN_TO_OUT, NN_DIM_OUT // 2)
 
-        self.act = torch.nn.Tanhshrink()
+        self.act = None
 
         if "exp_activation_function" in globals() :
 
@@ -217,6 +217,10 @@ class Model(torch.nn.Module):
             if exp_activation_function == "leakyrelu" :
 
                 self.act = torch.nn.LeakyReLU()
+        
+        else :
+
+            self.act = torch.nn.Tanhshrink()
 
     def forward(self, x_in):
 
