@@ -40,8 +40,8 @@ IS_ONLY_PLOT_REGION = False
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
-SAMPLING_MODE = 0
 
+SAMPLING_MODE = 0
 N_SAMPLES_TRAIN = 1000
 
 # those two only trigger if the requirements are met
@@ -49,6 +49,26 @@ IS_MODE_2_ABLATION = False
 IS_TWOLINKAGE_CONSTRAINED = False
 
 N_ITERATIONS = 10000
+
+if "exp_SAMPLING_MODE" in globals() :
+
+    SAMPLING_MODE = globals()["exp_SAMPLING_MODE"]
+
+if "exp_N_SAMPLES_TRAIN" in globals() :
+
+    N_SAMPLES_TRAIN = globals()["exp_N_SAMPLES_TRAIN"]
+
+if "exp_IS_MODE_2_ABLATION" in globals() :
+
+    IS_MODE_2_ABLATION = globals()["exp_IS_MODE_2_ABLATION"]
+
+if "exp_IS_TWOLINKAGE_CONSTRAINED" in globals() :
+
+    IS_TWOLINKAGE_CONSTRAINED = globals()["exp_IS_TWOLINKAGE_CONSTRAINED"]
+
+if "exp_N_ITERATIONS" in globals() :
+
+    N_ITERATIONS = globals()["exp_N_ITERATIONS"]
 
 # not needed for anything else
 if IS_MODE_2_ABLATION and SAMPLING_MODE != 2:
