@@ -5,7 +5,7 @@ import pathlib
 benchmark_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "benchmark.py")
 
 # Experiment: The RNG Matters
-'''
+
 local_globals_list = [
     {
         "exp_SAMPLING_MODE": 0,
@@ -71,3 +71,5 @@ for local_globals in local_globals_list :
         globals()["exp_N_SAMPLES_TRAIN"] = 1000
         globals()["exp_N_ITERATIONS"] = 10000
         exec(code, globals())
+
+'''
