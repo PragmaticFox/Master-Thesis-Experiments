@@ -52,5 +52,5 @@ glob_loc_list = [
 for exp in glob_loc_list :
     with open(benchmark_path) as f:
         code = compile(f.read(), benchmark_path, "exec")
-        globals = glob_loc_list[exp][0]
+        globals = glob_loc_list[exp]
         exec(code, globals)
