@@ -4,6 +4,7 @@ import pathlib
 
 benchmark_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "benchmark.py")
 
+'''
 # Experiment: The RNG Matters
 
 local_globals_list = [
@@ -69,7 +70,6 @@ for local_globals in local_globals_list :
         globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
         globals()["exp_IS_MODE_2_ABLATION"] = False
         globals()["exp_N_SAMPLES_TRAIN"] = 1000
-        globals()["exp_N_ITERATIONS"] = 10000
+        globals()["exp_N_ITERATIONS"] = 100000
         exec(code, globals())
 
-'''
