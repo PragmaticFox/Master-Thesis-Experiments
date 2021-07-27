@@ -5,7 +5,7 @@ import pathlib
 benchmark_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "benchmark.py")
 compute_hist_grom_model_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "compute_hist_from_model.py")
 
-
+'''
 # Experiment: fix histograms for two-linkage experiments
 
 local_globals_list = [
@@ -104,6 +104,9 @@ for local_globals in local_globals_list :
         globals()["__file__"] = compute_hist_grom_model_path
         exec(code, globals())
 
+
+'''
+
 '''
 
 # Experiment: fix histograms for three-linkage experiments
@@ -168,7 +171,7 @@ for local_globals in local_globals_list :
 
 '''
 
-'''
+#'''
 
 # Experiment: fix histograms for ur5 experiments
 
@@ -230,7 +233,7 @@ for local_globals in local_globals_list :
         globals()["__file__"] = compute_hist_grom_model_path
         exec(code, globals())
 
-'''
+#'''
 
 '''
 # Experiment: The RNG Matters
