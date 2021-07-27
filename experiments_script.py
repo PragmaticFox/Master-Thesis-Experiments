@@ -112,6 +112,50 @@ local_globals_list = [
     {
         "exp_DIR_MODEL": "/model/nn_model_full",
         "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
     }
 ]
 
@@ -129,6 +173,50 @@ for local_globals in local_globals_list :
 # Experiment: fix histograms for ur5 experiments
 
 local_globals_list = [
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    },
     {
         "exp_DIR_MODEL": "/model/nn_model_full",
         "exp_DIR_PATH_IMG": "/plots"
