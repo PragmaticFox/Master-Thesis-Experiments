@@ -5,6 +5,7 @@ import pathlib
 benchmark_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "benchmark.py")
 compute_hist_grom_model_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "compute_hist_from_model.py")
 
+
 # Experiment: fix histograms for two-linkage experiments
 
 local_globals_list = [
@@ -78,7 +79,8 @@ local_globals_list = [
     },
     {
         "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0c_Iterations_10k_2021_07_22_18_13_56/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0c_Iterations_10k_2021_07_22_18_13_56/plots"
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0c_Iterations_10k_2021_07_22_18_13_56/plots",
+        "exp_IS_TWOLINKAGE_CONSTRAINED": True
     },
     {
         "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0_Iterations_10k_2021_07_22_15_29_52/model/nn_model_full",
@@ -90,11 +92,10 @@ local_globals_list = [
     },
     {
         "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/jacobian_frobenius_norm_as_an_alternative/IK_2d_Samples_1000_Mode_0c_Iterations_100k_2021_07_22_18_22_14/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/jacobian_frobenius_norm_as_an_alternative/IK_2d_Samples_1000_Mode_0c_Iterations_100k_2021_07_22_18_22_14/plots"
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/jacobian_frobenius_norm_as_an_alternative/IK_2d_Samples_1000_Mode_0c_Iterations_100k_2021_07_22_18_22_14/plots",
+        "exp_IS_TWOLINKAGE_CONSTRAINED": True
     },
 ]
-
-#"exp_IS_TWOLINKAGE_CONSTRAINED" = True
 
 for local_globals in local_globals_list :
     with open(compute_hist_grom_model_path) as f:
@@ -103,6 +104,45 @@ for local_globals in local_globals_list :
         globals()["__file__"] = compute_hist_grom_model_path
         exec(code, globals())
 
+'''
+
+# Experiment: fix histograms for three-linkage experiments
+
+local_globals_list = [
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    }
+]
+
+for local_globals in local_globals_list :
+    with open(compute_hist_grom_model_path) as f:
+        code = compile(f.read(), compute_hist_grom_model_path, "exec")
+        globals().update(local_globals)
+        globals()["__file__"] = compute_hist_grom_model_path
+        exec(code, globals())
+
+'''
+
+'''
+
+# Experiment: fix histograms for ur5 experiments
+
+local_globals_list = [
+    {
+        "exp_DIR_MODEL": "/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "/plots"
+    }
+]
+
+for local_globals in local_globals_list :
+    with open(compute_hist_grom_model_path) as f:
+        code = compile(f.read(), compute_hist_grom_model_path, "exec")
+        globals().update(local_globals)
+        globals()["__file__"] = compute_hist_grom_model_path
+        exec(code, globals())
+
+'''
 
 '''
 # Experiment: The RNG Matters
