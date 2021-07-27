@@ -24,6 +24,10 @@ SEED_DICT = {
     "helper_torch_random_seed": START_SEED+8
 }
 
+if "exp_SEED_DICT" in globals() :
+
+    SEED_DICT = globals()["exp_SEED_DICT"]
+
 # fixes a possible "Fail to allocate bitmap" issue
 # https://github.com/matplotlib/mplfinance/issues/386#issuecomment-869950969
 matplotlib.use("Agg")
@@ -67,6 +71,12 @@ COLORBAR_ENERGY_UPPER_THRESHOLD = 1e+0
 
 COLORBAR_JACOBIAN_LOWER_THRESHOLD = 1e-1
 COLORBAR_JACOBIAN_UPPER_THRESHOLD = 1e+3
+
+HIST_ENERGY_LOWER_THRESHOLD = 1e-6
+HIST_ENERGY_UPPER_THRESHOLD = 1e+1
+
+HIST_JACOBIAN_LOWER_THRESHOLD = 1e-2
+HIST_JACOBIAN_UPPER_THRESHOLD = 1e+3
 
 TIME_MEASURE_UPDATE = 100
 TENSORBOARD_UPDATE = 100
@@ -446,6 +456,8 @@ def plot_histogram(plt, ax, arr, lower_thresh, upper_thresh):
     plt.xscale('log')
     plt.grid(False)
 
+    plt.xlim(xmin=lower_thresh, xmax = upper_thresh)
+
     plt.gca().axes.get_yaxis().set_visible(False)
 
 
@@ -529,8 +541,8 @@ def compute_and_save_jacobian_histogram(model, X_samples, dpi, dir_path_img, fna
     xlabel = "Jacobian Frobenius Norm"
     ylabel = "Samples per Bin"
 
-    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, COLORBAR_JACOBIAN_LOWER_THRESHOLD,
-                          COLORBAR_JACOBIAN_UPPER_THRESHOLD, dpi, dir_path_img, fname_img)
+    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, HIST_JACOBIAN_LOWER_THRESHOLD,
+                          HIST_JACOBIAN_UPPER_THRESHOLD, dpi, dir_path_img, fname_img)
 
 
 def compute_and_save_terminal_energy_histogram(compute_energy, model, X_samples, dpi, is_constrained, dir_path_img, fname_img, fontdict, title_string):
@@ -544,6 +556,6 @@ def compute_and_save_terminal_energy_histogram(compute_energy, model, X_samples,
     xlabel = "Terminal Energy [m]"
     ylabel = "Samples per Bin"
 
-    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, COLORBAR_ENERGY_LOWER_THRESHOLD,
-                          COLORBAR_ENERGY_UPPER_THRESHOLD, dpi, dir_path_img, fname_img)
+    create_histogram_plot(arr, title_string, fontdict, xlabel, ylabel, HIST_ENERGY_LOWER_THRESHOLD,
+                          HIST_ENERGY_UPPER_THRESHOLD, dpi, dir_path_img, fname_img)
 
