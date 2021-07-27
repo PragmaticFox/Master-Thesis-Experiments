@@ -321,6 +321,10 @@ def save_model(model, iterations, string_path, string_dict_only, string_full):
     print("{} Saved Current State for Evaluation.\n".format(iterations))
 
 
+def load_model(dir_model):
+    return torch.load(dir_model)
+
+
 def convert_sampling_mode_to_string(sampling_mode):
 
     sampling_string = "Sampling Once"

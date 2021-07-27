@@ -4,8 +4,7 @@ import pathlib
 
 benchmark_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "benchmark.py")
 
-# Experiment: two_linkage_sampling_comparisons
-
+# Experiment: fix histograms
 local_globals_list = [
     {
         "exp_SAMPLING_MODE": 0,
