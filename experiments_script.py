@@ -12,6 +12,86 @@ local_globals_list = [
         "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10_Mode_0_Iterations_10k_2021_07_22_15_19_45/model/nn_model_full",
         "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10_Mode_0_Iterations_10k_2021_07_22_15_19_45/plots"
     },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10_Mode_1_Iterations_10k_2021_07_22_16_04_12/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10_Mode_1_Iterations_10k_2021_07_22_16_04_12/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10_Mode_2_Iterations_10k_2021_07_22_17_39_30/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10_Mode_2_Iterations_10k_2021_07_22_17_39_30/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_100_Mode_0_Iterations_10k_2021_07_22_15_21_57/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_100_Mode_0_Iterations_10k_2021_07_22_15_21_57/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_100_Mode_1_Iterations_10k_2021_07_22_16_06_31/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_100_Mode_1_Iterations_10k_2021_07_22_16_06_31/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_100_Mode_2_Iterations_10k_2021_07_22_17_44_52/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_100_Mode_2_Iterations_10k_2021_07_22_17_44_52/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_1000_Mode_0_Iterations_10k_2021_07_22_15_29_52/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_1000_Mode_0_Iterations_10k_2021_07_22_15_29_52/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_1000_Mode_1_Iterations_10k_2021_07_22_16_09_08/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_1000_Mode_1_Iterations_10k_2021_07_22_16_09_08/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_1000_Mode_2_Iterations_10k_2021_07_22_17_47_07/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_1000_Mode_2_Iterations_10k_2021_07_22_17_47_07/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10000_Mode_0_Iterations_10k_2021_07_22_15_38_52/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10000_Mode_0_Iterations_10k_2021_07_22_15_38_52/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10000_Mode_1_Iterations_10k_2021_07_22_16_14_47/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10000_Mode_1_Iterations_10k_2021_07_22_16_14_47/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10000_Mode_2_Iterations_10k_2021_07_22_17_49_44/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10000_Mode_2_Iterations_10k_2021_07_22_17_49_44/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/100k_iterations_comparison/IK_2d_Samples_1000_Mode_0_Iterations_100k_2021_07_22_15_47_34/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/100k_iterations_comparison/IK_2d_Samples_1000_Mode_0_Iterations_100k_2021_07_22_15_47_34/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/100k_iterations_comparison/IK_2d_Samples_1000_Mode_1_Iterations_100k_2021_07_22_16_51_36/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/100k_iterations_comparison/IK_2d_Samples_1000_Mode_1_Iterations_100k_2021_07_22_16_51_36/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/100k_iterations_comparison/IK_2d_Samples_1000_Mode_2_Iterations_100k_2021_07_22_17_58_37/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/100k_iterations_comparison/IK_2d_Samples_1000_Mode_2_Iterations_100k_2021_07_22_17_58_37/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/expansion_sampling_ablation/IK_2d_Samples_1000_Mode_2_Iterations_10k_2021_07_22_17_47_07/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/expansion_sampling_ablation/IK_2d_Samples_1000_Mode_2_Iterations_10k_2021_07_22_17_47_07/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/expansion_sampling_ablation/IK_2d_Samples_1000_Mode_2a_Iterations_10k_2021_07_22_18_19_01/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/expansion_sampling_ablation/IK_2d_Samples_1000_Mode_2a_Iterations_10k_2021_07_22_18_19_01/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0c_Iterations_10k_2021_07_22_18_13_56/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0c_Iterations_10k_2021_07_22_18_13_56/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0_Iterations_10k_2021_07_22_15_29_52/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0_Iterations_10k_2021_07_22_15_29_52/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/jacobian_frobenius_norm_as_an_alternative/IK_2d_Samples_1000_Mode_0_Iterations_100k_2021_07_22_15_47_34/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/jacobian_frobenius_norm_as_an_alternative/IK_2d_Samples_1000_Mode_0_Iterations_100k_2021_07_22_15_47_34/plots"
+    },
+    {
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/jacobian_frobenius_norm_as_an_alternative/IK_2d_Samples_1000_Mode_0c_Iterations_100k_2021_07_22_18_22_14/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/jacobian_frobenius_norm_as_an_alternative/IK_2d_Samples_1000_Mode_0c_Iterations_100k_2021_07_22_18_22_14/plots"
+    },
 ]
 
 #"exp_IS_TWOLINKAGE_CONSTRAINED" = True
