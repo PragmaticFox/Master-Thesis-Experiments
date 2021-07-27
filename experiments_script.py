@@ -9,8 +9,8 @@ compute_hist_grom_model_path = pathlib.Path(pathlib.Path(__file__).parent.resolv
 
 local_globals_list = [
     {
-        "exp_DIR_MODEL": "D:\polybox_folder\master_thesis\experiments\main_experiments\two_linkage_sampling_comparisons\IK_2d_Samples_10_Mode_0_Iterations_10k_2021_07_22_15_19_45\model\nn_model_full",
-        "exp_DIR_PATH_IMG": "D:\polybox_folder\master_thesis\experiments\main_experiments\two_linkage_sampling_comparisons\IK_2d_Samples_10_Mode_0_Iterations_10k_2021_07_22_15_19_45\plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10_Mode_0_Iterations_10k_2021_07_22_15_19_45/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/two_linkage_sampling_comparisons/IK_2d_Samples_10_Mode_0_Iterations_10k_2021_07_22_15_19_45/plots"
     },
 ]
 
