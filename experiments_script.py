@@ -110,52 +110,52 @@ for local_globals in local_globals_list :
 
 local_globals_list = [
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10_Mode_0_Iterations_10k_2021_07_21_23_44_54/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10_Mode_0_Iterations_10k_2021_07_21_23_44_54/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10_Mode_1_Iterations_10k_2021_07_22_00_27_11/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10_Mode_1_Iterations_10k_2021_07_22_00_27_11/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10_Mode_2_Iterations_10k_2021_07_22_01_59_47/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10_Mode_2_Iterations_10k_2021_07_22_01_59_47/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_100_Mode_0_Iterations_10k_2021_07_21_23_52_49/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_100_Mode_0_Iterations_10k_2021_07_21_23_52_49/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_100_Mode_1_Iterations_10k_2021_07_22_00_32_40/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_100_Mode_1_Iterations_10k_2021_07_22_00_32_40/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_100_Mode_2_Iterations_10k_2021_07_22_02_05_11/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_100_Mode_2_Iterations_10k_2021_07_22_02_05_11/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_1000_Mode_0_Iterations_10k_2021_07_21_23_59_03/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_1000_Mode_0_Iterations_10k_2021_07_21_23_59_03/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_1000_Mode_1_Iterations_10k_2021_07_22_00_39_16/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_1000_Mode_1_Iterations_10k_2021_07_22_00_39_16/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_1000_Mode_2_Iterations_10k_2021_07_22_02_10_31/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_1000_Mode_2_Iterations_10k_2021_07_22_02_10_31/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10000_Mode_0_Iterations_10k_2021_07_22_00_06_41/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10000_Mode_0_Iterations_10k_2021_07_22_00_06_41/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10000_Mode_1_Iterations_10k_2021_07_22_01_00_16/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10000_Mode_1_Iterations_10k_2021_07_22_01_00_16/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10000_Mode_2_Iterations_10k_2021_07_22_02_16_08/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/three_linkage_sampling_comparisons/IK_3d_threelinkage_Samples_10000_Mode_2_Iterations_10k_2021_07_22_02_16_08/plots"
     }
 ]
 
@@ -174,52 +174,52 @@ for local_globals in local_globals_list :
 
 local_globals_list = [
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10_Mode_0_Iterations_10k_2021_07_22_11_23_02/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10_Mode_0_Iterations_10k_2021_07_22_11_23_02/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10_Mode_1_Iterations_10k_2021_07_22_11_15_10/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10_Mode_1_Iterations_10k_2021_07_22_11_15_10/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10_Mode_2_Iterations_10k_2021_07_22_12_09_16/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10_Mode_2_Iterations_10k_2021_07_22_12_09_16/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_100_Mode_0_Iterations_10k_2021_07_22_11_31_18/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_100_Mode_0_Iterations_10k_2021_07_22_11_31_18/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_100_Mode_1_Iterations_10k_2021_07_22_11_05_04/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_100_Mode_1_Iterations_10k_2021_07_22_11_05_04/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_100_Mode_2_Iterations_10k_2021_07_22_12_27_27/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_100_Mode_2_Iterations_10k_2021_07_22_12_27_27/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_1000_Mode_0_Iterations_10k_2021_07_22_11_40_09/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_1000_Mode_0_Iterations_10k_2021_07_22_11_40_09/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_1000_Mode_1_Iterations_10k_2021_07_22_10_18_14/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_1000_Mode_1_Iterations_10k_2021_07_22_10_18_14/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_1000_Mode_2_Iterations_10k_2021_07_22_12_35_03/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_1000_Mode_2_Iterations_10k_2021_07_22_12_35_03/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10000_Mode_0_Iterations_10k_2021_07_22_11_49_03/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10000_Mode_0_Iterations_10k_2021_07_22_11_49_03/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10000_Mode_1_Iterations_10k_2021_07_22_02_35_37/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10000_Mode_1_Iterations_10k_2021_07_22_02_35_37/plots"
     },
     {
-        "exp_DIR_MODEL": "/model/nn_model_full",
-        "exp_DIR_PATH_IMG": "/plots"
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10000_Mode_2_Iterations_10k_2021_07_22_12_42_51/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/main_experiments/ur5_sampling_comparisons/IK_3d_UR5_Samples_10000_Mode_2_Iterations_10k_2021_07_22_12_42_51/plots"
     }
 ]
 
