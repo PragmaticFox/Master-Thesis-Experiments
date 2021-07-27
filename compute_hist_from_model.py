@@ -157,14 +157,16 @@ X_samples = torch.tensor(
     dtype=helper.DTYPE_TORCH
 ).to(device)
 
+title_string = ""
+
 helper.compute_and_save_jacobian_histogram(
     model,
     X_samples,
     helper.SAVEFIG_DPI,
     dir_path_img,
-    "fixed_" + experiment.identifier_string + "_" + helper.HEATMAP_HISTOGRAM_NAME,
+    "fixed_" + experiment.identifier_string + "_" + helper.JACOBIAN_HISTOGRAM_NAME,
     helper.plots_fontdict,
-    dir_path_img
+    title_string
 )
 
 helper.compute_and_save_terminal_energy_histogram(
@@ -176,5 +178,5 @@ helper.compute_and_save_terminal_energy_histogram(
     dir_path_img,
     "fixed_" + experiment.identifier_string + "_" + helper.HEATMAP_HISTOGRAM_NAME,
     helper.plots_fontdict,
-    dir_path_img
+    title_string
 )
