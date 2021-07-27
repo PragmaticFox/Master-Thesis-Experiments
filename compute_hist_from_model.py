@@ -133,7 +133,7 @@ if "exp_IS_TWOLINKAGE_CONSTRAINED" in globals() :
 
     IS_TWOLINKAGE_CONSTRAINED = globals()["exp_IS_TWOLINKAGE_CONSTRAINED"]
 
-N_SAMPLES = 1000000
+N_SAMPLES = 100000
 
 if True and torch.cuda.is_available():
 
