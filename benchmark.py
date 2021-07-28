@@ -156,8 +156,9 @@ NN_DIM_IN_TO_OUT = 256
 
 LR_INITIAL = 1e-2
 
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.9995
-
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.999
+'''
 if N_ITERATIONS >= 10000 :
 
     LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.9997
@@ -169,6 +170,7 @@ if N_ITERATIONS >= 50000 :
 if N_ITERATIONS >= 100000 :
 
     LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.9999
+'''
 
 
 # parameters for mode 1
@@ -414,7 +416,15 @@ for j in range(N_ITERATIONS):
     # prevent potential exploding gradients
     #torch.nn.utils.clip_grad_norm_(model.parameters(), 1000.0)
     optimizer.step()
-    scheduler.step()
+    #scheduler.step()
+
+    if j < N_ITERATIONS // 2 :
+
+        optimizer.param_groups[0]['lr'] = current_lr * LR_SCHEDULER_MULTIPLICATIVE_REDUCTION
+    
+    else :
+
+        optimizer.param_groups[0]['lr'] = current_lr * LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2
 
     toc_loop = time.perf_counter()
     time_measure_tmp = (toc_loop - tic_loop)
