@@ -11,15 +11,15 @@ compute_hist_grom_model_path = pathlib.Path(pathlib.Path(__file__).parent.resolv
 
 local_globals_list = [
     {
-        "exp_SAMPLING_MODE": 0,
-        "exp_N_SAMPLES_TRAIN": 1000
-    },
-    {
         "exp_SAMPLING_MODE": 1,
         "exp_N_SAMPLES_TRAIN": 1000
     },
     {
         "exp_SAMPLING_MODE": 2,
+        "exp_N_SAMPLES_TRAIN": 1000
+    },
+    {
+        "exp_SAMPLING_MODE": 0,
         "exp_N_SAMPLES_TRAIN": 1000
     },
     {

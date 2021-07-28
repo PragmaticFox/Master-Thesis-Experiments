@@ -156,8 +156,12 @@ NN_DIM_IN_TO_OUT = 256
 
 LR_INITIAL = 1e-2
 
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.995
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.999925
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.9985
+
+if N_ITERATIONS == 100000 :
+
+    LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.999925
 
 # parameters for mode 1
 MODE_1_MODULO_FACTOR = 1
@@ -404,9 +408,9 @@ for j in range(N_ITERATIONS):
     optimizer.step()
     #scheduler.step()
 
-    if j < N_ITERATIONS // 2 :
+    if j < 3 * N_ITERATIONS // 4 :
 
-        optimizer.param_groups[0]['lr'] = current_lr * LR_SCHEDULER_MULTIPLICATIVE_REDUCTION
+        optimizer.param_groups[0]['lr'] = current_lr * LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1
     
     else :
 
