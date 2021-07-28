@@ -153,7 +153,7 @@ NN_DIM_IN_TO_OUT = 256
 
 LR_INITIAL = 1e-2
 
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for both 10k and 100k !
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for anything between 10k and 100k iterations (trust me) !
 
 # parameters for mode 1
 MODE_1_MODULO_FACTOR = 1
