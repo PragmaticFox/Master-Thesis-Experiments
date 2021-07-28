@@ -15,6 +15,7 @@ START_SEED = 42
 if "exp_START_SEED" in globals() :
 
     START_SEED = globals()["exp_START_SEED"]
+    print(START_SEED)
 
 SEED_DICT = {
     "bench_random_seed": START_SEED+0,

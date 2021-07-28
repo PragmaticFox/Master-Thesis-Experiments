@@ -29,7 +29,7 @@ for start_seed in range(25) :
             globals()["__file__"] = benchmark_path
             globals()["exp_START_SEED"] = start_seed
             globals()["exp_N_SAMPLES_TRAIN"] = 1000
-            globals()["exp_N_ITERATIONS"] = 10000
+            globals()["exp_N_ITERATIONS"] = 100
             globals()["exp_IS_MODE_2_ABLATION"] = False
             globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
             exec(code, globals())
