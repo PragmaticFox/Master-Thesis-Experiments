@@ -28,7 +28,7 @@ for local_globals in local_globals_list :
         globals().update(local_globals)
         globals()["__file__"] = benchmark_path
         globals()["exp_N_SAMPLES_TRAIN"] = 1000
-        globals()["exp_N_ITERATIONS"] = 100
+        globals()["exp_N_ITERATIONS"] = 20000
         globals()["exp_IS_MODE_2_ABLATION"] = False
         globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
         exec(code, globals())
