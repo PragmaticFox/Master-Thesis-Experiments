@@ -5,6 +5,75 @@ import pathlib
 benchmark_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "benchmark.py")
 compute_hist_grom_model_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "compute_hist_from_model.py")
 
+#'''
+
+# Experiment: Two-Linkage Main Experiments
+
+local_globals_list = [
+    {
+        "exp_SAMPLING_MODE": 0,
+        "exp_N_SAMPLES_TRAIN": 10
+    },
+    {
+        "exp_SAMPLING_MODE": 1,
+        "exp_N_SAMPLES_TRAIN": 10
+    },
+    {
+        "exp_SAMPLING_MODE": 2,
+        "exp_N_SAMPLES_TRAIN": 10
+    },
+    {
+        "exp_SAMPLING_MODE": 0,
+        "exp_N_SAMPLES_TRAIN": 100
+    },
+    {
+        "exp_SAMPLING_MODE": 1,
+        "exp_N_SAMPLES_TRAIN": 100
+    },
+    {
+        "exp_SAMPLING_MODE": 2,
+        "exp_N_SAMPLES_TRAIN": 100
+    },
+    {
+        "exp_SAMPLING_MODE": 0,
+        "exp_N_SAMPLES_TRAIN": 1000
+    },
+    {
+        "exp_SAMPLING_MODE": 1,
+        "exp_N_SAMPLES_TRAIN": 1000
+    },
+    {
+        "exp_SAMPLING_MODE": 2,
+        "exp_N_SAMPLES_TRAIN": 1000
+    },
+    {
+        "exp_SAMPLING_MODE": 0,
+        "exp_N_SAMPLES_TRAIN": 10000
+    },
+    {
+        "exp_SAMPLING_MODE": 1,
+        "exp_N_SAMPLES_TRAIN": 10000
+    },
+    {
+        "exp_SAMPLING_MODE": 2,
+        "exp_N_SAMPLES_TRAIN": 10000
+    }
+]
+
+for local_globals in local_globals_list :
+    with open(benchmark_path) as f:
+        code = compile(f.read(), benchmark_path, "exec")
+        globals().update(local_globals)
+        globals()["__file__"] = benchmark_path
+        globals()["exp_N_ITERATIONS"] = 100000
+        globals()["exp_IS_MODE_2_ABLATION"] = False
+        globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
+        exec(code, globals())
+
+#'''
+
+
+
 '''
 # Experiment: fix histograms for two-linkage experiments
 
