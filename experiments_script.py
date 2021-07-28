@@ -65,7 +65,7 @@ for local_globals in local_globals_list :
         code = compile(f.read(), benchmark_path, "exec")
         globals().update(local_globals)
         globals()["__file__"] = benchmark_path
-        globals()["exp_N_ITERATIONS"] = 25000
+        globals()["exp_N_ITERATIONS"] = 10000
         globals()["exp_IS_MODE_2_ABLATION"] = False
         globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
         exec(code, globals())
