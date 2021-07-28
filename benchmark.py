@@ -100,6 +100,16 @@ iter_str = ""
 
 if N_ITERATIONS == 10000:
     iter_str = "10k"
+
+if N_ITERATIONS == 20000:
+    iter_str = "20k"
+
+if N_ITERATIONS == 25000:
+    iter_str = "25k"
+
+if N_ITERATIONS == 50000:
+    iter_str = "50k"
+
 if N_ITERATIONS == 100000:
     iter_str = "100k"
 
