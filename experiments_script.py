@@ -171,7 +171,7 @@ for local_globals in local_globals_list :
 
 '''
 
-#'''
+'''
 
 # Experiment: fix histograms for ur5 experiments
 
@@ -233,7 +233,7 @@ for local_globals in local_globals_list :
         globals()["__file__"] = compute_hist_grom_model_path
         exec(code, globals())
 
-#'''
+'''
 
 '''
 # Experiment: The RNG Matters

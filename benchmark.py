@@ -41,7 +41,7 @@ IS_ONLY_PLOT_REGION = False
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
 
-SAMPLING_MODE = 0
+SAMPLING_MODE = 1
 N_SAMPLES_TRAIN = 1000
 
 # those two only trigger if the requirements are met
@@ -151,7 +151,7 @@ if N_ITERATIONS == 100000:
 
 
 # parameters for mode 1
-MODE_1_MODULO_FACTOR = 1
+MODE_1_MODULO_FACTOR = 100
 
 # parameters for mode 2
 DIVISOR = 3.0
