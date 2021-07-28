@@ -21,18 +21,17 @@ local_globals_list = [
     }
 ]
 
-for start_seed in range(25) :
-    for local_globals in local_globals_list :
-        with open(benchmark_path) as f:
-            code = compile(f.read(), benchmark_path, "exec")
-            globals().update(local_globals)
-            globals()["__file__"] = benchmark_path
-            globals()["exp_START_SEED"] = start_seed
-            globals()["exp_N_SAMPLES_TRAIN"] = 1000
-            globals()["exp_N_ITERATIONS"] = 100
-            globals()["exp_IS_MODE_2_ABLATION"] = False
-            globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
-            exec(code, globals())
+
+for local_globals in local_globals_list :
+    with open(benchmark_path) as f:
+        code = compile(f.read(), benchmark_path, "exec")
+        globals().update(local_globals)
+        globals()["__file__"] = benchmark_path
+        globals()["exp_N_SAMPLES_TRAIN"] = 1000
+        globals()["exp_N_ITERATIONS"] = 100
+        globals()["exp_IS_MODE_2_ABLATION"] = False
+        globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
+        exec(code, globals())
 
 #'''
 

@@ -10,12 +10,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-START_SEED = 42
-
-if "exp_START_SEED" in globals() :
-
-    START_SEED = globals()["exp_START_SEED"]
-    print(START_SEED)
+START_SEED = 0
 
 SEED_DICT = {
     "bench_random_seed": START_SEED+0,
@@ -28,10 +23,6 @@ SEED_DICT = {
     "helper_numpy_random_seed": START_SEED+7,
     "helper_torch_random_seed": START_SEED+8
 }
-
-if "exp_SEED_DICT" in globals() :
-
-    SEED_DICT = globals()["exp_SEED_DICT"]
 
 # fixes a possible "Fail to allocate bitmap" issue
 # https://github.com/matplotlib/mplfinance/issues/386#issuecomment-869950969
