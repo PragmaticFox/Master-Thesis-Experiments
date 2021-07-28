@@ -149,8 +149,8 @@ LR_SCHEDULER_MULTIPLICATIVE_REDUCTION = 0.999925 # for both 10k and 100k !
 MODE_1_MODULO_FACTOR = 100
 
 # parameters for mode 2
-DIVISOR = 3.0
-TENTH = 0.1 * N_ITERATIONS
+DIVISOR = 100.0
+TENTH = 0.2 * N_ITERATIONS
 
 
 class Model(torch.nn.Module):
