@@ -12,6 +12,10 @@ import matplotlib.pyplot as plt
 
 START_SEED = 42
 
+if "exp_START_SEED" in globals() :
+
+    START_SEED = globals()["exp_START_SEED"]
+
 SEED_DICT = {
     "bench_random_seed": START_SEED+0,
     "bench_numpy_random_seed": START_SEED+1,
