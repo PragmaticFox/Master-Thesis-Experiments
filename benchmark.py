@@ -2,8 +2,8 @@
 
 # local imports
 import helper
-import IK_2d_two_linkage as experiment
-#import IK_3d_three_linkage as experiment
+#import IK_2d_two_linkage as experiment
+import IK_3d_three_linkage as experiment
 
 # other imports
 import os
@@ -35,7 +35,7 @@ print(f"Matplotlib Version: {experiment.matplotlib.__version__}")
 
 torch.set_default_dtype(helper.DTYPE_TORCH)
 
-IS_ONLY_PLOT_REGION = False
+IS_ONLY_PLOT_REGION = True
 
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
@@ -145,7 +145,7 @@ txt_dict = {
 N_SAMPLES_VAL = 10000
 N_SAMPLES_TEST = 100000
 
-N_SAMPLES_THETA = 100000
+N_SAMPLES_THETA = 1000000
 
 helper.TIME_MEASURE_UPDATE = N_ITERATIONS // 100
 helper.TENSORBOARD_UPDATE = N_ITERATIONS // 100
