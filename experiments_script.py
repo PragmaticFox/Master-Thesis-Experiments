@@ -6,103 +6,26 @@ benchmark_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "benchmar
 compute_hist_grom_model_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "compute_hist_from_model.py")
 
 
-'''
-# Experiment: The RNG Matters
+# Experiment: fix histograms for two-linkage experiments (forgot one)
 
 local_globals_list = [
     {
-        "exp_SAMPLING_MODE": 0
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0_Iterations_100k_2021_07_22_15_47_34/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0_Iterations_100k_2021_07_22_15_47_34/plots"
     },
     {
-        "exp_SAMPLING_MODE": 1
+        "exp_DIR_MODEL": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0c_Iterations_100k_2021_07_22_18_22_14/model/nn_model_full",
+        "exp_DIR_PATH_IMG": "D:/polybox_folder/master_thesis/experiments/fixing_artifacts_with_constraints/IK_2d_Samples_1000_Mode_0c_Iterations_100k_2021_07_22_18_22_14/plots",
+        "exp_IS_TWOLINKAGE_CONSTRAINED": True
     },
-    {
-        "exp_SAMPLING_MODE": 2
-    }
-]
-
-
-for local_globals in local_globals_list :
-    with open(benchmark_path) as f:
-        code = compile(f.read(), benchmark_path, "exec")
-        globals().update(local_globals)
-        globals()["__file__"] = benchmark_path
-        globals()["exp_N_SAMPLES_TRAIN"] = 1000
-        globals()["exp_N_ITERATIONS"] = 20000
-        globals()["exp_IS_MODE_2_ABLATION"] = False
-        globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
-        exec(code, globals())
-
-'''
-
-#'''
-
-# Experiment: Two-Linkage Main Experiments
-
-local_globals_list = [
-    {
-        "exp_SAMPLING_MODE": 1,
-        "exp_N_SAMPLES_TRAIN": 1000
-    },
-    {
-        "exp_SAMPLING_MODE": 2,
-        "exp_N_SAMPLES_TRAIN": 1000
-    },
-    {
-        "exp_SAMPLING_MODE": 1,
-        "exp_N_SAMPLES_TRAIN": 10000
-    },
-    {
-        "exp_SAMPLING_MODE": 2,
-        "exp_N_SAMPLES_TRAIN": 10000
-    },
-    {
-        "exp_SAMPLING_MODE": 0,
-        "exp_N_SAMPLES_TRAIN": 1000
-    },
-    {
-        "exp_SAMPLING_MODE": 0,
-        "exp_N_SAMPLES_TRAIN": 10000
-    },
-    {
-        "exp_SAMPLING_MODE": 0,
-        "exp_N_SAMPLES_TRAIN": 100
-    },
-    {
-        "exp_SAMPLING_MODE": 1,
-        "exp_N_SAMPLES_TRAIN": 100
-    },
-    {
-        "exp_SAMPLING_MODE": 2,
-        "exp_N_SAMPLES_TRAIN": 100
-    },
-    {
-        "exp_SAMPLING_MODE": 0,
-        "exp_N_SAMPLES_TRAIN": 10
-    },
-    {
-        "exp_SAMPLING_MODE": 1,
-        "exp_N_SAMPLES_TRAIN": 10
-    },
-    {
-        "exp_SAMPLING_MODE": 2,
-        "exp_N_SAMPLES_TRAIN": 10
-    }
 ]
 
 for local_globals in local_globals_list :
-    with open(benchmark_path) as f:
-        code = compile(f.read(), benchmark_path, "exec")
+    with open(compute_hist_grom_model_path) as f:
+        code = compile(f.read(), compute_hist_grom_model_path, "exec")
         globals().update(local_globals)
-        globals()["__file__"] = benchmark_path
-        globals()["exp_N_ITERATIONS"] = 20000
-        globals()["exp_IS_MODE_2_ABLATION"] = False
-        globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
+        globals()["__file__"] = compute_hist_grom_model_path
         exec(code, globals())
-
-#'''
-
-
 
 '''
 # Experiment: fix histograms for two-linkage experiments
