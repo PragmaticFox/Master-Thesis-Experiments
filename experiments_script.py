@@ -6,7 +6,7 @@ benchmark_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "benchmar
 compute_hist_grom_model_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "compute_hist_from_model.py")
 
 
-#'''
+'''
 # Experiment: The RNG Matters
 
 local_globals_list = [
@@ -33,9 +33,9 @@ for local_globals in local_globals_list :
         globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
         exec(code, globals())
 
-#'''
-
 '''
+
+#'''
 
 # Experiment: Two-Linkage Main Experiments
 
@@ -100,7 +100,7 @@ for local_globals in local_globals_list :
         globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
         exec(code, globals())
 
-'''
+#'''
 
 
 

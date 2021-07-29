@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-START_SEED = 4
+START_SEED = 42
 
 SEED_DICT = {
     "bench_random_seed": START_SEED+0,
