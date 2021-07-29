@@ -5,7 +5,7 @@ import pathlib
 benchmark_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "benchmark.py")
 compute_hist_grom_model_path = pathlib.Path(pathlib.Path(__file__).parent.resolve(), "compute_hist_from_model.py")
 
-
+'''
 # Experiment: fix histograms for two-linkage experiments (forgot one)
 
 local_globals_list = [
@@ -27,6 +27,7 @@ for local_globals in local_globals_list :
         globals()["__file__"] = compute_hist_grom_model_path
         exec(code, globals())
 
+'''
 '''
 # Experiment: fix histograms for two-linkage experiments
 
@@ -296,7 +297,7 @@ for local_globals in local_globals_list :
         globals()["exp_IS_TWOLINKAGE_CONSTRAINED"] = False
         globals()["exp_IS_MODE_2_ABLATION"] = False
         globals()["exp_N_SAMPLES_TRAIN"] = 1000
-        globals()["exp_N_ITERATIONS"] = 100000
+        globals()["exp_N_ITERATIONS"] = 20000
         exec(code, globals())
 
 '''
