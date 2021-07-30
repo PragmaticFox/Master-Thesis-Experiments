@@ -301,7 +301,7 @@ def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, f
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    ax.scatter(x_state[0], x_state[1], x_state[2], c='r', s=100, zorder=-10)
+    ax.scatter(x_state[0], x_state[1], x_state[2], c='r', s=100, zorder=-10, alpha = 0.5)
 
     for t in range(N_TRAJOPT):
 

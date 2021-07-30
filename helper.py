@@ -60,7 +60,7 @@ SIZE_SPLIT = 10000
 TRAIN_SAMPLE_POINTS_PLOT_SIZE_2D = 2.0
 TRAIN_SAMPLE_POINTS_PLOT_SIZE_3D = 3.0
 
-ALPHA_PARAM_3D_PLOTS = -4.0
+ALPHA_PARAM_3D_PLOTS = -2.0
 
 COLORBAR_ENERGY_LOWER_THRESHOLD = 1e-5
 COLORBAR_ENERGY_UPPER_THRESHOLD = 1e+0
@@ -357,13 +357,34 @@ def compute_and_save_robot_plot(compute_energy, visualize_trajectory_and_save_im
         fname + "_worst_iteration.jpg"
     )
     '''
-    iii = 42
+    iii = 0
     visualize_trajectory_and_save_image(
-            x_state[iii].detach().cpu(),
-            x_hat_fk_chain[iii].detach().cpu(),
-            dir_path,
-            f"robot_{iii}_img_{j+1}.jpg"
-        )
+        x_state[iii].detach().cpu(),
+        x_hat_fk_chain[iii].detach().cpu(),
+        dir_path,
+        f"robot_{iii}_img_{j+1}.jpg"
+    )
+    iii = 1
+    visualize_trajectory_and_save_image(
+        x_state[iii].detach().cpu(),
+        x_hat_fk_chain[iii].detach().cpu(),
+        dir_path,
+        f"robot_{iii}_img_{j+1}.jpg"
+    )
+    iii = 8
+    visualize_trajectory_and_save_image(
+        x_state[iii].detach().cpu(),
+        x_hat_fk_chain[iii].detach().cpu(),
+        dir_path,
+        f"robot_{iii}_img_{j+1}.jpg"
+    )
+    iii = 3
+    visualize_trajectory_and_save_image(
+        x_state[iii].detach().cpu(),
+        x_hat_fk_chain[iii].detach().cpu(),
+        dir_path,
+        f"robot_{iii}_img_{j+1}.jpg"
+    )
 
     '''
     for i in range(5) :

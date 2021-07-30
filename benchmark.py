@@ -2,8 +2,8 @@
 
 # local imports
 import helper
-#import IK_2d_two_linkage as experiment
-import IK_3d_three_linkage as experiment
+import IK_2d_two_linkage as experiment
+#import IK_3d_three_linkage as experiment
 
 # other imports
 import os
@@ -41,14 +41,14 @@ IS_ONLY_PLOT_REGION = False
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
 
-SAMPLING_MODE = 2
+SAMPLING_MODE = 0
 N_SAMPLES_TRAIN = 1000
 
 # those two only trigger if the requirements are met
 IS_MODE_2_ABLATION = False
 IS_TWOLINKAGE_CONSTRAINED = False
 
-N_ITERATIONS = 10000
+N_ITERATIONS = 1000
 
 if "exp_SAMPLING_MODE" in globals() :
 
@@ -158,11 +158,14 @@ NN_DIM_IN_TO_OUT = 256
 
 LR_INITIAL = 1e-2
 
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.99930
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.99930
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 1.0
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.995
+
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.9925
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.99930
 
 LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.999925
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.9988#0.9973
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.95#0.9988#0.9973
 
 if N_ITERATIONS == 100000 :
 
@@ -333,11 +336,14 @@ X_state_val = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.
 X_state_test = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
     N_SAMPLES_TEST)], dtype=helper.DTYPE_TORCH).to(device)
 
-
+'''
 LIMITS_OTHER = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
 
 X_state_other = torch.tensor([helper.compute_sample(LIMITS_OTHER, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
     N_SAMPLES_OTHER)], dtype=helper.DTYPE_TORCH).to(device)
+'''
+
+X_state_other = X_state_train_all[X_state_train_all[:, 2] > 0.3].clone()
 
 X_state_train_all_sorted = torch.zeros_like(X_state_train_all).to(device)
 
@@ -422,7 +428,10 @@ for j in range(N_ITERATIONS):
     optimizer.step()
     #scheduler.step()
 
-    if j < 3 * N_ITERATIONS // 4 :
+    #condition = j < 3 * N_ITERATIONS // 4
+    condition = j < 200
+    
+    if condition :
 
         optimizer.param_groups[0]['lr'] = current_lr * LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1
     
@@ -430,10 +439,12 @@ for j in range(N_ITERATIONS):
 
         optimizer.param_groups[0]['lr'] = current_lr * LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2
 
-
-    if cur_index % helper.TENSORBOARD_UPDATE == 0 or j == 0:
+    if cur_index % helper.TIME_MEASURE_UPDATE == 0 :
 
         print(f"{cur_index} iterations {current_lr} lr {time_measure_tmp:0.2f} [s] (total {time_measure:0.2f} [s])")
+
+    '''
+    if cur_index % helper.TENSORBOARD_UPDATE == 0 or j == 0:
 
         loss_val = 0
         terminal_position_distance_metrics_val = {}
@@ -477,7 +488,8 @@ for j in range(N_ITERATIONS):
 
         print(f"Val / Test Mean: {metrics['mean']:.3e}")
 
-    jmod = 10
+    '''
+    jmod = 1
     if j % jmod == 0:
 
         helper.compute_and_save_robot_plot(
@@ -490,7 +502,7 @@ for j in range(N_ITERATIONS):
             dir_path_id_plots,
             j // jmod
         )
-
+        '''
         helper.compute_and_save_terminal_energy_histogram(
             experiment.compute_energy,
             model,
@@ -512,7 +524,8 @@ for j in range(N_ITERATIONS):
             helper.plots_fontdict,
             f"jacobian_hist_{j // jmod}"
         )
-
+        '''
+    '''
     jmod = 100
     if j % jmod == 0:
 
@@ -540,6 +553,7 @@ for j in range(N_ITERATIONS):
             helper.plots_fontdict,
             f"jacobian_plot_{j // jmod}"
         )
+    '''
 
     toc_loop = time.perf_counter()
     time_measure_tmp = (toc_loop - tic_loop)
