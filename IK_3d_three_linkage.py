@@ -82,7 +82,7 @@ FK_ORIGIN = [0.0, 0.0, 0.0]
 SAMPLE_CIRCLE = True
 
 # 25 fps * 10 seconds = 250 frames / slices
-N_SLICES = 250
+N_SLICES = 5
 
 RADIUS_INNER = 0.0
 RADIUS_OUTER = 1.0
@@ -647,7 +647,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
     cmap = cmapRdBu(np.arange(cmapRdBu.N))
     cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmapRdBu.N)
     cmap = ListedColormap(cmap)
-
+    '''
     plot_heatmap(
         plt=plt,
         dpi=dpi,
@@ -664,7 +664,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
         fontdict=fontdict,
         case="x"
     )
-
+    
     plot_heatmap(
         plt=plt,
         dpi=dpi,
@@ -681,7 +681,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
         fontdict=fontdict,
         case="y"
     )
-
+    '''
     plot_heatmap(
         plt=plt,
         dpi=dpi,
@@ -698,6 +698,7 @@ def compute_and_save_jacobian_plot(model, device, X_state_train, dpi, n_one_dim,
         fontdict=fontdict,
         case="z"
     )
+
 
     if IS_ONLY_3D_PLOTS :
 
@@ -848,7 +849,7 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
     cmap = cmapRdBu(np.arange(cmapRdBu.N))
     cmap[:, -1] = np.logspace(helper.ALPHA_PARAM_3D_PLOTS, 0, cmapRdBu.N)
     cmap = ListedColormap(cmap)
-
+    '''
     plot_heatmap(
         plt=plt,
         dpi=dpi,
@@ -882,7 +883,7 @@ def compute_and_save_terminal_energy_plot(model, device, X_state_train, dpi, is_
         fontdict=fontdict,
         case="y"
     )
-
+    '''
     plot_heatmap(
         plt=plt,
         dpi=dpi,
@@ -1076,7 +1077,7 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
         ax.set_xlabel("y")
         ax.set_ylabel("z")
 
-        limits_str = f"xmin_{xs_min__:.3f}_xmax_{xs_max__:.3f}"
+        limits_str = f"x = [{xs_min__:.3f}, {xs_max__:.3f}]"
 
     if case == "y":
 
@@ -1088,7 +1089,7 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
         ax.set_xlabel("x")
         ax.set_ylabel("z")
 
-        limits_str = f"ymin_{ys_min__:.3f}_ymax_{ys_max__:.3f}"
+        limits_str = f"y = [{ys_min__:.3f}, {ys_max__:.3f}]"
 
     if case == "z":
 
@@ -1100,7 +1101,7 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
         ax.set_xlabel("x")
         ax.set_ylabel("y")
 
-        limits_str = f"zmin_{zs_min__:.3f}_zmax_{zs_max__:.3f}"
+        limits_str = f"z = [{zs_min__:.3f}, {zs_max__:.3f}]"
 
     title_string = f"\nx = [{xs_min__}, {xs_max__}]\ny = [{ys_min__}, {ys_max__}]\nz = [{zs_min__}, {zs_max__}]\n"
     fontdict = {}
@@ -1109,9 +1110,21 @@ def plot_joint_angles_region_slices(plt, dpi, dir_path_img, fname_img, delta, ca
 
     ax.set_aspect('equal', adjustable='box')
 
+    plt.text(
+        0.965,
+        0.950,
+        limits_str,
+        horizontalalignment='right',
+        verticalalignment='center',
+        transform = ax.transAxes
+    )
+
     fig = plt.gcf()
 
-    helper.save_figure(fig, dpi, dir_path_img, f"{case}_" + str(i+1) + "_" + limits_str + "_" + fname_img + ".png")
+    #plt.axis('off')
+
+    #helper.save_figure(fig, dpi, dir_path_img, f"{case}_" + str(i+1) + "_" + limits_str + "_" + fname_img + ".png")
+    helper.save_figure(fig, dpi, dir_path_img, f"img_{i+1}.png")
 
     # close the plot handle
     plt.close('all')

@@ -51,7 +51,7 @@ UR5_CYLINDER_RADIUS = 0.149
 
 SAVEFIG_DPI = 300
 
-N_ONE_DIM = 1000
+N_ONE_DIM = 300
 
 HIST_BINS = 100
 
@@ -68,10 +68,10 @@ COLORBAR_ENERGY_UPPER_THRESHOLD = 1e+0
 COLORBAR_JACOBIAN_LOWER_THRESHOLD = 1e-1
 COLORBAR_JACOBIAN_UPPER_THRESHOLD = 1e+3
 
-HIST_ENERGY_LOWER_THRESHOLD = 1e-4
-HIST_ENERGY_UPPER_THRESHOLD = 1e+1
+HIST_ENERGY_LOWER_THRESHOLD = 1e-6
+HIST_ENERGY_UPPER_THRESHOLD = 1e+2
 
-HIST_JACOBIAN_LOWER_THRESHOLD = 1e-0
+HIST_JACOBIAN_LOWER_THRESHOLD = 1e-3
 HIST_JACOBIAN_UPPER_THRESHOLD = 1e+4
 
 TIME_MEASURE_UPDATE = 100
@@ -341,7 +341,7 @@ def convert_constrained_boolean_to_string(is_constrained):
     return constrained_string
 
 
-def compute_and_save_robot_plot(compute_energy, visualize_trajectory_and_save_image, model, x_state, is_constrained, fname, dir_path):
+def compute_and_save_robot_plot(compute_energy, visualize_trajectory_and_save_image, model, x_state, is_constrained, fname, dir_path, j = 0):
 
     n_batch = x_state.shape[0]
 
@@ -349,14 +349,32 @@ def compute_and_save_robot_plot(compute_energy, visualize_trajectory_and_save_im
         model, x_state, is_constrained)
 
     index_batch_worst = np.argmax(energy.detach().tolist())
-
+    '''
     visualize_trajectory_and_save_image(
         x_state[index_batch_worst].detach().cpu(),
         x_hat_fk_chain[index_batch_worst].detach().cpu(),
         dir_path,
         fname + "_worst_iteration.jpg"
     )
+    '''
+    iii = 42
+    visualize_trajectory_and_save_image(
+            x_state[iii].detach().cpu(),
+            x_hat_fk_chain[iii].detach().cpu(),
+            dir_path,
+            f"robot_{iii}_img_{j+1}.jpg"
+        )
 
+    '''
+    for i in range(5) :
+        visualize_trajectory_and_save_image(
+            x_state[i].detach().cpu(),
+            x_hat_fk_chain[i].detach().cpu(),
+            dir_path,
+            f"robot_{i}_img_{j+1}.jpg"
+        )
+    '''
+    '''
     nb = 5
 
     for i in range(nb):
@@ -370,7 +388,7 @@ def compute_and_save_robot_plot(compute_energy, visualize_trajectory_and_save_im
             fname +
             "_random_{:d}_of_{:d}.jpg".format(i+1, nb)
         )
-
+    '''
 
 def compute_and_save_metrics_txt(txt_dict, test_metrics, n_iterations, dir_path_txt, fname_txt):
 

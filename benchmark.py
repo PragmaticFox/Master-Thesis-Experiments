@@ -35,13 +35,13 @@ print(f"Matplotlib Version: {experiment.matplotlib.__version__}")
 
 torch.set_default_dtype(helper.DTYPE_TORCH)
 
-IS_ONLY_PLOT_REGION = True
+IS_ONLY_PLOT_REGION = False
 
 # 0 is sampling once N_SAMPLES_TRAIN at the beginning of training
 # 1 is resampling N_SAMPLES_TRAIN after each iteration
 # 2 is expansion sampling: sampling once N_SAMPLES_TRAIN, but start with 1 sample, then add more and more samples from the vicinity.
 
-SAMPLING_MODE = 1
+SAMPLING_MODE = 2
 N_SAMPLES_TRAIN = 1000
 
 # those two only trigger if the requirements are met
@@ -145,7 +145,9 @@ txt_dict = {
 N_SAMPLES_VAL = 10000
 N_SAMPLES_TEST = 100000
 
-N_SAMPLES_THETA = 1000000
+N_SAMPLES_OTHER = 100
+
+N_SAMPLES_THETA = 10000
 
 helper.TIME_MEASURE_UPDATE = N_ITERATIONS // 100
 helper.TENSORBOARD_UPDATE = N_ITERATIONS // 100
@@ -159,8 +161,8 @@ LR_INITIAL = 1e-2
 LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.99930
 LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.99930
 
-#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.999925
-#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.9988#0.9973
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.999925
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.9988#0.9973
 
 if N_ITERATIONS == 100000 :
 
@@ -171,8 +173,8 @@ if N_ITERATIONS == 100000 :
 MODE_1_MODULO_FACTOR = 1
 
 # parameters for mode 2
-DIVISOR = 3.0
-TENTH = 0.1 * N_ITERATIONS
+DIVISOR = 5.0
+TENTH = 0.2 * N_ITERATIONS
 
 
 class Model(torch.nn.Module):
@@ -331,6 +333,12 @@ X_state_val = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.
 X_state_test = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
     N_SAMPLES_TEST)], dtype=helper.DTYPE_TORCH).to(device)
 
+
+LIMITS_OTHER = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
+
+X_state_other = torch.tensor([helper.compute_sample(LIMITS_OTHER, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
+    N_SAMPLES_OTHER)], dtype=helper.DTYPE_TORCH).to(device)
+
 X_state_train_all_sorted = torch.zeros_like(X_state_train_all).to(device)
 
 experiment.compute_and_save_samples_plot(X_state_train_all.detach().cpu(), X_state_val.detach(
@@ -420,9 +428,6 @@ for j in range(N_ITERATIONS):
 
         optimizer.param_groups[0]['lr'] = current_lr * LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2
 
-    toc_loop = time.perf_counter()
-    time_measure_tmp = (toc_loop - tic_loop)
-    time_measure += time_measure_tmp
 
     if cur_index % helper.TENSORBOARD_UPDATE == 0 or j == 0:
 
@@ -469,6 +474,75 @@ for j in range(N_ITERATIONS):
         txt_dict['99percentile'] += '\n' + str(metrics['99percentile'])
 
         print(f"Val / Test Mean: {metrics['mean']:.3e}")
+
+    jmod = 10
+    if j % jmod == 0:
+
+        helper.compute_and_save_robot_plot(
+            experiment.compute_energy,
+            experiment.visualize_trajectory_and_save_image,
+            model,
+            X_state_other,
+            IS_TWOLINKAGE_CONSTRAINED,
+            "robot_plot",
+            dir_path_id_plots,
+            j // jmod
+        )
+
+        helper.compute_and_save_terminal_energy_histogram(
+            experiment.compute_energy,
+            model,
+            X_state_val,
+            helper.SAVEFIG_DPI,
+            IS_TWOLINKAGE_CONSTRAINED,
+            dir_path_id_plots,
+            f"energy_hist_{j // jmod}",
+            helper.plots_fontdict,
+            f"energy_hist_{j // jmod}"
+        )
+
+        helper.compute_and_save_jacobian_histogram(
+            model,
+            X_state_val,
+            helper.SAVEFIG_DPI,
+            dir_path_id_plots,
+            f"jacobian_hist_{j // jmod}",
+            helper.plots_fontdict,
+            f"jacobian_hist_{j // jmod}"
+        )
+
+    jmod = 100
+    if j % jmod == 0:
+
+        experiment.compute_and_save_terminal_energy_plot(
+            model,
+            device,
+            X_state_other,
+            helper.SAVEFIG_DPI,
+            IS_TWOLINKAGE_CONSTRAINED,
+            helper.N_ONE_DIM,
+            dir_path_id_plots,
+            f"energy_plot_{j // jmod}",
+            helper.plots_fontdict,
+            f"energy_plot_{j // jmod}"
+        )
+
+        experiment.compute_and_save_jacobian_plot(
+            model,
+            device,
+            X_state_other,
+            helper.SAVEFIG_DPI,
+            helper.N_ONE_DIM,
+            dir_path_id_plots,
+            f"jacobian_plot_{j // jmod}",
+            helper.plots_fontdict,
+            f"jacobian_plot_{j // jmod}"
+        )
+
+    toc_loop = time.perf_counter()
+    time_measure_tmp = (toc_loop - tic_loop)
+    time_measure += time_measure_tmp
+    
 
 loss_test = 0
 terminal_position_distance_metrics_test = {}
