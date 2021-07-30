@@ -46,9 +46,9 @@ N_SAMPLES_TRAIN = 1000
 
 # those two only trigger if the requirements are met
 IS_MODE_2_ABLATION = False
-IS_TWOLINKAGE_CONSTRAINED = False
+IS_TWOLINKAGE_CONSTRAINED = True
 
-N_ITERATIONS = 1000
+N_ITERATIONS = 300
 
 if "exp_SAMPLING_MODE" in globals() :
 
@@ -336,14 +336,8 @@ X_state_val = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.
 X_state_test = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
     N_SAMPLES_TEST)], dtype=helper.DTYPE_TORCH).to(device)
 
-'''
-LIMITS_OTHER = [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]]
-
-X_state_other = torch.tensor([helper.compute_sample(LIMITS_OTHER, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
+X_state_other = torch.tensor([helper.compute_sample(experiment.LIMITS, experiment.SAMPLE_CIRCLE, experiment.RADIUS_OUTER, experiment.RADIUS_INNER) for _ in range(
     N_SAMPLES_OTHER)], dtype=helper.DTYPE_TORCH).to(device)
-'''
-
-X_state_other = X_state_train_all[X_state_train_all[:, 2] > 0.3].clone()
 
 X_state_train_all_sorted = torch.zeros_like(X_state_train_all).to(device)
 

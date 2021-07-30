@@ -357,13 +357,15 @@ def compute_and_save_robot_plot(compute_energy, visualize_trajectory_and_save_im
         fname + "_worst_iteration.jpg"
     )
     '''
-    iii = 0
+
+    iii = 3
     visualize_trajectory_and_save_image(
         x_state[iii].detach().cpu(),
         x_hat_fk_chain[iii].detach().cpu(),
         dir_path,
         f"robot_{iii}_img_{j+1}.jpg"
     )
+    '''
     iii = 1
     visualize_trajectory_and_save_image(
         x_state[iii].detach().cpu(),
@@ -385,7 +387,7 @@ def compute_and_save_robot_plot(compute_energy, visualize_trajectory_and_save_im
         dir_path,
         f"robot_{iii}_img_{j+1}.jpg"
     )
-
+    '''
     '''
     for i in range(5) :
         visualize_trajectory_and_save_image(

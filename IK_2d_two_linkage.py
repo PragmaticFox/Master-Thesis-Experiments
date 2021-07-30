@@ -88,7 +88,7 @@ def fk(theta):
 
 def visualize_trajectory_and_save_image(x_state, x_hat_fk_chain, dir_path_img, fname_img):
 
-    plt.scatter(x_state[0], x_state[1], c='r', s=100, zorder=-10)
+    plt.scatter(x_state[0], x_state[1], c='r', s=100, zorder=-10, alpha = 0.5)
 
     for t in range(N_TRAJOPT):
 
@@ -181,9 +181,8 @@ def compute_energy(model, x_state, is_constrained):
     constraint_bound = torch.zeros_like(energy)
 
     if is_constrained:
-        constraint_bound = helper.soft_bound_constraint(
-            lower_limit=-math.pi, upper_limit=0.0, eps_rel=1e-1, stiffness=1e-0, x=theta_hat[:, -1])
-        #constraint_bound = soft_bound_constraint(lower_limit = 0.0, upper_limit = math.pi, eps_rel = 1e-1, stiffness = 1e-0, x = theta_hat[:, -1])
+        #constraint_bound = helper.soft_bound_constraint(lower_limit=-math.pi, upper_limit=0.0, eps_rel=1e-1, stiffness=1e-0, x=theta_hat[:, -1])
+        constraint_bound = helper.soft_bound_constraint(lower_limit = 0.0, upper_limit = math.pi, eps_rel = 1e-1, stiffness = 1e-0, x = theta_hat[:, -1])
 
     energy += constraint_bound
 
