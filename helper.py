@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-START_SEED = 0
+START_SEED = 42
 
 SEED_DICT = {
     "bench_random_seed": START_SEED+0,
@@ -51,7 +51,7 @@ UR5_CYLINDER_RADIUS = 0.149
 
 SAVEFIG_DPI = 300
 
-N_ONE_DIM = 300
+N_ONE_DIM = 600
 
 HIST_BINS = 100
 

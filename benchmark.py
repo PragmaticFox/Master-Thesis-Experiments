@@ -164,11 +164,11 @@ LR_INITIAL = 1e-2
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.9925
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.99930
 
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.99930
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.99930
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.99930
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.99930
 
-#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.999925
-#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.95#0.9988#0.9973
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.9999
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.9973#0.9988#0.9973
 
 if N_ITERATIONS == 100000 :
 
@@ -524,7 +524,7 @@ for j in range(N_ITERATIONS):
         )
         '''
 
-    jmod = 1
+    jmod = 10
     if j % jmod == 0:
 
         experiment.compute_and_save_terminal_energy_plot(
@@ -550,6 +550,18 @@ for j in range(N_ITERATIONS):
             f"jacobian_plot_{j // jmod}",
             helper.plots_fontdict,
             f"jacobian_plot_{j // jmod}"
+        )
+
+        experiment.compute_and_save_joint_angles_plot(
+            model,
+            device,
+            X_state_train,
+            helper.SAVEFIG_DPI,
+            helper.N_ONE_DIM,
+            dir_path_id_plots,
+            f"joint_angles_plot_{j // jmod}",
+            helper.plots_fontdict,
+            f"joint_angles_plot_{j // jmod}"
         )
 
 
