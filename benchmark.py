@@ -356,6 +356,8 @@ distances = 0
 distance_index = 0
 distances_indices_sorted = 0
 
+time_measure_tmp = 0
+
 for j in range(N_ITERATIONS):
 
     tic_loop = time.perf_counter()
