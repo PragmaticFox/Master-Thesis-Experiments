@@ -46,9 +46,9 @@ N_SAMPLES_TRAIN = 1000
 
 # those two only trigger if the requirements are met
 IS_MODE_2_ABLATION = False
-IS_TWOLINKAGE_CONSTRAINED = True
+IS_TWOLINKAGE_CONSTRAINED = False
 
-N_ITERATIONS = 300
+N_ITERATIONS = 10000
 
 if "exp_SAMPLING_MODE" in globals() :
 
@@ -164,8 +164,11 @@ LR_INITIAL = 1e-2
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.9925
 #LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.99930
 
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.999925
-LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.95#0.9988#0.9973
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.99930
+LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.99930
+
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_1 = 0.999925
+#LR_SCHEDULER_MULTIPLICATIVE_REDUCTION_2 = 0.95#0.9988#0.9973
 
 if N_ITERATIONS == 100000 :
 
@@ -422,8 +425,8 @@ for j in range(N_ITERATIONS):
     optimizer.step()
     #scheduler.step()
 
-    #condition = j < 3 * N_ITERATIONS // 4
-    condition = j < 200
+    condition = j < 3 * N_ITERATIONS // 4
+    #condition = j < 200
     
     if condition :
 
@@ -483,9 +486,9 @@ for j in range(N_ITERATIONS):
         print(f"Val / Test Mean: {metrics['mean']:.3e}")
 
     '''
-    jmod = 1
+    jmod = 100
     if j % jmod == 0:
-
+        '''
         helper.compute_and_save_robot_plot(
             experiment.compute_energy,
             experiment.visualize_trajectory_and_save_image,
@@ -496,6 +499,7 @@ for j in range(N_ITERATIONS):
             dir_path_id_plots,
             j // jmod
         )
+        '''
         '''
         helper.compute_and_save_terminal_energy_histogram(
             experiment.compute_energy,
@@ -519,14 +523,14 @@ for j in range(N_ITERATIONS):
             f"jacobian_hist_{j // jmod}"
         )
         '''
-    '''
-    jmod = 100
+
+    jmod = 1
     if j % jmod == 0:
 
         experiment.compute_and_save_terminal_energy_plot(
             model,
             device,
-            X_state_other,
+            X_state_train,
             helper.SAVEFIG_DPI,
             IS_TWOLINKAGE_CONSTRAINED,
             helper.N_ONE_DIM,
@@ -539,7 +543,7 @@ for j in range(N_ITERATIONS):
         experiment.compute_and_save_jacobian_plot(
             model,
             device,
-            X_state_other,
+            X_state_train,
             helper.SAVEFIG_DPI,
             helper.N_ONE_DIM,
             dir_path_id_plots,
@@ -547,7 +551,7 @@ for j in range(N_ITERATIONS):
             helper.plots_fontdict,
             f"jacobian_plot_{j // jmod}"
         )
-    '''
+
 
     toc_loop = time.perf_counter()
     time_measure_tmp = (toc_loop - tic_loop)
