@@ -524,7 +524,7 @@ for j in range(N_ITERATIONS):
         )
         '''
 
-    jmod = 10
+    jmod = 40
     if j % jmod == 0:
 
         experiment.compute_and_save_terminal_energy_plot(
